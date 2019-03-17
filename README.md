@@ -1,7 +1,7 @@
 # phBot-xPlugins
 [phBot](https://forum.projecthax.com/) Plugins - Extend your possibilities using this amazing [SilkroadOnline](http://www.joymax.com/silkroad/) bot
 
-##Content
+## Content
 - [xAutoConfig](https://forum.projecthax.com/t/plugin-xautoconfig/331 "v0.0.4") : Load default settings to your new (not configured) character
 - [xPacketTool](https://forum.projecthax.com/t/plugin-xpackettool/332 "v0.0.2") : Analize and inject packets to server/client through phBot
 - [xChat](https://forum.projecthax.com/t/plugin-xchat/333 "v0.0.2") : Chat script support included with chat spam

@@ -50,7 +50,7 @@ def AttackMobs():
 		# Setting training area far away. The bot should continue where he was at the script
 		set_training_position(0,0,0)
 		log("Plugin: All mobs killed. Getting back to the script.")
-		start_bot()
+		Timer(1,start_bot).start()
 
 # Count all mobs around your character (60 or more it's the max. range I think)
 def getMobCount():
