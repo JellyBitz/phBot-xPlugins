@@ -5,7 +5,7 @@ import struct
 import json
 import os
 
-pVersion = 'v0.0.2'
+pVersion = 'v0.0.3'
 pName = 'xPackeTool'
 
 # Initializing GUI
@@ -62,7 +62,7 @@ def btnInjectPacket_clicked():
 
 # Return plugin configs path (JSON)
 def getConfig():
-	return get_config_dir()+pName".json"
+	return get_config_dir()+pName+".json"
 
 # Checkbox "Don't show" checked
 def cbxDontShow_clicked(checked):
