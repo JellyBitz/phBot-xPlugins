@@ -6,12 +6,10 @@ import json
 import os
 
 pVersion = 'v0.0.2'
-
-# Avoid issues
-inGame = False
+pName = 'xPackeTool'
 
 # Initializing GUI
-gui = QtBind.init(__name__,'xPackeTool')
+gui = QtBind.init(__name__,pName)
 lblInject = QtBind.createLabel(gui,'Inject Packets to Client/Server through bot, or just to parse what you need.',21,15)
 
 cbxSro = QtBind.createCheckBox(gui, 'cbxSro_clicked','Show Client packets [C->B]',395,13)
@@ -47,25 +45,24 @@ def cbxJmx_clicked(checked):
 
 # Inject packet on button clicked
 def btnInjectPacket_clicked():
-	if inGame:
-		strOpcode = QtBind.text(gui,txtOpcode)
-		strData = QtBind.text(gui,txtData)
-		# Opcode or Data is not empty
-		if strOpcode and strData:
-			Packet = bytearray()
-			opcode = int(strOpcode,16)
-			data = strData.split()
-			i = 0
-			while i < len(data):
-				Packet.append(int(data[i],16))
-				i += 1
-			encrypted = QtBind.isChecked(gui,cbxEncrypted)
-			log("Plugin: Injecting packet (xPacketTool)")
-			inject_joymax(opcode,Packet,encrypted)
+	strOpcode = QtBind.text(gui,txtOpcode)
+	strData = QtBind.text(gui,txtData)
+	# Opcode or Data is not empty
+	if strOpcode and strData:
+		Packet = bytearray()
+		opcode = int(strOpcode,16)
+		data = strData.split()
+		i = 0
+		while i < len(data):
+			Packet.append(int(data[i],16))
+			i += 1
+		encrypted = QtBind.isChecked(gui,cbxEncrypted)
+		log("Plugin: Injecting packet ("+pName+")")
+		inject_joymax(opcode,Packet,encrypted)
 
 # Return plugin configs path (JSON)
 def getConfig():
-	return get_config_dir()+"xPacketTool.json"
+	return get_config_dir()+pName".json"
 
 # Checkbox "Don't show" checked
 def cbxDontShow_clicked(checked):
@@ -129,45 +126,43 @@ def lstOpcodes_exists(opcode):
 	
 # Button "Add" clicked
 def btnAddOpcode_clicked():
-	if inGame:
-		# parse to HEX or fail trying
-		opcode = int(QtBind.text(gui,tbxOpcodes),16)
-		if opcode and not lstOpcodes_exists(opcode):
-			data = {}
-			if os.path.exists(getConfig()):
-				with open(getConfig(),"r") as f:
-					data = json.load(f)
-			# Add or Create opcode into the list
-			if "Opcodes" in data:
-				data["Opcodes"].append('0x{:02X}'.format(opcode))
-			else:
-				data["Opcodes"] = ['0x{:02X}'.format(opcode)]
-			with open(getConfig(),"w") as f:
-				f.write(json.dumps(data, indent=4, sort_keys=True))
-			QtBind.append(gui,lstOpcodes,'0x{:02X}'.format(opcode))
-			# saved successfully
-			QtBind.setText(gui, tbxOpcodes,"")
-			log("Plugin: Added opcode [0x"+'{:02X}'.format(opcode)+"]")
+	# parse to HEX or fail trying
+	opcode = int(QtBind.text(gui,tbxOpcodes),16)
+	if opcode and not lstOpcodes_exists(opcode):
+		data = {}
+		if os.path.exists(getConfig()):
+			with open(getConfig(),"r") as f:
+				data = json.load(f)
+		# Add or Create opcode into the list
+		if "Opcodes" in data:
+			data["Opcodes"].append('0x{:02X}'.format(opcode))
+		else:
+			data["Opcodes"] = ['0x{:02X}'.format(opcode)]
+		with open(getConfig(),"w") as f:
+			f.write(json.dumps(data, indent=4, sort_keys=True))
+		QtBind.append(gui,lstOpcodes,'0x{:02X}'.format(opcode))
+		# saved successfully
+		QtBind.setText(gui, tbxOpcodes,"")
+		log("Plugin: Added opcode [0x"+'{:02X}'.format(opcode)+"]")
 
 # Button "Remove" clicked
 def btnRemOpcode_clicked():
-	if inGame:
-		selectedItem = QtBind.text(gui,lstOpcodes)
-		if selectedItem:
-			if os.path.exists(getConfig()):
-				data = {}
-				with open(getConfig(), 'r') as f:
-					data = json.load(f)
-				# try remove opcode from file loaded
-				try:
-					data["Opcodes"].remove(selectedItem)
-					# Replace configs if selectedItem exists at least
-					with open(getConfig(),"w") as f:
-						f.write(json.dumps(data, indent=4, sort_keys=True))
-				except:
-					pass # just ignore file if don't exist
-			QtBind.remove(gui,lstOpcodes,selectedItem)
-			log("Plugin: Removed opcode ["+selectedItem+"]")
+	selectedItem = QtBind.text(gui,lstOpcodes)
+	if selectedItem:
+		if os.path.exists(getConfig()):
+			data = {}
+			with open(getConfig(), 'r') as f:
+				data = json.load(f)
+			# try remove opcode from file loaded
+			try:
+				data["Opcodes"].remove(selectedItem)
+				# Replace configs if selectedItem exists at least
+				with open(getConfig(),"w") as f:
+					f.write(json.dumps(data, indent=4, sort_keys=True))
+			except:
+				pass # just ignore file if don't exist
+		QtBind.remove(gui,lstOpcodes,selectedItem)
+		log("Plugin: Removed opcode ["+selectedItem+"]")
 
 # return True if can log/show the packet
 def show_packet(opcode):
@@ -177,17 +172,6 @@ def show_packet(opcode):
 	elif cbxDontShow_checked:
 		return True
 	return False
-
-# Called when the bot successfully connects to the game server
-def connected():
-	global inGame
-	inGame = False
-
-# Called when the character enters the game world
-def joined_game():
-	global inGame
-	inGame = True
-	loadConfigs()
 
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
@@ -206,4 +190,5 @@ def handle_joymax(opcode, data):
 	return True
 
 # Load success
-log('Plugin: xPacketTool '+pVersion+' plugin succesfully loaded.')
+log('Plugin: '+pName+' '+pVersion+' succesfully loaded.')
+loadConfigs()

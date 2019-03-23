@@ -4,15 +4,8 @@ from threading import Timer
 import json
 import os
 
-pVersion = 'v0.1.0'
+pVersion = 'v0.1.2'
 pName = 'xAutoDungeon'
-
-# Avoid issues
-inGame = False
-
-# Globals
-check_mobs_time = 0
-isAttacking = False
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
@@ -60,7 +53,7 @@ def btnAddMob_clicked():
 	text = QtBind.text(gui,tbxMobs)
 	if text and not lst_exist(text,lstMobs):
 		QtBind.append(gui,lstMobs,text)
-		QtBind.setText(gui, lstMobs,"")
+		QtBind.setText(gui,tbxMobs,"")
 		saveConfig("lstMobs",QtBind.getItems(gui,lstMobs))
 		log('Plugin: Mob added ['+text+']')
 
@@ -80,9 +73,9 @@ def lst_exist(text,lst):
 			return True
 	return False
 
-# Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,15"
-# Will be checking mobs every 15 seconds at this area as default.
-def AttackArea(arguments):
+# Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5"
+# Will be checking mobs every 5 seconds at the area as default.
+def AttackArea(args):
 	# stop bot and kill mobs through bot or continue script normally
 	if getMobCount() > 0:
 		# stop scripting
@@ -90,39 +83,36 @@ def AttackArea(arguments):
 		# set automatically the training area
 		p = get_position()
 		set_training_position(p['region'], p['x'], p['y'])
-		# set time
-		global check_mobs_time
-		if len(arguments) == 2:
-			check_mobs_time = float(arguments[1])
-		#15s as default
-		if not check_mobs_time:
-			check_mobs_time = 15.0
+		# waiting 5 seconds as default
+		wait = 5
+		if len(args) == 2:
+			wait = float(args[1])
 		# start to kill mobs on other thread because interpreter lock
-		Timer(1.0,AttackMobs).start()
+		Timer(0.5,AttackMobs, (wait,False)).start()
 	# otherwise continue normally
 	else:
 		log("Plugin: Not mobs at this area.")
 	return 0
 
 # Attacking mobs using all configs from bot
-def AttackMobs():
-	global isAttacking
-	if getMobCount() > 0:
-		# Start to kill mobs with last training area
-		if not isAttacking:
+def AttackMobs(wait,isAttacking):
+	count = getMobCount()
+	if count > 0:
+		# Start to kill mobs using bot
+		if isAttacking:
+			log("Plugin: Killing ("+str(count)+") mobs at this area.")
+		else:
 			start_bot()
-			isAttacking = True
-		log("Plugin: Killing ("+str(getMobCount())+") mobs at this area.")
-		# Check if there is not mobs to continue the script
-		Timer(check_mobs_time,AttackMobs).start()
+			log("Plugin: Starting to kill ("+str(count)+") mobs at this area.")
+		# Check if there is not mobs to continue script
+		Timer(wait,AttackMobs, (wait,True)).start()
 	else:
 		# All mobs killed, stop botting
 		stop_bot()
-		isAttacking = False
 		# Setting training area far away. The bot should continue where he was at the script
 		set_training_position(0,0,0)
-		log("Plugin: All mobs killed. Getting back to the script.")
-		Timer(1,start_bot).start()
+		log("Plugin: All mobs killed.. Getting back to the script.")
+		Timer(0.5,start_bot).start()
 
 # Count all mobs around your character (60 or more it's the max. range I think)
 def getMobCount():
