@@ -6,7 +6,7 @@ import json
 import os
 
 pName = 'xChat'
-pVersion = 'v0.1.0'
+pVersion = 'v0.1.1'
 
 # Avoid issues
 inGame = False
@@ -144,7 +144,7 @@ def handle_chat(t,player,msg):
 		logline(["","[Private]"+p+":"+msg])
 	elif t == 3 and QtBind.isChecked(gui,cbxLogGM):
 		logline(["","[GM]"+p+":"+msg])
-	elif t == 4 and QtBind.isChecked(gui,cbxLogGM):
+	elif t == 4 and QtBind.isChecked(gui,cbxLogParty):
 		logline(["","[Party]"+p+":"+msg])
 	elif t == 5 and QtBind.isChecked(gui,cbxLogGuild):
 		logline(["","[Guild]"+p+":"+msg])
@@ -158,8 +158,8 @@ def handle_chat(t,player,msg):
 		logline(["","[Union]"+p+":"+msg])
 	elif t == 16 and QtBind.isChecked(gui,cbxLogAcademy):
 		logline(["","[Academy]"+p+":"+msg])
-	elif QtBind.isChecked(gui,cbxLog):
-		logline(["","[Unknown("+str(t)+")]"+p+":"+msg])
+	elif QtBind.isChecked(gui,cbxLogUnknown):
+		logline(["","[Others("+str(t)+")]"+p+":"+msg])
 
 # Save message to the log.txt "logline,text"
 def logline(args):
