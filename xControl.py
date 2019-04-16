@@ -7,7 +7,7 @@ import random
 import json
 import os
 
-pVersion = 'v0.2.4'
+pVersion = 'v0.2.5'
 
 # Avoid issues
 inGame = False
@@ -142,38 +142,38 @@ def handle_chat(t,player,msg):
 				log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
 			elif msg == "SIT":
 				log("Plugin: Sit/Stand")
-				inject(["inject","704F","04"])
+				inject(["","704F","04"])
 			elif msg.startswith("CAPE"):
 				if msg == "CAPE":
 					log("Plugin: Using PVP Cape (Yellow)")
-					inject(["inject","7516","5"])
+					inject(["","7516","5"])
 				else:
 					type = msg[4:].split()
 					if type:
 						type = type[0].lower()
 						if type == "off":
 							log("Plugin: Removing PVP Cape")
-							inject(["inject","7516","0"])
+							inject(["","7516","0"])
 						elif type == "red":
 							log("Plugin: Using PVP Cape (Red)")
-							inject(["inject","7516","1"])
+							inject(["","7516","1"])
 						elif type == "gray":
 							log("Plugin: Using PVP Cape (Gray)")
-							inject(["inject","7516","2"])
+							inject(["","7516","2"])
 						elif type == "blue":
 							log("Plugin: Using PVP Cape (Blue)")
-							inject(["inject","7516","3"])
+							inject(["","7516","3"])
 						elif type == "white":
 							log("Plugin: Using PVP Cape (White)")
-							inject(["inject","7516","4"])
+							inject(["","7516","4"])
 						elif type == "yellow":
 							log("Plugin: Using PVP Cape (Yellow)")
-							inject(["inject","7516","5"])
+							inject(["","7516","5"])
 						else:
 							log("Plugin: Wrong PVP Cape color")
 			elif msg == "ZERK":
 				log("Plugin: Using Berserker mode")
-				inject(["inject","70A7","1"])
+				inject(["","70A7","1"])
 			elif msg == "RETURN":
 				# Trying avoid high CPU usage with many chars at the same time
 				Timer(random.random(), inject_useReturnScroll).start()
@@ -220,13 +220,13 @@ def inject_useReturnScroll():
 		if item:
 			if item['name'] == 'Return Scroll' or item['name'] == 'Special Return Scroll' or item['name'] == 'Token Return Scroll' or item['name'] == 'Beginner instant recall scroll' or item['name'] == 'Instant Return Scroll':
 				Packet = bytearray()
-				Packet.append(slot) # Inventory slot
-				Packet.append(0x30) # Always constant = 0x0C30
+				Packet.append(slot)
+				Packet.append(0x30)
 				Packet.append(0x0C) 
-				Packet.append(0x03) # RETURN SCROLL ID = 0x0103
+				Packet.append(0x03)
 				Packet.append(0x01)
 				inject_joymax(0x704C, Packet, True)
-				log('Plugin: Using "'+item['name']+'" ')
+				log('Plugin: Using "'+item['name']+'"')
 				return
 	log('Plugin: "Return Scroll" not found at your inventory')
 

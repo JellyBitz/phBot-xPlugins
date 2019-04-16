@@ -6,7 +6,7 @@ import json
 import os
 
 pName = 'xChat'
-pVersion = 'v0.1.1'
+pVersion = 'v0.1.2'
 
 # Avoid issues
 inGame = False
@@ -20,24 +20,24 @@ character_data = None
 gui = QtBind.init(__name__,pName)
 cbxMsg = QtBind.createCheckBox(gui, 'cbxMsg_clicked','Send message: ', 21, 13)
 cbxMsg_checked = False
-tbxMsg = QtBind.createLineEdit(gui,"",130,12,590,18)
-lblSpamCounter = QtBind.createLabel(gui,"Spam Counter:",21,35)
-lblCounter = QtBind.createLabel(gui,"0",90,35)
+tbxMsg = QtBind.createLineEdit(gui,"",125,12,480,18)
+lblSpamCounter = QtBind.createLabel(gui,"Spam Counter :",620,13)
+lblCounter = QtBind.createLabel(gui,"0",700,13)
 
-lblLog = QtBind.createLabel(gui,"Select the type of chat messages that you want to log :",21,55)
-cbxLogAll = QtBind.createCheckBox(gui, 'cbxLog_clicked','All', 21, 75)
-cbxLogPrivate = QtBind.createCheckBox(gui, 'cbxLog_clicked','Private', 21, 95)
-cbxLogParty = QtBind.createCheckBox(gui, 'cbxLog_clicked','Party', 21, 115)
-cbxLogGuild = QtBind.createCheckBox(gui, 'cbxLog_clicked','Guild', 21, 135)
-cbxLogUnion = QtBind.createCheckBox(gui, 'cbxLog_clicked','Union', 21, 155)
-cbxLogAcademy = QtBind.createCheckBox(gui, 'cbxLog_clicked','Academy', 21, 175)
-cbxLogStall = QtBind.createCheckBox(gui, 'cbxLog_clicked','Stall', 21, 195)
-cbxLogGlobal = QtBind.createCheckBox(gui, 'cbxLog_clicked','Notes', 21, 215)
-cbxLogNotice = QtBind.createCheckBox(gui, 'cbxLog_clicked','Notice', 21, 235)
-cbxLogGM = QtBind.createCheckBox(gui, 'cbxLog_clicked','GM', 21, 255)
-cbxLogUnknown = QtBind.createCheckBox(gui, 'cbxLog_clicked','All Others', 21, 275)
+lblLog = QtBind.createLabel(gui,"Now you can log all ingame messages! Just select the type of chat messages that you want to log.",21,45)
+cbxLogAll = QtBind.createCheckBox(gui,'cbxLog_clicked','All', 21, 64)
+cbxLogPrivate = QtBind.createCheckBox(gui,'cbxLog_clicked','Private', 21, 83)
+cbxLogParty = QtBind.createCheckBox(gui,'cbxLog_clicked','Party', 21, 102)
+cbxLogGuild = QtBind.createCheckBox(gui,'cbxLog_clicked','Guild', 21, 121)
+cbxLogUnion = QtBind.createCheckBox(gui,'cbxLog_clicked','Union', 21, 140)
+cbxLogAcademy = QtBind.createCheckBox(gui,'cbxLog_clicked','Academy', 21, 159)
+cbxLogStall = QtBind.createCheckBox(gui,'cbxLog_clicked','Stall', 21, 178)
+cbxLogGlobal = QtBind.createCheckBox(gui,'cbxLog_clicked','Global', 21, 197)
+cbxLogNotice = QtBind.createCheckBox(gui,'cbxLog_clicked','Notice', 21, 216)
+cbxLogGM = QtBind.createCheckBox(gui,'cbxLog_clicked','GM', 21, 235)
+cbxLogUnknown = QtBind.createCheckBox(gui,'cbxLog_clicked','All Others', 21, 254)
 
-cbxLogsInOne = QtBind.createCheckBox(gui, 'cbxLog_clicked','Save messages in one file (log.txt)', 21, 300)
+cbxLogsInOne = QtBind.createCheckBox(gui, 'cbxLog_clicked','Save messages in one file (log.txt)', 500, 45)
 
 # Return folder path
 def getPath():
@@ -159,14 +159,14 @@ def handle_chat(t,player,msg):
 	elif t == 16 and QtBind.isChecked(gui,cbxLogAcademy):
 		logline(["","[Academy]"+p+":"+msg])
 	elif QtBind.isChecked(gui,cbxLogUnknown):
-		logline(["","[Others("+str(t)+")]"+p+":"+msg])
+		logline(["","[Other("+str(t)+")]"+p+":"+msg])
 
 # Save message to the log.txt "logline,text"
 def logline(args):
 	if len(args) == 2:
 		path = "log.txt" if QtBind.isChecked(gui,cbxLogsInOne) else character_data["server"]+"_"+character_data["name"]+"_log.txt"
 		date = strftime("%d/%m %I:%M:%S %p", localtime())
-		with open(getPath()+path,"w+") as f:
+		with open(getPath()+path,"a+") as f:
 			f.write(date+" > "+args[1])
 
 # Check to start sending messages
