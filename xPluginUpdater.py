@@ -27,7 +27,7 @@ def Check(currentVersion,url,name=None):
 					return False
 				if not name:
 					name = re.search('/([a-zA-Z0-9]*).py',url)[1]
-				log('Plugin: A new version ('+newVersion[1]+'.'+newVersion[2]+'.'+newVersion[3]+') is available!')
+				log('Plugin: A new version ('+name+' '+newVersion[1]+'.'+newVersion[2]+'.'+newVersion[3]+') is available!')
 				with open(name+'.py','w+') as f:
 					f.write(pyCode)
 				log('Plugin: Successfully updated! Try to reload the plugin')
