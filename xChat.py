@@ -6,7 +6,7 @@ import json
 import os
 
 pName = 'xChat'
-pVersion = 'v0.1.3'
+pVersion = '0.2.0'
 
 # Avoid issues
 inGame = False
@@ -216,14 +216,14 @@ def event_loop():
 				QtBind.setText(gui,lblCounter,str(int(QtBind.text(gui,lblCounter))+1))
 
 # Plugin load success
-log('Plugin: '+pName+' '+pVersion+' successfully loaded.')
+log('Plugin: '+pName+' v'+pVersion+' successfully loaded.')
 # Creating configs folder
 if not os.path.exists(getPath()):
 	os.makedirs(getPath())
 	log('Plugin: '+pName+' folder has been created.')
 # Check if module exists
 try:
-	import xUpdater
-	xUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
+	import xPluginUpdater
+	xPluginUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
 except:
 	pass

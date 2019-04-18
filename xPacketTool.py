@@ -5,8 +5,8 @@ import struct
 import json
 import os
 
-pVersion = 'v0.0.4'
 pName = 'xPackeTool'
+pVersion = '0.1.0'
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
@@ -191,10 +191,10 @@ def handle_joymax(opcode, data):
 
 # Load success
 loadConfigs()
-log('Plugin: '+pName+' '+pVersion+' succesfully loaded.')
+log('Plugin: '+pName+' v'+pVersion+' succesfully loaded.')
 # Check if module exists
 try:
-	import xUpdater
-	xUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
+	import xPluginUpdater
+	xPluginUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
 except:
 	pass
