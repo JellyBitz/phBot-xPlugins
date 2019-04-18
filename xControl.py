@@ -7,7 +7,8 @@ import random
 import json
 import os
 
-pVersion = 'v0.2.5'
+pName = 'xControl'
+pVersion = 'v0.2.6'
 
 # Avoid issues
 inGame = False
@@ -17,7 +18,7 @@ followPlayer = ''
 followDistance = 0
 
 # Initializing GUI
-gui = QtBind.init(__name__,'xControl')
+gui = QtBind.init(__name__,pName)
 lblxControl = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA : Set training area using the actual location\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data : Inject packet\n - CHAT #Type #Message : Send any message type\n - MOVEON #Radius? : Set a random movement',21,11)
 lblxControl2 = QtBind.createLabel(gui,' - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following',345,101)
 
@@ -28,7 +29,7 @@ btnRemLeader = QtBind.createButton(gui,'btnRemLeader_clicked',"     Remove     "
 
 # Return xControl folder path
 def getPath():
-	return get_config_dir()+"xControl\\"
+	return get_config_dir()+pName+"\\"
 
 # Return character configs path (JSON)
 def getConfig():
@@ -368,8 +369,14 @@ def stop_follow():
 	return True
 
 # Plugin loaded success
-log("Plugin: xControl "+pVersion+" successfully loaded.")
+log("Plugin: "+pName+" "+pVersion+" successfully loaded.")
 # Creating xControl configs folder
 if not os.path.exists(getPath()):
 	os.makedirs(getPath())
-	log('Plugin: "xControl" folder has been created.')
+	log('Plugin: "'+pName+'" folder has been created.')
+# Check if module exists
+try:
+	import xUpdater
+	xUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
+except:
+	pass

@@ -5,7 +5,7 @@ import struct
 import json
 import os
 
-pVersion = 'v0.0.3'
+pVersion = 'v0.0.4'
 pName = 'xPackeTool'
 
 # Initializing GUI
@@ -190,5 +190,11 @@ def handle_joymax(opcode, data):
 	return True
 
 # Load success
-log('Plugin: '+pName+' '+pVersion+' succesfully loaded.')
 loadConfigs()
+log('Plugin: '+pName+' '+pVersion+' succesfully loaded.')
+# Check if module exists
+try:
+	import xUpdater
+	xUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
+except:
+	pass

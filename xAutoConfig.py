@@ -2,7 +2,8 @@ from phBot import *
 import shutil
 import os
 
-pVersion = 'v0.0.4'
+pName = 'xAutoConfig'
+pVersion = 'v0.0.5'
 
 # Called when the user successfully selects a character. No character data has been loaded yet.
 def joined_game():
@@ -19,4 +20,10 @@ def joined_game():
 			shutil.copyfile(defaultFilter,get_config_path().replace(".json",".db3"))
 			log("Plugin: Default Filter loaded")
 
-log('Plugin: xAutoConfig '+pVersion+' successfully loaded.')
+log('Plugin: '+pName+' '+pVersion+' successfully loaded.')
+# Check if module exists
+try:
+	import xUpdater
+	xUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
+except:
+	pass

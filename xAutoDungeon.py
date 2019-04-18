@@ -4,7 +4,7 @@ from threading import Timer
 import json
 import os
 
-pVersion = 'v0.1.2'
+pVersion = 'v0.1.3'
 pName = 'xAutoDungeon'
 
 # Initializing GUI
@@ -126,5 +126,11 @@ def getMobCount():
 	return count
 
 # Plugin loading success
-log('Plugin: '+pName+' '+pVersion+' succesfully loaded.')
 loadConfig()
+log('Plugin: '+pName+' '+pVersion+' succesfully loaded.')
+# Check if module exists
+try:
+	import xUpdater
+	xUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
+except:
+	pass
