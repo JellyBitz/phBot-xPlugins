@@ -1,6 +1,5 @@
 from phBot import *
 import urllib.request
-import urllib.parse
 import re
 
 pName = 'xPluginUpdater'

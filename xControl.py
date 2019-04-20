@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.3.0'
+pVersion = '0.3.1'
 
 # Avoid issues
 inGame = False
@@ -20,7 +20,7 @@ followDistance = 0
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
 lblxControl = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA : Set training area using the actual location\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data : Inject packet\n - CHAT #Type #Message : Send any message type\n - MOVEON #Radius? : Set a random movement',21,11)
-lblxControl2 = QtBind.createLabel(gui,' - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following',345,101)
+lblxControl2 = QtBind.createLabel(gui,' - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
 lstLeaders = QtBind.createList(gui,511,32,176,48)
@@ -212,7 +212,14 @@ def handle_chat(t,player,msg):
 			elif msg == "NOFOLLOW":
 				stop_follow()
 				log("Plugin: Following stopped")
-
+			elif msg.startswith("PROFILE"):
+				if msg == "PROFILE":
+					if set_profile('Default'):
+						log("Plugin: Setting Default profile")
+				else:
+					msg = msg[7:].strip()
+					if set_profile(msg):
+						log("Plugin: Setting "+msg+" profile")
 
 # Inject Packet (Use return scroll)
 def inject_useReturnScroll():
@@ -369,11 +376,11 @@ def stop_follow():
 	return True
 
 # Plugin loaded success
-log("Plugin: "+pName+" v"+pVersion+" successfully loaded.")
+log("Plugin: "+pName+" v"+pVersion+" successfully loaded")
 # Creating xControl configs folder
 if not os.path.exists(getPath()):
 	os.makedirs(getPath())
-	log('Plugin: "'+pName+'" folder has been created.')
+	log('Plugin: "'+pName+'" folder has been created')
 # Check if module exists
 try:
 	import xPluginUpdater
