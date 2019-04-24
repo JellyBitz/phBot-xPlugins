@@ -8,7 +8,8 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.3.1'
+pVersion = '0.3.2'
+pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
 inGame = False
@@ -381,9 +382,3 @@ log("Plugin: "+pName+" v"+pVersion+" successfully loaded")
 if not os.path.exists(getPath()):
 	os.makedirs(getPath())
 	log('Plugin: "'+pName+'" folder has been created')
-# Check if module exists
-try:
-	import xPluginUpdater
-	xPluginUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
-except:
-	pass

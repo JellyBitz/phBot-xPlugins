@@ -6,7 +6,8 @@ import json
 import os
 
 pName = 'xChat'
-pVersion = '0.3.0'
+pVersion = '0.3.1'
+pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xChat.py'
 
 # Avoid issues
 inGame = False
@@ -285,9 +286,3 @@ log('Plugin: '+pName+' v'+pVersion+' successfully loaded.')
 if not os.path.exists(getPath()):
 	os.makedirs(getPath())
 	log('Plugin: '+pName+' folder has been created.')
-# Check if module exists
-try:
-	import xPluginUpdater
-	xPluginUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
-except:
-	pass

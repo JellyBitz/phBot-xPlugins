@@ -6,7 +6,8 @@ import json
 import os
 
 pName = 'xPackeTool'
-pVersion = '0.1.0'
+pVersion = '0.1.1'
+pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPackeTool.py'
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
@@ -192,9 +193,3 @@ def handle_joymax(opcode, data):
 # Load success
 loadConfigs()
 log('Plugin: '+pName+' v'+pVersion+' succesfully loaded.')
-# Check if module exists
-try:
-	import xPluginUpdater
-	xPluginUpdater.Check(pVersion,'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/'+pName+'.py')
-except:
-	pass
