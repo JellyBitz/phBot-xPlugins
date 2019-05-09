@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.0.3'
+pVersion = '0.0.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Use a name as reference. Ex.: CUSTOM_NAME = "Jelly"
@@ -79,9 +79,11 @@ def handle_joymax(opcode, data):
 						index+=1
 					index+=1
 					forCount = data[index]
+					index+=1
 					for j in range(forCount):
 						index+=5
 					forCount = data[index]
+					index+=1
 					for j in range(forCount):
 						index+=5
 
