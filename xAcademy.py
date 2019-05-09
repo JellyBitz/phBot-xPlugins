@@ -5,13 +5,15 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.0.1'
+pVersion = '0.0.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
- # Use a name as reference. Ex.: "Jelly" will try create "Jelly101","Jelly102","Jelly103" (Will be random if it's empty)
+# Use a name as reference. Ex.: CUSTOM_NAME = "Jelly"
+# will try to create "Jelly100","Jelly101","Jelly102"
+# Will be random if you leave it empty
 CUSTOM_NAME = ""
 SEQUENCE_START_NUMBER = 100
-RANDOM_GENRE = True # (True/False)
+RANDOM_RACE = False # (True/False)
 
 # Var to check if this plugin is creating the character
 creatingCharacter = False
@@ -68,7 +70,7 @@ def handle_joymax(opcode, data):
 					index+=1
 					if charIsDeleting:
 						index+=4
-					index+=1
+					index+=2
 					if data[index]:
 						index+=1
 						strLength = struct.unpack_from('<H', data, index)[0]
@@ -110,12 +112,11 @@ def handle_joymax(opcode, data):
 
 def create_character():
 	global creatingCharacterNick
-	global RANDOM_GENRE
-	# select charname
+	global RANDOM_RACE
 	
 	# select class
 	charClass = "CH"
-	if RANDOM_GENRE:
+	if RANDOM_RACE:
 		charClass = "CH" if random.randint(0,100)%2 == 0 else "EU"
 	if charClass == 'CH':
 		c_model = get_monster_string('CHAR_CH_MAN_ADVENTURER')['model']
