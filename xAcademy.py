@@ -5,15 +5,14 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.0.5'
+pVersion = '0.0.6'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
-# Use a name as reference. Ex.: CUSTOM_NAME = "Jelly"
+# Ex.: CUSTOM_NAME = "Jelly"
 # will try to create "Jelly100","Jelly101","Jelly102"
-# Will be random if you leave it empty
-CUSTOM_NAME = ""
+CUSTOM_NAME = "" # Will be random if you leave it empty
 SEQUENCE_START_NUMBER = 100
-RANDOM_RACE = False # (True/False)
+RANDOM_RACE = False # Will be CH as default
 
 # Var to check if this plugin is creating the character
 creatingCharacter = False
@@ -48,8 +47,8 @@ def handle_joymax(opcode, data):
 					Timer(1.0,createNickname).start()
 		elif action == 2:
 			if success:
-				selectCharacter = None
-				deleteCharacter = None
+				selectCharacter = ""
+				deleteCharacter = ""
 				# Check all characters at selection screen
 				nChars = data[index]
 				index+=1
@@ -94,13 +93,13 @@ def handle_joymax(opcode, data):
 					# Condition for deleting
 					if charLevel > 40 and charLevel <= 50 and not charIsDeleting:
 						deleteCharacter = deleteCharacter
-
+				
 				# Check for deleting a character
-				if deleteCharacter:
-					log("Plugin: deleting character ["+deleteCharacter+"] Lv."+charLevel)
+				if deleteCharacter != "":
+					log("Plugin: deleting character ["+deleteCharacter+"] Lv."+str(charLevel))
 					delete_character(deleteCharacter)
 				# Select or create character if is required
-				if selectCharacter:
+				if selectCharacter == "":
 					if nChars < 4:
 						creatingCharacter = True
 						# Wait 5 seconds, then start looking for a nickname
@@ -155,14 +154,14 @@ def create_character():
 # Inject Packet
 def delete_character(charName):
 	p = b'\x03'
-	p += pack('H', len(charName))
+	p += struct.pack('H', len(charName))
 	p += charName.encode('ascii')
 	Timer(0.1,inject_joymax,(0x7007,p, False)).start()
 
 # Inject Packet
 def check_name(charName):
 	p = b'\x04'
-	p += pack('H', len(charName))
+	p += struct.pack('H', len(charName))
 	p += charName.encode('ascii')
 	Timer(0.1,inject_joymax,(0x7007,p, False)).start()
 
@@ -203,7 +202,7 @@ def createNickname():
 		creatingCharacterNick = getNickSequence()
 	else:
 		creatingCharacterNick = getRandomNick()
-	Log("Plugin: Checking nickname ["+creatingCharacterNick+"]")
+	log("Plugin: Checking nickname ["+creatingCharacterNick+"]")
 	check_name(creatingCharacterNick)
 
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
