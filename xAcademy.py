@@ -5,14 +5,14 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.0.6'
+pVersion = '0.0.7'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
 # will try to create "Jelly100","Jelly101","Jelly102"
 CUSTOM_NAME = "" # Will be random if you leave it empty
 SEQUENCE_START_NUMBER = 100
-RANDOM_RACE = False # Will be CH as default
+CUSTOM_RACE = "EU" # Will be random if you leave it empty
 
 # Var to check if this plugin is creating the character
 creatingCharacter = False
@@ -61,31 +61,41 @@ def handle_joymax(opcode, data):
 					index+= 2
 					charName = struct.unpack_from('<' + str(charLength) + 's', data, index)[0].decode('cp1252')
 					index+= charLength
-					# Some unnecesary data will be skipped aggresively!
 					index+=1 # scale
 					charLevel = data[index]
-					index+=23
+					index+=1 # level
+					index+=8 # exp
+					index+=2 # str
+					index+=2 # int
+					index+=2 # stats
+					index+=4 # hp
+					index+=4 # mp
 					charIsDeleting = data[index]
 					index+=1
 					if charIsDeleting:
 						index+=4
-					index+=2
+					index+=1 # guildMemberClass
+					# isGuildRenameRequired
 					if data[index]:
 						index+=1
+						# guildName
 						strLength = struct.unpack_from('<H', data, index)[0]
 						index+= (2 + strLength)
 					else:
 						index+=1
-					index+=1
+					index+=1 # academyMemberClass
 					forCount = data[index]
 					index+=1
+					# items
 					for j in range(forCount):
-						index+=5
+						index+=4 # RefItemID
+						index+=1 # plust
 					forCount = data[index]
 					index+=1
+					# avatarItems
 					for j in range(forCount):
-						index+=5
-
+						index+=4 # RefItemID
+						index+=1 # plust
 					# Conditions for auto select character
 					if charLevel < 40 and not charIsDeleting:
 						selectCharacter = charName
@@ -115,8 +125,8 @@ def create_character():
 	global creatingCharacterNick
 	
 	# select class
-	charClass = "CH"
-	if RANDOM_RACE:
+	charClass = CUSTOM_RACE
+	if charClass == "":
 		charClass = "CH" if random.randint(0,100)%2 == 0 else "EU"
 	if charClass == 'CH':
 		c_model = get_monster_string('CHAR_CH_MAN_ADVENTURER')['model']
