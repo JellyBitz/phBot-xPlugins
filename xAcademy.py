@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.0.4'
+pVersion = '0.0.5'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Use a name as reference. Ex.: CUSTOM_NAME = "Jelly"
@@ -100,7 +100,7 @@ def handle_joymax(opcode, data):
 					log("Plugin: deleting character ["+deleteCharacter+"] Lv."+charLevel)
 					delete_character(deleteCharacter)
 				# Select or create character if is required
-				if selectCharacter == "":
+				if selectCharacter:
 					if nChars < 4:
 						creatingCharacter = True
 						# Wait 5 seconds, then start looking for a nickname
@@ -114,7 +114,6 @@ def handle_joymax(opcode, data):
 
 def create_character():
 	global creatingCharacterNick
-	global RANDOM_RACE
 	
 	# select class
 	charClass = "CH"
@@ -179,7 +178,6 @@ def getRandomNick():
 
 # Get the sequence previously saved or start a new one if not
 def getSequence():
-	global SEQUENCE_START_NUMBER
 	seq = SEQUENCE_START_NUMBER -1
 	if os.path.exists(pName+".Sequence.txt"):
 		with open(pName+".Sequence.txt","r") as f:
@@ -191,7 +189,6 @@ def getSequence():
 
 # Check the name length and sequence and return it
 def getNickSequence():
-	global CUSTOM_NAME
 	seq = str(getSequence())
 	nick = CUSTOM_NAME+seq
 	nickLength = len(nick)
