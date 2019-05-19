@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.0.7'
+pVersion = '0.0.8'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -148,14 +148,14 @@ def create_character():
 	creatingCharacter = True
 	log('Plugin: Creating character with name %s and type %s' % (creatingCharacterNick, charClass))
 	p = b'\x01'
-	p += pack('H', len(creatingCharacterNick))
+	p += struct.pack('H', len(creatingCharacterNick))
 	p += creatingCharacterNick.encode('ascii')
-	p += pack('I', c_model)
-	p += pack('B', 0)
-	p += pack('I', chest)
-	p += pack('I', legs)
-	p += pack('I', shoes)
-	p += pack('I', weapon)
+	p += struct.pack('I', c_model)
+	p += struct.pack('B', 0)
+	p += struct.pack('I', chest)
+	p += struct.pack('I', legs)
+	p += struct.pack('I', shoes)
+	p += struct.pack('I', weapon)
 	Timer(0.1,inject_joymax,(0x7007,p, False)).start()
 	# Request char listing
 	# CLIENT_CHARACTER_SELECTION_REQUEST
