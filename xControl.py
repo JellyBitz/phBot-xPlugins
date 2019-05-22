@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.3.3'
+pVersion = '0.3.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -334,10 +334,10 @@ def randomMovement(radiusMax=10):
 def start_follow(player,distance=10):
 	if party_player(player):
 		global followPlayer,followDistance
+		if followPlayer == '':
+			Timer(0.5, start_follow_loop).start()
 		followPlayer = player
 		followDistance = distance
-		if not followPlayer:
-			Timer(0.1, start_follow_loop).start()
 		return True
 	return False
 
