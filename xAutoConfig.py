@@ -1,5 +1,4 @@
 from phBot import *
-from threading import Timer
 import shutil
 import os
 
