@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.0.8'
+pVersion = '0.0.9'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -23,102 +23,109 @@ creatingCharacterNick = ""
 def handle_joymax(opcode, data):
 	# SERVER_CHARACTER_SELECTION_RESPONSE
 	if opcode == 0xB007:
-		global creatingCharacter
-		index = 0 # Packet index
-		# ReadUInt8 / byte (1)
-		action = data[index]
-		index+=1
-		success = data[index]
-		index+=1
-		if action == 1:
-			if creatingCharacter:
-				creatingCharacter = False
+		locale = get_locale()
+		# Filter packet parsing
+		if locale == 22:
+			global creatingCharacter
+			index = 0 # Packet index
+			# ReadUInt8 / byte (1)
+			action = data[index]
+			index+=1
+			success = data[index]
+			index+=1
+			if action == 1:
+				if creatingCharacter:
+					creatingCharacter = False
+					if success:
+						log("Plugin: Character created successfully!")
+					else:
+						log("Plugin: Character creation failed")
+			elif action == 4:
+				if creatingCharacter:
+					if success:
+						log("Plugin: Nickname available...")
+						create_character()
+					else:
+						log("Plugin: Nickname has been already taken!")
+						Timer(1.0,createNickname).start()
+			elif action == 2:
 				if success:
-					log("Plugin: Character created successfully!")
-				else:
-					log("Plugin: Character creation failed")
-		elif action == 4:
-			if creatingCharacter:
-				if success:
-					log("Plugin: Nickname available...")
-					create_character()
-				else:
-					log("Plugin: Nickname has been already taken!")
-					Timer(1.0,createNickname).start()
-		elif action == 2:
-			if success:
-				selectCharacter = ""
-				deleteCharacter = ""
-				# Check all characters at selection screen
-				nChars = data[index]
-				index+=1
-				for i in range(nChars):
-					# ReadUInt32() / uint (4)
-					struct.unpack_from("<i",data,index)[0] # model
-					index+=4
-					# ReadAscii() / ushort (2) + string (length)
-					charLength = struct.unpack_from('<H', data, index)[0]
-					index+= 2
-					charName = struct.unpack_from('<' + str(charLength) + 's', data, index)[0].decode('cp1252')
-					index+= charLength
-					index+=1 # scale
-					charLevel = data[index]
-					index+=1 # level
-					index+=8 # exp
-					index+=2 # str
-					index+=2 # int
-					index+=2 # stats
-					index+=4 # hp
-					index+=4 # mp
-					charIsDeleting = data[index]
+					selectCharacter = ""
+					deleteCharacter = ""
+					# Check all characters at selection screen
+					nChars = data[index]
 					index+=1
-					if charIsDeleting:
+					for i in range(nChars):
+						# ReadUInt32() / uint (4)
+						struct.unpack_from("<i",data,index)[0] # model
 						index+=4
-					index+=1 # guildMemberClass
-					# isGuildRenameRequired
-					if data[index]:
+						# ReadAscii() / ushort (2) + string (length)
+						charLength = struct.unpack_from('<H', data, index)[0]
+						index+= 2
+						charName = struct.unpack_from('<' + str(charLength) + 's', data, index)[0].decode('cp1252')
+						index+= charLength
+						index+=1 # scale
+						charLevel = data[index]
+						index+=1 # level
+						index+=8 # exp
+						index+=2 # str
+						index+=2 # int
+						index+=2 # stats
+						index+=4 # hp
+						index+=4 # mp
+						charIsDeleting = data[index]
 						index+=1
-						# guildName
-						strLength = struct.unpack_from('<H', data, index)[0]
-						index+= (2 + strLength)
-					else:
+						if charIsDeleting:
+							index+=4
+						index+=1 # guildMemberClass
+						# isGuildRenameRequired
+						if data[index]:
+							index+=1
+							# guildName
+							strLength = struct.unpack_from('<H', data, index)[0]
+							index+= (2 + strLength)
+						else:
+							index+=1
+						index+=1 # academyMemberClass
+						forCount = data[index]
 						index+=1
-					index+=1 # academyMemberClass
-					forCount = data[index]
-					index+=1
-					# items
-					for j in range(forCount):
-						index+=4 # RefItemID
-						index+=1 # plust
-					forCount = data[index]
-					index+=1
-					# avatarItems
-					for j in range(forCount):
-						index+=4 # RefItemID
-						index+=1 # plust
-					# Conditions for auto select character
-					if charLevel < 40 and not charIsDeleting:
-						selectCharacter = charName
-						break
-					# Condition for deleting
-					if charLevel > 40 and charLevel <= 50 and not charIsDeleting:
-						deleteCharacter = deleteCharacter
-				
-				# Check for deleting a character
-				if deleteCharacter != "":
-					log("Plugin: deleting character ["+deleteCharacter+"] Lv."+str(charLevel))
-					delete_character(deleteCharacter)
-				# Select or create character if is required
-				if selectCharacter == "":
-					if nChars < 4:
-						creatingCharacter = True
-						# Wait 5 seconds, then start looking for a nickname
-						Timer(5.0,createNickname).start()
+						# items
+						for j in range(forCount):
+							index+=4 # RefItemID
+							index+=1 # plust
+						forCount = data[index]
+						index+=1
+						# avatarItems
+						for j in range(forCount):
+							index+=4 # RefItemID
+							index+=1 # plust
+						# Conditions for auto select character
+						if charLevel < 40 and not charIsDeleting:
+							selectCharacter = charName
+							break
+						# Condition for deleting
+						if charLevel > 40 and charLevel <= 50 and not charIsDeleting:
+							deleteCharacter = deleteCharacter
+					
+					# Check for deleting a character
+					if deleteCharacter != "":
+						log("Plugin: deleting character ["+deleteCharacter+"] Lv."+str(charLevel))
+						delete_character(deleteCharacter)
+					# Select or create character if is required
+					if selectCharacter == "":
+						if nChars < 4:
+							creatingCharacter = True
+							# Wait 5 seconds, then start looking for a nickname
+							Timer(5.0,createNickname).start()
+						else:
+							log("Plugin: Not enough space to create a new character")
 					else:
-						log("Plugin: Not enough space to create a new character")
-				else:
-					log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
-					select_character(selectCharacter)
+						log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
+						select_character(selectCharacter)
+		else:
+			log("Plugin: xAcademy only works for vsro 1.188")
+			log("xAcademy: If you want support, send me this data via private message..")
+			log("Data:" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data)))
 	return True
 
 def create_character():
