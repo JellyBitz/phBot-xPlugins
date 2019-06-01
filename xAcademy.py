@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.0.9'
+pVersion = '0.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -25,7 +25,7 @@ def handle_joymax(opcode, data):
 	if opcode == 0xB007:
 		locale = get_locale()
 		# Filter packet parsing
-		if locale == 22:
+		try:
 			global creatingCharacter
 			index = 0 # Packet index
 			# ReadUInt8 / byte (1)
@@ -55,6 +55,7 @@ def handle_joymax(opcode, data):
 					# Check all characters at selection screen
 					nChars = data[index]
 					index+=1
+					log("Plugin: xAcademy character list: "+ ("None" if not nChars else ""))
 					for i in range(nChars):
 						# ReadUInt32() / uint (4)
 						struct.unpack_from("<i",data,index)[0] # model
@@ -64,15 +65,22 @@ def handle_joymax(opcode, data):
 						index+= 2
 						charName = struct.unpack_from('<' + str(charLength) + 's', data, index)[0].decode('cp1252')
 						index+= charLength
+						if locale == 18:
+							index+=2 # ???
 						index+=1 # scale
 						charLevel = data[index]
 						index+=1 # level
-						index+=8 # exp
+						exp = struct.unpack_from('<Q', data, index)[0]
+						index+=8
 						index+=2 # str
 						index+=2 # int
 						index+=2 # stats
+						if locale == 18:
+							index+=4 # ???
 						index+=4 # hp
 						index+=4 # mp
+						if locale == 18:
+							index+=2 # ???
 						charIsDeleting = data[index]
 						index+=1
 						if charIsDeleting:
@@ -87,18 +95,36 @@ def handle_joymax(opcode, data):
 						else:
 							index+=1
 						index+=1 # academyMemberClass
+						if locale == 18:
+							index+=4 # ???
 						forCount = data[index]
 						index+=1
 						# items
 						for j in range(forCount):
 							index+=4 # RefItemID
-							index+=1 # plust
+							index+=1 # plus
 						forCount = data[index]
 						index+=1
 						# avatarItems
 						for j in range(forCount):
 							index+=4 # RefItemID
-							index+=1 # plust
+							index+=1 # plus
+						if locale == 18:
+							index+=1 # ???
+
+						# Show info about previous character
+						log(str(i+1)+") "+charName+" Lv."+str(charLevel)+" [Exp. "+str(int(exp))+"%]")
+						try:
+							if i == (nChars-1):
+								data[index]
+								log("Plugin: [Warning] Packet partially parsed.")
+						except:
+							try:
+								data[index-1]
+								# Smooth parsing
+							except:
+								log("Plugin: [Warning] Packet partially parsed.")
+
 						# Conditions for auto select character
 						if charLevel < 40 and not charIsDeleting:
 							selectCharacter = charName
@@ -122,10 +148,10 @@ def handle_joymax(opcode, data):
 					else:
 						log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
 						select_character(selectCharacter)
-		else:
-			log("Plugin: xAcademy only works for vsro 1.188")
-			log("xAcademy: If you want support, send me this data via private message..")
-			log("Data:" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data)))
+		except:
+			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
+			log("If you want support, send me all this via private message:")
+			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"] Locale ["+locale+"]")
 	return True
 
 def create_character():
