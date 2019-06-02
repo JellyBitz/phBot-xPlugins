@@ -58,20 +58,20 @@ def handle_joymax(opcode, data):
 					log("Plugin: xAcademy character list: "+ ("None" if not nChars else ""))
 					for i in range(nChars):
 						# ReadUInt32() / uint (4)
-						struct.unpack_from("<i",data,index)[0] # model
-						index+=4
+						struct.unpack_from("<i",data,index)[0]
+						index+=4 # model id
 						# ReadAscii() / ushort (2) + string (length)
 						charLength = struct.unpack_from('<H', data, index)[0]
-						index+= 2
+						index+=2 # name length
 						charName = struct.unpack_from('<' + str(charLength) + 's', data, index)[0].decode('cp1252')
-						index+= charLength
+						index+= charLength # name
 						if locale == 18:
 							index+=2 # ???
 						index+=1 # scale
 						charLevel = data[index]
 						index+=1 # level
 						exp = struct.unpack_from('<Q', data, index)[0]
-						index+=8
+						index+=8 # exp
 						index+=2 # str
 						index+=2 # int
 						index+=2 # stats
@@ -82,7 +82,7 @@ def handle_joymax(opcode, data):
 						if locale == 18:
 							index+=2 # ???
 						charIsDeleting = data[index]
-						index+=1
+						index+=1 # isDeleting
 						if charIsDeleting:
 							index+=4
 						index+=1 # guildMemberClass
@@ -98,14 +98,12 @@ def handle_joymax(opcode, data):
 						if locale == 18:
 							index+=4 # ???
 						forCount = data[index]
-						index+=1
-						# items
+						index+=1 # item count
 						for j in range(forCount):
 							index+=4 # RefItemID
 							index+=1 # plus
 						forCount = data[index]
-						index+=1
-						# avatarItems
+						index+=1# avatar item count
 						for j in range(forCount):
 							index+=4 # RefItemID
 							index+=1 # plus
@@ -151,7 +149,7 @@ def handle_joymax(opcode, data):
 		except:
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
-			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"] Locale ["+locale+"]")
+			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"] Locale ["+str(locale)+"]")
 	return True
 
 def create_character():
