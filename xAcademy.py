@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.1.2'
+pVersion = '0.1.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -85,7 +85,7 @@ def handle_joymax(opcode, data):
 						charIsDeleting = data[index]
 						index+=1 # isDeleting
 						if charIsDeleting:
-							index+=2
+							index+=4
 						if locale == 18:
 							index+=4 # ???
 						index+=1 # guildMemberClass
@@ -119,7 +119,7 @@ def handle_joymax(opcode, data):
 							selectCharacter = charName
 							break
 						# Condition for deleting
-						if charLevel > 40 and charLevel <= 50 and not charIsDeleting:
+						if charLevel >= 40 and charLevel <= 50 and not charIsDeleting:
 							deleteCharacter = deleteCharacter
 
 					try:
