@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.1.1'
+pVersion = '0.1.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -58,7 +58,7 @@ def handle_joymax(opcode, data):
 					log("Plugin: xAcademy character list: "+ ("None" if not nChars else ""))
 					for i in range(nChars):
 						# ReadUInt32() / uint (4)
-						struct.unpack_from("<i",data,index)[0]
+						struct.unpack_from("<I",data,index)[0]
 						index+=4 # model id
 						# ReadAscii() / ushort (2) + string (length)
 						charLength = struct.unpack_from('<H', data, index)[0]
@@ -76,6 +76,7 @@ def handle_joymax(opcode, data):
 						index+=2 # int
 						index+=2 # stats
 						if locale == 18:
+							unk01 = struct.unpack_from("<I",data,index)[0]
 							index+=4 # ???
 						index+=4 # hp
 						index+=4 # mp
@@ -84,7 +85,9 @@ def handle_joymax(opcode, data):
 						charIsDeleting = data[index]
 						index+=1 # isDeleting
 						if charIsDeleting:
-							index+=4
+							index+=2
+						if locale == 18:
+							index+=4 # ???
 						index+=1 # guildMemberClass
 						# isGuildRenameRequired
 						if data[index]:
@@ -95,8 +98,6 @@ def handle_joymax(opcode, data):
 						else:
 							index+=1
 						index+=1 # academyMemberClass
-						if locale == 18:
-							index+=4 # ???
 						forCount = data[index]
 						index+=1 # item count
 						for j in range(forCount):
@@ -107,21 +108,11 @@ def handle_joymax(opcode, data):
 						for j in range(forCount):
 							index+=4 # RefItemID
 							index+=1 # plus
-						if locale == 18:
+						if locale == 18 and unk01 == 0:
 							index+=1 # ???
-
+						
 						# Show info about previous character
-						log(str(i+1)+") "+charName+" Lv."+str(charLevel)+" [Exp. "+str(int(exp))+"%]")
-						try:
-							if i == (nChars-1):
-								data[index]
-								log("Plugin: [Warning] Packet partially parsed.")
-						except:
-							try:
-								data[index-1]
-								# Smooth parsing
-							except:
-								log("Plugin: [Warning] Packet partially parsed.")
+						log(str(i+1)+") "+charName+" Lv."+str(charLevel))
 
 						# Conditions for auto select character
 						if charLevel < 40 and not charIsDeleting:
@@ -130,7 +121,18 @@ def handle_joymax(opcode, data):
 						# Condition for deleting
 						if charLevel > 40 and charLevel <= 50 and not charIsDeleting:
 							deleteCharacter = deleteCharacter
-					
+
+					try:
+						if i == (nChars-1):
+							data[index]
+							log("Plugin: [Warning] Packet partially parsed.")
+					except:
+						try:
+							data[index-1]
+							# Smooth parsing
+						except:
+							log("Plugin: [Warning] Packet partially parsed.")
+
 					# Check for deleting a character
 					if deleteCharacter != "":
 						log("Plugin: deleting character ["+deleteCharacter+"] Lv."+str(charLevel))
