@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.1.3'
+pVersion = '0.1.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -43,7 +43,7 @@ def handle_joymax(opcode, data):
 			elif action == 4:
 				if creatingCharacter:
 					if success:
-						log("Plugin: Nickname available...")
+						log("Plugin: Nickname available!")
 						create_character()
 					else:
 						log("Plugin: Nickname has been already taken!")
@@ -112,7 +112,7 @@ def handle_joymax(opcode, data):
 							index+=1 # ???
 						
 						# Show info about previous character
-						log(str(i+1)+") "+charName+" Lv."+str(charLevel))
+						log(str(i+1)+") "+charName+" Lv."+str(charLevel)+(" (*)" if charIsDeleting else ""))
 
 						# Conditions for auto select character
 						if charLevel < 40 and not charIsDeleting:
@@ -120,7 +120,7 @@ def handle_joymax(opcode, data):
 							break
 						# Condition for deleting
 						if charLevel >= 40 and charLevel <= 50 and not charIsDeleting:
-							deleteCharacter = deleteCharacter
+							deleteCharacter = charName
 
 					try:
 						if i == (nChars-1):
@@ -147,7 +147,7 @@ def handle_joymax(opcode, data):
 							log("Plugin: Not enough space to create a new character")
 					else:
 						log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
-						select_character(selectCharacter)
+						Timer(5.0,xselect_character,(selectCharacter,)).start()
 		except:
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
@@ -193,6 +193,11 @@ def create_character():
 	# Request char listing
 	# CLIENT_CHARACTER_SELECTION_REQUEST
 	Timer(5.0,inject_joymax,(0x7007, b'\x02', False)).start()
+
+def xselect_character(charName):
+	p = struct.pack('H', len(charName))
+	p += charName.encode('ascii')
+	Timer(0.1,inject_joymax,(0x7001,p, False)).start()
 
 # Inject Packet
 def delete_character(charName):
