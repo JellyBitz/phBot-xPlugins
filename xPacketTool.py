@@ -6,16 +6,16 @@ import json
 import os
 
 pName = 'xPackeTool'
-pVersion = '0.1.1'
+pVersion = '0.1.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPackeTool.py'
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
 lblInject = QtBind.createLabel(gui,'Inject Packets to Client/Server through bot, or just to parse what you need.',21,15)
 
-cbxSro = QtBind.createCheckBox(gui, 'cbxSro_clicked','Show Client packets [C->B]',395,13)
+cbxSro = QtBind.createCheckBox(gui, 'cbxSro_clicked','Show Client packets [C->S]',395,13)
 cbxSro_checked = False
-cbxJmx = QtBind.createCheckBox(gui, 'cbxJmx_clicked','Show Server packets [S->B]',560,13)
+cbxJmx = QtBind.createCheckBox(gui, 'cbxJmx_clicked','Show Server packets [S->C]',560,13)
 cbxJmx_checked = False
 
 lblUsing = QtBind.createLabel(gui,'Opcode:\t              Data:',41,47)
