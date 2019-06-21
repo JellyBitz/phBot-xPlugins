@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.1.5'
+pVersion = '0.1.6'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -47,7 +47,7 @@ def handle_joymax(opcode, data):
 						create_character()
 					else:
 						log("Plugin: Nickname has been already taken!")
-						Timer(1.0,createNickname).start()
+						Timer(1.0,create_nickname).start()
 			elif action == 2:
 				if success:
 					selectCharacter = ""
@@ -136,19 +136,18 @@ def handle_joymax(opcode, data):
 					# Check for deleting a character
 					if deleteCharacter != "":
 						log("Plugin: deleting character ["+deleteCharacter+"] Lv."+str(charLevel))
-						delete_character(deleteCharacter)
-					else:
+						Timer(0.1,Inject_DeleteCharacter,(deleteCharacter,)).start()
 					# Select or create character if is required
-						if selectCharacter == "":
-							if nChars < 4:
-								creatingCharacter = True
-								# Wait 5 seconds, then start looking for a nickname
-								Timer(5.0,createNickname).start()
-							else:
-								log("Plugin: Not enough space to create a new character")
+					if selectCharacter == "":
+						if nChars < 4:
+							creatingCharacter = True
+							# Wait 10 seconds, then start looking for nicknames
+							Timer(10.0,create_nickname).start()
 						else:
-							log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
-							select_character(selectCharacter);
+							log("Plugin: Not enough space to create a new character")
+					else:
+						log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
+						Timer(10.0,select_character,(selectCharacter,));
 		except:
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
@@ -196,18 +195,18 @@ def create_character():
 	Timer(5.0,inject_joymax,(0x7007, b'\x02', False)).start()
 
 # Inject Packet
-def delete_character(charName):
+def Inject_DeleteCharacter(charName):
 	p = b'\x03'
 	p += struct.pack('H', len(charName))
 	p += charName.encode('ascii')
-	Timer(0.1,inject_joymax,(0x7007,p, False)).start()
+	inject_joymax(0x7007,p, False)
 
 # Inject Packet
-def check_name(charName):
+def Inject_CheckName(charName):
 	p = b'\x04'
 	p += struct.pack('H', len(charName))
 	p += charName.encode('ascii')
-	Timer(0.1,inject_joymax,(0x7007,p, False)).start()
+	inject_joymax(0x7007,p, False)
 
 # Generate a random nickname with max 12 characters 
 def getRandomNick():
@@ -240,13 +239,13 @@ def getNickSequence():
 		nick = CUSTOM_NAME[:-nickLength]+seq
 	return nick
 
-def createNickname():
+def create_nickname():
 	global creatingCharacterNick
 	if CUSTOM_NAME != "":
 		creatingCharacterNick = getNickSequence()
 	else:
 		creatingCharacterNick = getRandomNick()
 	log("Plugin: Checking nickname ["+creatingCharacterNick+"]")
-	check_name(creatingCharacterNick)
+	Timer(0.1,Inject_CheckName,(creatingCharacterNick,)).start()
 
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
