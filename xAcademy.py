@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.1.6'
+pVersion = '0.1.7'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -147,12 +147,17 @@ def handle_joymax(opcode, data):
 							log("Plugin: Not enough space to create a new character")
 					else:
 						log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
-						Timer(10.0,select_character,(selectCharacter,));
+						Timer(10.0,Inject_SelectCharacter,(selectCharacter,));
 		except:
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
 			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"] Locale ["+str(locale)+"]")
 	return True
+
+def Inject_SelectCharacter(charName):
+	p = struct.pack('H', len(charName))
+	p += charName.encode('ascii')
+	inject_joymax(0x7001,p, False)
 
 def create_character():
 	global creatingCharacterNick
@@ -179,7 +184,7 @@ def create_character():
 		return
 
 	creatingCharacter = True
-	log('Plugin: Creating character with name %s and type %s' % (creatingCharacterNick, charClass))
+	log('Plugin: Creating character with name [%s] [%s]' % (creatingCharacterNick, charClass))
 	p = b'\x01'
 	p += struct.pack('H', len(creatingCharacterNick))
 	p += creatingCharacterNick.encode('ascii')
@@ -208,15 +213,19 @@ def Inject_CheckName(charName):
 	p += charName.encode('ascii')
 	inject_joymax(0x7007,p, False)
 
-# Generate a random nickname with max 12 characters 
+# Generate a random (male) game of thrones name!
 def getRandomNick():
-	names = ["Han","Je","Tuk","Zen","Jin","Xan","Xen","Xin","Za","Ke","Zoh","Zan","Zu","Lid","Yek","Ri","Riu","Ruk","Vi","Vik","Ki","Yi","Bok","Kah","Khan","War","Ten","Fu","Wan","Wi","Lin","Ran","Min","Ez","Kra","Ken"]
-	# (36 subnames / 4 combinations : 58905 max possibilities at the moment)
-	n1 = random.randint(0,len(names)-1)
-	n2 = random.randint(0,len(names)-1)
-	n3 = random.randint(0,len(names)-1)
-	n4 = random.randint(0,len(names)-1)
-	return (names[n1]+names[n2]+names[n3]+names[n4])
+	# Adding names with max. 12 letters
+	names = ["Aegon","Aerys","Aemon","Aeron","Alliser","Areo","Bran","Bronn","Benjen","Brynden","Beric","Balon","Bowen","Craster","Davos","Daario","Doran","Darrik","Dyron","Eddard","Edric","Euron","Edmure","Gendry","Gilly","Gregor","GreyWorm","Hoster","Jon","Jaime","Jorah","Joffrey","Jeor","Jaqen","Jojen","Janos","Kevan","Khal","Lancel","Loras","Maekar","Mace","Mance","Nestor","Oberyn","Petyr","Podrick","Quentyn","Robert","Robb","Ramsay","Roose","Rickon","Rickard","Rhaegar","Renly","Rodrik","Randyll","Samwell","Sandor","Stannis","Stefon","Tywin","Tyrion","Theon","Tormund","Trystane","Tommen","Val","Varys","Viserys","Victarion","Vimar","Walder","Wyman","Yoren","Yohn","Zane"]
+	name = names[random.randint(0,len(names)-1)]
+	# Fill with discord style
+	if len(name) < 12:
+		maxWidth = 12-len(name)
+		if maxWidth > 4 :
+			maxWidth = 4
+		numbers = pow(10,maxWidth)-1
+		name = str(name)+(str(random.randint(0,numbers))).zfill(maxWidth)
+	return name
 
 # Get the sequence previously saved or start a new one if not
 def getSequence():
