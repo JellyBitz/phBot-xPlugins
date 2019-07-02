@@ -4,18 +4,54 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.2.1'
+pVersion = '0.3.0'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
 
-lblMobs = QtBind.createLabel(gui,'Add monster names to being ignored from the counter mobs.',21,11)
-tbxMobs = QtBind.createLineEdit(gui,"",511,11,100,20)
-lstMobs = QtBind.createList(gui,511,32,176,48)
-btnAddMob = QtBind.createButton(gui,'btnAddMob_clicked',"    Add    ",612,10)
-btnRemMob = QtBind.createButton(gui,'btnRemMob_clicked',"     Remove     ",560,79)
+lblMobs = QtBind.createLabel(gui,'#    Add monster names to avoid    #\n#          from Monster counter         #',511,11)
+tbxMobs = QtBind.createLineEdit(gui,"",511,43,100,20)
+lstMobs = QtBind.createList(gui,511,64,176,198)
+btnAddMob = QtBind.createButton(gui,'btnAddMob_clicked',"    Add    ",612,42)
+btnRemMob = QtBind.createButton(gui,'btnRemMob_clicked',"     Remove     ",560,261)
+
+lblPreferences = QtBind.createLabel(gui,"Monster counter preferences (Orderer by priority) :",21,11)
+lstAvoid = []
+lstOnly = []
+
+lblUnique = QtBind.createLabel(gui,'Unique',21,30)
+cbxAvoidUnique = QtBind.createCheckBox(gui,'cbxAvoidUnique_clicked','Avoid',80,30)
+cbxOnlyUnique = QtBind.createCheckBox(gui,'cbxOnlyUnique_clicked','Only',150,30)
+def cbxAvoidUnique_clicked(checked):
+	if checked:
+		lstAvoid.append('8') # 8 = Unique
+	else:
+		lstAvoid.remove('8')
+	saveConfig("lstAvoid",lstAvoid)
+def cbxOnlyUnique_clicked(checked):
+	if checked:
+		lstOnly.append('8')
+	else:
+		lstOnly.remove('8')
+	saveConfig("lstOnly",lstOnly)
+
+lblElite = QtBind.createLabel(gui,'Elite',21,49)
+cbxAvoidElite = QtBind.createCheckBox(gui,'cbxAvoidElite_clicked','Avoid',80,49)
+cbxOnlyElite = QtBind.createCheckBox(gui,'cbxOnlyElite_clicked','Only',150,49)
+def cbxAvoidElite_clicked(checked):
+	if checked:
+		lstAvoid.append('7') # 7 = Elite
+	else:
+		lstAvoid.remove('7')
+	saveConfig("lstAvoid",lstAvoid)
+def cbxOnlyElite_clicked(checked):
+	if checked:
+		lstOnly.append('7')
+	else:
+		lstOnly.remove('7')
+	saveConfig("lstOnly",lstOnly)
 
 # Return character configs path (JSON)
 def getConfig():
@@ -37,7 +73,21 @@ def loadConfig():
 		if "lstMobs" in data:
 			for d in data["lstMobs"]:
 				QtBind.append(gui,lstMobs,d)
+		if "lstAvoid" in data:
+			lstAvoid = data["lstAvoid"]
+			for i in range(len(lstAvoid)):
+				if lstAvoid[i] == '8':
+					QtBind.setChecked(gui,cbxAvoidUnique,True)
+				elif lstAvoid[i] == '7':
+					QtBind.setChecked(gui,cbxAvoidElite,True)
 
+		if "lstOnly" in data:
+			lstOnly = data["lstOnly"]
+			for i in range(len(lstOnly)):
+				if lstOnly[i] == '8':
+					QtBind.setChecked(gui,cbxOnlyUnique,True)
+				elif lstOnly[i] == '7':
+					QtBind.setChecked(gui,cbxOnlyElite,True)
 # Save specific value at config
 def saveConfig(key,value):
 	if key:
@@ -52,7 +102,7 @@ def saveConfig(key,value):
 # Add mob to the list
 def btnAddMob_clicked():
 	text = QtBind.text(gui,tbxMobs)
-	if text and not lst_exist(text,lstMobs):
+	if text and not QtBind_ItemsContains(text,lstMobs):
 		QtBind.append(gui,lstMobs,text)
 		QtBind.setText(gui,tbxMobs,"")
 		saveConfig("lstMobs",QtBind.getItems(gui,lstMobs))
@@ -61,18 +111,21 @@ def btnAddMob_clicked():
 # Add mob to the list
 def btnRemMob_clicked():
 	selected = QtBind.text(gui,lstMobs)
-	if selected and lst_exist(selected,lstMobs):
+	if selected and QtBind_ItemsContains(selected,lstMobs):
 		QtBind.remove(gui,lstMobs,selected)
 		saveConfig("lstMobs",QtBind.getItems(gui,lstMobs))
 		log('Plugin: Mob removed ['+selected+']')
 
 # Return True if text exist at the list
-def lst_exist(text,lst):
-	items = QtBind.getItems(gui,lst)
-	for i in range(len(items)):
-		if items[i].lower() == text.lower():
+def ListContains(text,lst):
+	for i in range(len(lst)):
+		if lst[i].lower() == text.lower():
 			return True
 	return False
+
+# Return True if item exists
+def QtBind_ItemsContains(text,lst):
+	return ListContains(text,QtBind.getItems(gui,lst))
 
 # Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5"
 # Will be checking mobs every 5 seconds at the area as default.
@@ -121,7 +174,16 @@ def getMobCount():
 	monsters = get_monsters()
 	if monsters:
 		for key, mob in monsters.items():
-			if lst_exist(mob["name"],lstMobs):
+			# Avoid if this mob type is found
+			if ListContains(str(mob['type']),lstAvoid):
+				continue
+			# Only count setup
+			if len(lstOnly) > 0:
+				# If is not in Only count, skip it
+				if not ListContains(str(mob['type']),lstOnly):
+					continue
+			# Ignore mob names
+			elif QtBind_ItemsContains(mob['name'],lstMobs):
 				continue
 			count+=1
 	return count
