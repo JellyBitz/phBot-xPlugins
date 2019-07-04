@@ -4,7 +4,7 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.3.0'
+pVersion = '0.3.1'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -53,6 +53,54 @@ def cbxOnlyElite_clicked(checked):
 		lstOnly.remove('7')
 	saveConfig("lstOnly",lstOnly)
 
+lblStrong = QtBind.createLabel(gui,'Strong',21,68)
+cbxAvoidStrong = QtBind.createCheckBox(gui,'cbxAvoidStrong_clicked','Avoid',80,68)
+cbxOnlyStrong = QtBind.createCheckBox(gui,'cbxOnlyStrong_clicked','Only',150,68)
+def cbxAvoidStrong_clicked(checked):
+	if checked:
+		lstAvoid.append('6') # 6 = Strong
+	else:
+		lstAvoid.remove('6')
+	saveConfig("lstAvoid",lstAvoid)
+def cbxOnlyStrong_clicked(checked):
+	if checked:
+		lstOnly.append('6')
+	else:
+		lstOnly.remove('6')
+	saveConfig("lstOnly",lstOnly)
+
+lblTitan = QtBind.createLabel(gui,'Titan',21,87)
+cbxAvoidTitan = QtBind.createCheckBox(gui,'cbxAvoidTitan_clicked','Avoid',80,87)
+cbxOnlyTitan = QtBind.createCheckBox(gui,'cbxOnlyTitan_clicked','Only',150,87)
+def cbxAvoidTitan_clicked(checked):
+	if checked:
+		lstAvoid.append('5') # 5 = Titan
+	else:
+		lstAvoid.remove('5')
+	saveConfig("lstAvoid",lstAvoid)
+def cbxOnlyTitan_clicked(checked):
+	if checked:
+		lstOnly.append('5')
+	else:
+		lstOnly.remove('5')
+	saveConfig("lstOnly",lstOnly)
+
+lblGiant = QtBind.createLabel(gui,'Giant',21,87)
+cbxAvoidGiant = QtBind.createCheckBox(gui,'cbxAvoidGiant_clicked','Avoid',80,87)
+cbxOnlyGiant = QtBind.createCheckBox(gui,'cbxOnlyGiant_clicked','Only',150,87)
+def cbxAvoidGiant_clicked(checked):
+	if checked:
+		lstAvoid.append('4') # 4 = Giant
+	else:
+		lstAvoid.remove('4')
+	saveConfig("lstAvoid",lstAvoid)
+def cbxOnlyGiant_clicked(checked):
+	if checked:
+		lstOnly.append('4')
+	else:
+		lstOnly.remove('4')
+	saveConfig("lstOnly",lstOnly)
+
 # Return character configs path (JSON)
 def getConfig():
 	return get_config_dir()+pName+".json"
@@ -80,7 +128,12 @@ def loadConfig():
 					QtBind.setChecked(gui,cbxAvoidUnique,True)
 				elif lstAvoid[i] == '7':
 					QtBind.setChecked(gui,cbxAvoidElite,True)
-
+				elif lstAvoid[i] == '6':
+					QtBind.setChecked(gui,cbxAvoidStrong,True)
+				elif lstAvoid[i] == '5':
+					QtBind.setChecked(gui,cbxAvoidTitan,True)
+				elif lstAvoid[i] == '4':
+					QtBind.setChecked(gui,cbxAvoidGiant,True)
 		if "lstOnly" in data:
 			lstOnly = data["lstOnly"]
 			for i in range(len(lstOnly)):
@@ -88,6 +141,13 @@ def loadConfig():
 					QtBind.setChecked(gui,cbxOnlyUnique,True)
 				elif lstOnly[i] == '7':
 					QtBind.setChecked(gui,cbxOnlyElite,True)
+				elif lstOnly[i] == '6':
+					QtBind.setChecked(gui,cbxOnlyStrong,True)
+				elif lstOnly[i] == '5':
+					QtBind.setChecked(gui,cbxOnlyTitan,True)
+				elif lstOnly[i] == '4':
+					QtBind.setChecked(gui,cbxOnlyGiant,True)
+
 # Save specific value at config
 def saveConfig(key,value):
 	if key:
@@ -142,14 +202,14 @@ def AttackArea(args):
 		if len(args) == 2:
 			wait = float(args[1])
 		# start to kill mobs on other thread because interpreter lock
-		Timer(0.5,AttackMobs, (wait,False)).start()
+		Timer(0.5,AttackMobs, (wait,False,p['x'],p['y'],p['z'])).start()
 	# otherwise continue normally
 	else:
 		log("Plugin: Not mobs at this area.")
 	return 0
 
 # Attacking mobs using all configs from bot
-def AttackMobs(wait,isAttacking):
+def AttackMobs(wait,isAttacking,x,y,z):
 	count = getMobCount()
 	if count > 0:
 		# Start to kill mobs using bot
@@ -159,14 +219,17 @@ def AttackMobs(wait,isAttacking):
 			start_bot()
 			log("Plugin: Starting to kill ("+str(count)+") mobs at this area.")
 		# Check if there is not mobs to continue script
-		Timer(wait,AttackMobs, (wait,True)).start()
+		Timer(wait,AttackMobs, (wait,True,x,y,z)).start()
 	else:
 		# All mobs killed, stop botting
 		stop_bot()
 		# Setting training area far away. The bot should continue where he was at the script
 		set_training_position(0,0,0)
+		# Move back to the starting point
+		move_to(x,y,z)
 		log("Plugin: All mobs killed.. Getting back to the script.")
-		Timer(0.5,start_bot).start()
+		# give it some time to reach the movement
+		Timer(2500,start_bot).start()
 
 # Count all mobs around your character (60 or more it's the max. range I think)
 def getMobCount():
