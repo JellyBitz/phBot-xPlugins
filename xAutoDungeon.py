@@ -4,7 +4,7 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.3.2'
+pVersion = '0.3.3'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -257,7 +257,7 @@ def AttackMobs(wait,isAttacking,x,y,z):
 		move_to(x,y,z)
 		log("Plugin: All mobs killed.. Getting back to the script.")
 		# give it some time to reach the movement
-		Timer(2500,start_bot).start()
+		Timer(3.0,start_bot).start()
 
 # Count all mobs around your character (60 or more it's the max. range I think)
 def getMobCount():
