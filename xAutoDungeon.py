@@ -4,7 +4,7 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.3.1'
+pVersion = '0.3.2'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -25,81 +25,89 @@ lblUnique = QtBind.createLabel(gui,'Unique',21,30)
 cbxAvoidUnique = QtBind.createCheckBox(gui,'cbxAvoidUnique_clicked','Avoid',80,30)
 cbxOnlyUnique = QtBind.createCheckBox(gui,'cbxOnlyUnique_clicked','Only',150,30)
 def cbxAvoidUnique_clicked(checked):
-	if checked:
-		lstAvoid.append('8') # 8 = Unique
-	else:
-		lstAvoid.remove('8')
-	saveConfig("lstAvoid",lstAvoid)
+	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'8') # 8 = Unique
 def cbxOnlyUnique_clicked(checked):
-	if checked:
-		lstOnly.append('8')
-	else:
-		lstOnly.remove('8')
-	saveConfig("lstOnly",lstOnly)
+	Checkbox_Checked(checked,lstOnly,"lstOnly",'8')
 
 lblElite = QtBind.createLabel(gui,'Elite',21,49)
 cbxAvoidElite = QtBind.createCheckBox(gui,'cbxAvoidElite_clicked','Avoid',80,49)
 cbxOnlyElite = QtBind.createCheckBox(gui,'cbxOnlyElite_clicked','Only',150,49)
 def cbxAvoidElite_clicked(checked):
-	if checked:
-		lstAvoid.append('7') # 7 = Elite
-	else:
-		lstAvoid.remove('7')
-	saveConfig("lstAvoid",lstAvoid)
+	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'7') # 7 = Elite
 def cbxOnlyElite_clicked(checked):
-	if checked:
-		lstOnly.append('7')
-	else:
-		lstOnly.remove('7')
-	saveConfig("lstOnly",lstOnly)
+	Checkbox_Checked(checked,lstOnly,"lstOnly",'7')
 
 lblStrong = QtBind.createLabel(gui,'Strong',21,68)
 cbxAvoidStrong = QtBind.createCheckBox(gui,'cbxAvoidStrong_clicked','Avoid',80,68)
 cbxOnlyStrong = QtBind.createCheckBox(gui,'cbxOnlyStrong_clicked','Only',150,68)
 def cbxAvoidStrong_clicked(checked):
-	if checked:
-		lstAvoid.append('6') # 6 = Strong
-	else:
-		lstAvoid.remove('6')
-	saveConfig("lstAvoid",lstAvoid)
+	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'6') # 6 = Strong
 def cbxOnlyStrong_clicked(checked):
-	if checked:
-		lstOnly.append('6')
-	else:
-		lstOnly.remove('6')
-	saveConfig("lstOnly",lstOnly)
+	Checkbox_Checked(checked,lstOnly,"lstOnly",'6')
 
 lblTitan = QtBind.createLabel(gui,'Titan',21,87)
 cbxAvoidTitan = QtBind.createCheckBox(gui,'cbxAvoidTitan_clicked','Avoid',80,87)
 cbxOnlyTitan = QtBind.createCheckBox(gui,'cbxOnlyTitan_clicked','Only',150,87)
 def cbxAvoidTitan_clicked(checked):
-	if checked:
-		lstAvoid.append('5') # 5 = Titan
-	else:
-		lstAvoid.remove('5')
-	saveConfig("lstAvoid",lstAvoid)
+	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'5') # 5 = Titan
 def cbxOnlyTitan_clicked(checked):
-	if checked:
-		lstOnly.append('5')
-	else:
-		lstOnly.remove('5')
-	saveConfig("lstOnly",lstOnly)
+	Checkbox_Checked(checked,lstOnly,"lstOnly",'5')
 
-lblGiant = QtBind.createLabel(gui,'Giant',21,87)
-cbxAvoidGiant = QtBind.createCheckBox(gui,'cbxAvoidGiant_clicked','Avoid',80,87)
-cbxOnlyGiant = QtBind.createCheckBox(gui,'cbxOnlyGiant_clicked','Only',150,87)
+lblGiant = QtBind.createLabel(gui,'Giant',21,106)
+cbxAvoidGiant = QtBind.createCheckBox(gui,'cbxAvoidGiant_clicked','Avoid',80,106)
+cbxOnlyGiant = QtBind.createCheckBox(gui,'cbxOnlyGiant_clicked','Only',150,106)
 def cbxAvoidGiant_clicked(checked):
-	if checked:
-		lstAvoid.append('4') # 4 = Giant
-	else:
-		lstAvoid.remove('4')
-	saveConfig("lstAvoid",lstAvoid)
+	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'4') # 4 = Giant
 def cbxOnlyGiant_clicked(checked):
+	Checkbox_Checked(checked,lstOnly,"lstOnly",'4')
+
+lblChampion = QtBind.createLabel(gui,'Champion',21,125)
+cbxAvoidChampion = QtBind.createCheckBox(gui,'cbxAvoidChampion_clicked','Avoid',80,125)
+cbxOnlyChampion = QtBind.createCheckBox(gui,'cbxOnlyChampion_clicked','Only',150,125)
+def cbxAvoidChampion_clicked(checked):
+	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'1') # 1 = Champion
+def cbxOnlyChampion_clicked(checked):
+	Checkbox_Checked(checked,lstOnly,"lstOnly",'1')
+
+lblGeneral = QtBind.createLabel(gui,'General',21,144)
+cbxAvoidGeneral = QtBind.createCheckBox(gui,'cbxAvoidGeneral_clicked','Avoid',80,144)
+cbxOnlyGeneral = QtBind.createCheckBox(gui,'cbxOnlyGeneral_clicked','Only',150,144)
+def cbxAvoidGeneral_clicked(checked):
+	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'0') # 0 = General
+def cbxOnlyGeneral_clicked(checked):
+	Checkbox_Checked(checked,lstOnly,"lstOnly",'0')
+
+lblParty = QtBind.createLabel(gui,'Party',21,163)
+cbxAvoidParty = QtBind.createCheckBox(gui,'cbxAvoidParty_clicked','Avoid',80,163)
+cbxOnlyParty = QtBind.createCheckBox(gui,'cbxOnlyParty_clicked','Only',150,163)
+def cbxAvoidParty_clicked(checked):
+	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'16') # 16 = Party
+def cbxOnlyParty_clicked(checked):
+	Checkbox_Checked(checked,lstOnly,"lstOnly",'16')
+
+lblChampionParty = QtBind.createLabel(gui,'ChampionParty',21,182)
+cbxAvoidChampionParty = QtBind.createCheckBox(gui,'cbxAvoidChampionParty_clicked','Avoid',80,182)
+cbxOnlyChampionParty = QtBind.createCheckBox(gui,'cbxOnlyChampionParty_clicked','Only',150,182)
+def cbxAvoidChampionParty_clicked(checked):
+	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'17') # 17 = ChampionParty
+def cbxOnlyChampionParty_clicked(checked):
+	Checkbox_Checked(checked,lstOnly,"lstOnly",'17')
+
+lblGiantParty = QtBind.createLabel(gui,'GiantParty',21,201)
+cbxAvoidGiantParty = QtBind.createCheckBox(gui,'cbxAvoidGiantParty_clicked','Avoid',80,201)
+cbxOnlyGiantParty = QtBind.createCheckBox(gui,'cbxOnlyGiantParty_clicked','Only',150,201)
+def cbxAvoidGiantParty_clicked(checked):
+	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'20') # 20 = GiantParty
+def cbxOnlyGiantParty_clicked(checked):
+	Checkbox_Checked(checked,lstOnly,"lstOnly",'20')
+
+# Generalizing checkbox methods
+def Checkbox_Checked(checked,lst,lstName,mobType):
 	if checked:
-		lstOnly.append('4')
+		lst.append(mobType)
 	else:
-		lstOnly.remove('4')
-	saveConfig("lstOnly",lstOnly)
+		lst.remove(mobType)
+	saveConfig(lstName,lst)
 
 # Return character configs path (JSON)
 def getConfig():
@@ -134,6 +142,16 @@ def loadConfig():
 					QtBind.setChecked(gui,cbxAvoidTitan,True)
 				elif lstAvoid[i] == '4':
 					QtBind.setChecked(gui,cbxAvoidGiant,True)
+				elif lstAvoid[i] == '1':
+					QtBind.setChecked(gui,cbxAvoidChampion,True)
+				elif lstAvoid[i] == '0':
+					QtBind.setChecked(gui,cbxAvoidGeneral,True)
+				elif lstAvoid[i] == '16':
+					QtBind.setChecked(gui,cbxAvoidParty,True)
+				elif lstAvoid[i] == '17':
+					QtBind.setChecked(gui,cbxAvoidChampionParty,True)
+				elif lstAvoid[i] == '20':
+					QtBind.setChecked(gui,cbxAvoidGiantParty,True)
 		if "lstOnly" in data:
 			lstOnly = data["lstOnly"]
 			for i in range(len(lstOnly)):
@@ -147,6 +165,16 @@ def loadConfig():
 					QtBind.setChecked(gui,cbxOnlyTitan,True)
 				elif lstOnly[i] == '4':
 					QtBind.setChecked(gui,cbxOnlyGiant,True)
+				elif lstOnly[i] == '1':
+					QtBind.setChecked(gui,cbxOnlyChampion,True)
+				elif lstOnly[i] == '0':
+					QtBind.setChecked(gui,cbxOnlyGeneral,True)
+				elif lstOnly[i] == '16':
+					QtBind.setChecked(gui,cbxOnlyParty,True)
+				elif lstOnly[i] == '17':
+					QtBind.setChecked(gui,cbxOnlyChampionParty,True)
+				elif lstOnly[i] == '20':
+					QtBind.setChecked(gui,cbxOnlyGiantParty,True)
 
 # Save specific value at config
 def saveConfig(key,value):
