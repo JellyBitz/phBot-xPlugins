@@ -1,16 +1,20 @@
 from phBot import *
 
 pName = 'xArena'
-pVersion = '0.0.1'
+pVersion = '0.0.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xArena.py'
+
+InBattleArena = False
 
 def handle_joymax(opcode, data):
 	if opcode == 0x34D2:
+		global InBattleArena
 		if data[0] == 0xFF:
 			result = data[1]
 			if result == 0x00:
 				log('Plugin: Successfully registered to arena')
 				stop_bot()
+				InBattleArena = True
 			elif result == 0x02:
 				log('Plugin: You already registered!')
 			elif result == 0x04:
@@ -25,6 +29,9 @@ def handle_joymax(opcode, data):
 			result = data[2]
 			coins = data[3]
 			log('Plugin: You have '+('lost' if result == 2 else 'won')+', you gained '+str(coins)+' coins!')
+			if InBattleArena:
+				InBattleArena = False
+				start_bot()
 	return True
 
 def arena(arguments):
