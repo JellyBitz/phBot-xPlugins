@@ -4,7 +4,7 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.4.0'
+pVersion = '0.4.1'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -279,7 +279,7 @@ def getMobCount():
 			elif QtBind_ItemsContains(mob['name'],lstMobs):
 				continue
 			# Adding GUI for a complete UX
-			QtBind.append(gui,lstMonsterCounter,+mob['name']+' ('+str(mob['type'])+')')
+			QtBind.append(gui,lstMonsterCounter,mob['name']+' ('+str(mob['type'])+')')
 			count+=1
 	return count
 
