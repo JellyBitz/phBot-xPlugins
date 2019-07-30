@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.1.7'
+pVersion = '0.1.8'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -114,13 +114,14 @@ def handle_joymax(opcode, data):
 						# Show info about previous character
 						log(str(i+1)+") "+charName+" Lv."+str(charLevel)+(" (*)" if charIsDeleting else ""))
 
-						# Conditions for auto select character
-						if charLevel < 40 and not charIsDeleting:
-							selectCharacter = charName
-							break
-						# Condition for deleting
-						if charLevel >= 40 and charLevel <= 50 and not charIsDeleting:
-							deleteCharacter = charName
+						# Conditions for auto select the first character
+						if not selectCharacter:
+							if charLevel < 40 and not charIsDeleting:
+								selectCharacter = charName
+						# Condition for deleting only one character
+						if not deleteCharacter:
+							if charLevel >= 40 and charLevel <= 50 and not charIsDeleting:
+								deleteCharacter = charName
 
 					try:
 						if i == (nChars-1):
@@ -134,11 +135,11 @@ def handle_joymax(opcode, data):
 							log("Plugin: [Warning] Packet partially parsed.")
 
 					# Check for deleting a character
-					if deleteCharacter != "":
+					if deleteCharacter:
 						log("Plugin: deleting character ["+deleteCharacter+"] Lv."+str(charLevel))
 						Timer(0.1,Inject_DeleteCharacter,(deleteCharacter,)).start()
 					# Select or create character if is required
-					if selectCharacter == "":
+					if not selectCharacter:
 						if nChars < 4:
 							creatingCharacter = True
 							# Wait 10 seconds, then start looking for nicknames
@@ -146,8 +147,11 @@ def handle_joymax(opcode, data):
 						else:
 							log("Plugin: Not enough space to create a new character")
 					else:
+						waitSelection = 0.1
+						if deleteCharacter:
+							waitSelection = 10.0
 						log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
-						Timer(10.0,Inject_SelectCharacter,(selectCharacter,));
+						Timer(waitSelection,Inject_SelectCharacter,(selectCharacter,));
 		except:
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
