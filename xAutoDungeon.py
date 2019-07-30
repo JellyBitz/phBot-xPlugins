@@ -4,102 +4,106 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.3.3'
+pVersion = '0.4.0'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
 
-lblMobs = QtBind.createLabel(gui,'#    Add monster names to avoid    #\n#          from Monster counter         #',511,11)
-tbxMobs = QtBind.createLineEdit(gui,"",511,43,100,20)
-lstMobs = QtBind.createList(gui,511,64,176,198)
-btnAddMob = QtBind.createButton(gui,'btnAddMob_clicked',"    Add    ",612,42)
-btnRemMob = QtBind.createButton(gui,'btnRemMob_clicked',"     Remove     ",560,261)
+lblMobs = QtBind.createLabel(gui,'#   Add monster names to ignore    #\n#          from Monster Counter         #',31,3)
+tbxMobs = QtBind.createLineEdit(gui,"",31,35,100,20)
+lstMobs = QtBind.createList(gui,31,56,176,206)
+btnAddMob = QtBind.createButton(gui,'btnAddMob_clicked',"    Add    ",132,34)
+btnRemMob = QtBind.createButton(gui,'btnRemMob_clicked',"     Remove     ",80,261)
 
-lblPreferences = QtBind.createLabel(gui,"Monster counter preferences (Orderer by priority) :",21,11)
-lstAvoid = []
-lstOnly = []
+lblMonsterCounter = QtBind.createLabel(gui,"#                 Monster Counter                 #",520,3)
+lstMonsterCounter = QtBind.createList(gui,520,23,197,239)
+QtBind.append(gui,lstMonsterCounter,'Name (Type)') # Header
 
-lblUnique = QtBind.createLabel(gui,'Unique',21,30)
-cbxAvoidUnique = QtBind.createCheckBox(gui,'cbxAvoidUnique_clicked','Avoid',80,30)
-cbxOnlyUnique = QtBind.createCheckBox(gui,'cbxOnlyUnique_clicked','Only',150,30)
-def cbxAvoidUnique_clicked(checked):
-	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'8') # 8 = Unique
-def cbxOnlyUnique_clicked(checked):
-	Checkbox_Checked(checked,lstOnly,"lstOnly",'8')
+lblPreferences = QtBind.createLabel(gui,"#    Monster Counter preferences (By priority)    #",240,3)
+lstIgnore = []
+lstOnlyCount = []
 
-lblElite = QtBind.createLabel(gui,'Elite',21,49)
-cbxAvoidElite = QtBind.createCheckBox(gui,'cbxAvoidElite_clicked','Avoid',80,49)
-cbxOnlyElite = QtBind.createCheckBox(gui,'cbxOnlyElite_clicked','Only',150,49)
-def cbxAvoidElite_clicked(checked):
-	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'7') # 7 = Elite
-def cbxOnlyElite_clicked(checked):
-	Checkbox_Checked(checked,lstOnly,"lstOnly",'7')
+lblGeneral = QtBind.createLabel(gui,'General (0)',240,30)
+cbxIgnoreGeneral = QtBind.createCheckBox(gui,'cbxIgnoreGeneral_clicked','Ignore',345,30)
+cbxOnlyCountGeneral = QtBind.createCheckBox(gui,'cbxOnlyCountGeneral_clicked','Only Count',405,30)
+def cbxIgnoreGeneral_clicked(checked):
+	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'0') # 0 = General
+def cbxOnlyCountGeneral_clicked(checked):
+	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'0')
 
-lblStrong = QtBind.createLabel(gui,'Strong',21,68)
-cbxAvoidStrong = QtBind.createCheckBox(gui,'cbxAvoidStrong_clicked','Avoid',80,68)
-cbxOnlyStrong = QtBind.createCheckBox(gui,'cbxOnlyStrong_clicked','Only',150,68)
-def cbxAvoidStrong_clicked(checked):
-	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'6') # 6 = Strong
-def cbxOnlyStrong_clicked(checked):
-	Checkbox_Checked(checked,lstOnly,"lstOnly",'6')
+lblChampion = QtBind.createLabel(gui,'Champion (1)',240,49)
+cbxIgnoreChampion = QtBind.createCheckBox(gui,'cbxIgnoreChampion_clicked','Ignore',345,49)
+cbxOnlyCountChampion = QtBind.createCheckBox(gui,'cbxOnlyCountChampion_clicked','Only Count',405,49)
+def cbxIgnoreChampion_clicked(checked):
+	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'1') # 1 = Champion
+def cbxOnlyCountChampion_clicked(checked):
+	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'1')
 
-lblTitan = QtBind.createLabel(gui,'Titan',21,87)
-cbxAvoidTitan = QtBind.createCheckBox(gui,'cbxAvoidTitan_clicked','Avoid',80,87)
-cbxOnlyTitan = QtBind.createCheckBox(gui,'cbxOnlyTitan_clicked','Only',150,87)
-def cbxAvoidTitan_clicked(checked):
-	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'5') # 5 = Titan
-def cbxOnlyTitan_clicked(checked):
-	Checkbox_Checked(checked,lstOnly,"lstOnly",'5')
+lblGiant = QtBind.createLabel(gui,'Giant (4)',240,68)
+cbxIgnoreGiant = QtBind.createCheckBox(gui,'cbxIgnoreGiant_clicked','Ignore',345,68)
+cbxOnlyCountGiant = QtBind.createCheckBox(gui,'cbxOnlyCountGiant_clicked','Only Count',405,68)
+def cbxIgnoreGiant_clicked(checked):
+	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'4') # 4 = Giant
+def cbxOnlyCountGiant_clicked(checked):
+	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'4')
 
-lblGiant = QtBind.createLabel(gui,'Giant',21,106)
-cbxAvoidGiant = QtBind.createCheckBox(gui,'cbxAvoidGiant_clicked','Avoid',80,106)
-cbxOnlyGiant = QtBind.createCheckBox(gui,'cbxOnlyGiant_clicked','Only',150,106)
-def cbxAvoidGiant_clicked(checked):
-	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'4') # 4 = Giant
-def cbxOnlyGiant_clicked(checked):
-	Checkbox_Checked(checked,lstOnly,"lstOnly",'4')
+lblTitan = QtBind.createLabel(gui,'Titan (5)',240,87)
+cbxIgnoreTitan = QtBind.createCheckBox(gui,'cbxIgnoreTitan_clicked','Ignore',345,87)
+cbxOnlyCountTitan = QtBind.createCheckBox(gui,'cbxOnlyCountTitan_clicked','Only Count',405,87)
+def cbxIgnoreTitan_clicked(checked):
+	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'5') # 5 = Titan
+def cbxOnlyCountTitan_clicked(checked):
+	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'5')
 
-lblChampion = QtBind.createLabel(gui,'Champion',21,125)
-cbxAvoidChampion = QtBind.createCheckBox(gui,'cbxAvoidChampion_clicked','Avoid',80,125)
-cbxOnlyChampion = QtBind.createCheckBox(gui,'cbxOnlyChampion_clicked','Only',150,125)
-def cbxAvoidChampion_clicked(checked):
-	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'1') # 1 = Champion
-def cbxOnlyChampion_clicked(checked):
-	Checkbox_Checked(checked,lstOnly,"lstOnly",'1')
+lblStrong = QtBind.createLabel(gui,'Strong (6)',240,106)
+cbxIgnoreStrong = QtBind.createCheckBox(gui,'cbxIgnoreStrong_clicked','Ignore',345,106)
+cbxOnlyCountStrong = QtBind.createCheckBox(gui,'cbxOnlyCountStrong_clicked','Only Count',405,106)
+def cbxIgnoreStrong_clicked(checked):
+	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'6') # 6 = Strong
+def cbxOnlyCountStrong_clicked(checked):
+	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'6')
 
-lblGeneral = QtBind.createLabel(gui,'General',21,144)
-cbxAvoidGeneral = QtBind.createCheckBox(gui,'cbxAvoidGeneral_clicked','Avoid',80,144)
-cbxOnlyGeneral = QtBind.createCheckBox(gui,'cbxOnlyGeneral_clicked','Only',150,144)
-def cbxAvoidGeneral_clicked(checked):
-	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'0') # 0 = General
-def cbxOnlyGeneral_clicked(checked):
-	Checkbox_Checked(checked,lstOnly,"lstOnly",'0')
+lblElite = QtBind.createLabel(gui,'Elite (7)',240,125)
+cbxIgnoreElite = QtBind.createCheckBox(gui,'cbxIgnoreElite_clicked','Ignore',345,125)
+cbxOnlyCountElite = QtBind.createCheckBox(gui,'cbxOnlyCountElite_clicked','Only Count',405,125)
+def cbxIgnoreElite_clicked(checked):
+	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'7') # 7 = Elite
+def cbxOnlyCountElite_clicked(checked):
+	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'7')
 
-lblParty = QtBind.createLabel(gui,'Party',21,163)
-cbxAvoidParty = QtBind.createCheckBox(gui,'cbxAvoidParty_clicked','Avoid',80,163)
-cbxOnlyParty = QtBind.createCheckBox(gui,'cbxOnlyParty_clicked','Only',150,163)
-def cbxAvoidParty_clicked(checked):
-	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'16') # 16 = Party
-def cbxOnlyParty_clicked(checked):
-	Checkbox_Checked(checked,lstOnly,"lstOnly",'16')
+lblUnique = QtBind.createLabel(gui,'Unique (8)',240,144)
+cbxIgnoreUnique = QtBind.createCheckBox(gui,'cbxIgnoreUnique_clicked','Ignore',345,144)
+cbxOnlyCountUnique = QtBind.createCheckBox(gui,'cbxOnlyCountUnique_clicked','Only Count',405,144)
+def cbxIgnoreUnique_clicked(checked):
+	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'8') # 8 = Unique
+def cbxOnlyCountUnique_clicked(checked):
+	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'8')
 
-lblChampionParty = QtBind.createLabel(gui,'ChampionParty',21,182)
-cbxAvoidChampionParty = QtBind.createCheckBox(gui,'cbxAvoidChampionParty_clicked','Avoid',80,182)
-cbxOnlyChampionParty = QtBind.createCheckBox(gui,'cbxOnlyChampionParty_clicked','Only',150,182)
-def cbxAvoidChampionParty_clicked(checked):
-	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'17') # 17 = ChampionParty
-def cbxOnlyChampionParty_clicked(checked):
-	Checkbox_Checked(checked,lstOnly,"lstOnly",'17')
+lblParty = QtBind.createLabel(gui,'Party (16)',240,163)
+cbxIgnoreParty = QtBind.createCheckBox(gui,'cbxIgnoreParty_clicked','Ignore',345,163)
+cbxOnlyCountParty = QtBind.createCheckBox(gui,'cbxOnlyCountParty_clicked','Only Count',405,163)
+def cbxIgnoreParty_clicked(checked):
+	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'16') # 16 = Party
+def cbxOnlyCountParty_clicked(checked):
+	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'16')
 
-lblGiantParty = QtBind.createLabel(gui,'GiantParty',21,201)
-cbxAvoidGiantParty = QtBind.createCheckBox(gui,'cbxAvoidGiantParty_clicked','Avoid',80,201)
-cbxOnlyGiantParty = QtBind.createCheckBox(gui,'cbxOnlyGiantParty_clicked','Only',150,201)
-def cbxAvoidGiantParty_clicked(checked):
-	Checkbox_Checked(checked,lstAvoid,"lstAvoid",'20') # 20 = GiantParty
-def cbxOnlyGiantParty_clicked(checked):
-	Checkbox_Checked(checked,lstOnly,"lstOnly",'20')
+lblChampionParty = QtBind.createLabel(gui,'ChampionParty (17)',240,182)
+cbxIgnoreChampionParty = QtBind.createCheckBox(gui,'cbxIgnoreChampionParty_clicked','Ignore',345,182)
+cbxOnlyCountChampionParty = QtBind.createCheckBox(gui,'cbxOnlyCountChampionParty_clicked','Only Count',405,182)
+def cbxIgnoreChampionParty_clicked(checked):
+	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'17') # 17 = ChampionParty
+def cbxOnlyCountChampionParty_clicked(checked):
+	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'17')
+
+lblGiantParty = QtBind.createLabel(gui,'GiantParty (20)',240,201)
+cbxIgnoreGiantParty = QtBind.createCheckBox(gui,'cbxIgnoreGiantParty_clicked','Ignore',345,201)
+cbxOnlyCountGiantParty = QtBind.createCheckBox(gui,'cbxOnlyCountGiantParty_clicked','Only Count',405,201)
+def cbxIgnoreGiantParty_clicked(checked):
+	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'20') # 20 = GiantParty
+def cbxOnlyCountGiantParty_clicked(checked):
+	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'20')
 
 # Generalizing checkbox methods
 def Checkbox_Checked(checked,lst,lstName,mobType):
@@ -113,14 +117,8 @@ def Checkbox_Checked(checked,lst,lstName,mobType):
 def getConfig():
 	return get_config_dir()+pName+".json"
 
-# Load default configs
-def loadDefaultConfig():
-	# Clear data
-	QtBind.clear(gui,lstMobs)
-
 # Load config if exists
 def loadConfig():
-	loadDefaultConfig()
 	if os.path.exists(getConfig()):
 		data = {}
 		with open(getConfig(),"r") as f:
@@ -129,52 +127,52 @@ def loadConfig():
 		if "lstMobs" in data:
 			for d in data["lstMobs"]:
 				QtBind.append(gui,lstMobs,d)
-		if "lstAvoid" in data:
-			lstAvoid = data["lstAvoid"]
-			for i in range(len(lstAvoid)):
-				if lstAvoid[i] == '8':
-					QtBind.setChecked(gui,cbxAvoidUnique,True)
-				elif lstAvoid[i] == '7':
-					QtBind.setChecked(gui,cbxAvoidElite,True)
-				elif lstAvoid[i] == '6':
-					QtBind.setChecked(gui,cbxAvoidStrong,True)
-				elif lstAvoid[i] == '5':
-					QtBind.setChecked(gui,cbxAvoidTitan,True)
-				elif lstAvoid[i] == '4':
-					QtBind.setChecked(gui,cbxAvoidGiant,True)
-				elif lstAvoid[i] == '1':
-					QtBind.setChecked(gui,cbxAvoidChampion,True)
-				elif lstAvoid[i] == '0':
-					QtBind.setChecked(gui,cbxAvoidGeneral,True)
-				elif lstAvoid[i] == '16':
-					QtBind.setChecked(gui,cbxAvoidParty,True)
-				elif lstAvoid[i] == '17':
-					QtBind.setChecked(gui,cbxAvoidChampionParty,True)
-				elif lstAvoid[i] == '20':
-					QtBind.setChecked(gui,cbxAvoidGiantParty,True)
-		if "lstOnly" in data:
-			lstOnly = data["lstOnly"]
-			for i in range(len(lstOnly)):
-				if lstOnly[i] == '8':
-					QtBind.setChecked(gui,cbxOnlyUnique,True)
-				elif lstOnly[i] == '7':
-					QtBind.setChecked(gui,cbxOnlyElite,True)
-				elif lstOnly[i] == '6':
-					QtBind.setChecked(gui,cbxOnlyStrong,True)
-				elif lstOnly[i] == '5':
-					QtBind.setChecked(gui,cbxOnlyTitan,True)
-				elif lstOnly[i] == '4':
-					QtBind.setChecked(gui,cbxOnlyGiant,True)
-				elif lstOnly[i] == '1':
-					QtBind.setChecked(gui,cbxOnlyChampion,True)
-				elif lstOnly[i] == '0':
-					QtBind.setChecked(gui,cbxOnlyGeneral,True)
-				elif lstOnly[i] == '16':
-					QtBind.setChecked(gui,cbxOnlyParty,True)
-				elif lstOnly[i] == '17':
-					QtBind.setChecked(gui,cbxOnlyChampionParty,True)
-				elif lstOnly[i] == '20':
-					QtBind.setChecked(gui,cbxOnlyGiantParty,True)
+		if "lstIgnore" in data:
+			lstIgnore = data["lstIgnore"]
+			for i in range(len(lstIgnore)):
+				if lstIgnore[i] == '8':
+					QtBind.setChecked(gui,cbxIgnoreUnique,True)
+				elif lstIgnore[i] == '7':
+					QtBind.setChecked(gui,cbxIgnoreElite,True)
+				elif lstIgnore[i] == '6':
+					QtBind.setChecked(gui,cbxIgnoreStrong,True)
+				elif lstIgnore[i] == '5':
+					QtBind.setChecked(gui,cbxIgnoreTitan,True)
+				elif lstIgnore[i] == '4':
+					QtBind.setChecked(gui,cbxIgnoreGiant,True)
+				elif lstIgnore[i] == '1':
+					QtBind.setChecked(gui,cbxIgnoreChampion,True)
+				elif lstIgnore[i] == '0':
+					QtBind.setChecked(gui,cbxIgnoreGeneral,True)
+				elif lstIgnore[i] == '16':
+					QtBind.setChecked(gui,cbxIgnoreParty,True)
+				elif lstIgnore[i] == '17':
+					QtBind.setChecked(gui,cbxIgnoreChampionParty,True)
+				elif lstIgnore[i] == '20':
+					QtBind.setChecked(gui,cbxIgnoreGiantParty,True)
+		if "lstOnlyCount" in data:
+			lstOnlyCount = data["lstOnlyCount"]
+			for i in range(len(lstOnlyCount)):
+				if lstOnlyCount[i] == '8':
+					QtBind.setChecked(gui,cbxOnlyCountUnique,True)
+				elif lstOnlyCount[i] == '7':
+					QtBind.setChecked(gui,cbxOnlyCountElite,True)
+				elif lstOnlyCount[i] == '6':
+					QtBind.setChecked(gui,cbxOnlyCountStrong,True)
+				elif lstOnlyCount[i] == '5':
+					QtBind.setChecked(gui,cbxOnlyCountTitan,True)
+				elif lstOnlyCount[i] == '4':
+					QtBind.setChecked(gui,cbxOnlyCountGiant,True)
+				elif lstOnlyCount[i] == '1':
+					QtBind.setChecked(gui,cbxOnlyCountChampion,True)
+				elif lstOnlyCount[i] == '0':
+					QtBind.setChecked(gui,cbxOnlyCountGeneral,True)
+				elif lstOnlyCount[i] == '16':
+					QtBind.setChecked(gui,cbxOnlyCountParty,True)
+				elif lstOnlyCount[i] == '17':
+					QtBind.setChecked(gui,cbxOnlyCountChampionParty,True)
+				elif lstOnlyCount[i] == '20':
+					QtBind.setChecked(gui,cbxOnlyCountGiantParty,True)
 
 # Save specific value at config
 def saveConfig(key,value):
@@ -194,7 +192,7 @@ def btnAddMob_clicked():
 		QtBind.append(gui,lstMobs,text)
 		QtBind.setText(gui,tbxMobs,"")
 		saveConfig("lstMobs",QtBind.getItems(gui,lstMobs))
-		log('Plugin: Mob added ['+text+']')
+		log('Plugin: Monster added ['+text+']')
 
 # Add mob to the list
 def btnRemMob_clicked():
@@ -202,7 +200,7 @@ def btnRemMob_clicked():
 	if selected and QtBind_ItemsContains(selected,lstMobs):
 		QtBind.remove(gui,lstMobs,selected)
 		saveConfig("lstMobs",QtBind.getItems(gui,lstMobs))
-		log('Plugin: Mob removed ['+selected+']')
+		log('Plugin: Monster removed ['+selected+']')
 
 # Return True if text exist at the list
 def ListContains(text,lst):
@@ -261,21 +259,27 @@ def AttackMobs(wait,isAttacking,x,y,z):
 
 # Count all mobs around your character (60 or more it's the max. range I think)
 def getMobCount():
+	# Clear
+	QtBind.clear(gui,lstMonsterCounter)
+	QtBind.append(gui,lstMonsterCounter,'Name (Type)') # Header
 	count = 0
+	# Check all mob around
 	monsters = get_monsters()
 	if monsters:
 		for key, mob in monsters.items():
-			# Avoid if this mob type is found
-			if ListContains(str(mob['type']),lstAvoid):
+			# Ignore if this mob type is found
+			if ListContains(str(mob['type']),lstIgnore):
 				continue
 			# Only count setup
-			if len(lstOnly) > 0:
-				# If is not in Only count, skip it
-				if not ListContains(str(mob['type']),lstOnly):
+			if len(lstOnlyCount) > 0:
+				# If is not in only count, skip it
+				if not ListContains(str(mob['type']),lstOnlyCount):
 					continue
 			# Ignore mob names
 			elif QtBind_ItemsContains(mob['name'],lstMobs):
 				continue
+			# Adding GUI for a complete UX
+			QtBind.append(gui,lstMonsterCounter,+mob['name']+' ('+str(mob['type'])+')')
 			count+=1
 	return count
 
