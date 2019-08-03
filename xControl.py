@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.3.4'
+pVersion = '0.3.5'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -20,7 +20,7 @@ followDistance = 0
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
-lblxControl2 = QtBind.createLabel(gui,' - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name',345,101)
+lblxControl = QtBind.createLabel(gui,' - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
 lstLeaders = QtBind.createList(gui,511,32,176,48)
@@ -179,7 +179,9 @@ def handle_chat(t,player,msg):
 				# Trying avoid high CPU usage with many chars at the same time
 				Timer(random.random(), inject_useReturnScroll).start()
 			elif msg.startswith("TELEPORT"):
-				msg = msg[8:].strip()
+				msg = msg[8:]
+				if msg:
+					msg = msg[1:] # remove whatever used as separator
 				if msg:
 					split = ""
 					if "," in msg:
