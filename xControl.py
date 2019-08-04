@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.3.5'
+pVersion = '0.3.6'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -20,7 +20,8 @@ followDistance = 0
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
-lblxControl = QtBind.createLabel(gui,' - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name',345,101)
+lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA : Set training area using the actual location\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data : Inject packet\n - CHAT #Type #Message : Send any message type\n - MOVEON #Radius? : Set a random movement',21,11)
+lblxControl02 = QtBind.createLabel(gui,' - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
 lstLeaders = QtBind.createList(gui,511,32,176,48)
@@ -190,7 +191,7 @@ def handle_chat(t,player,msg):
 						split = " "
 					if split != "":
 						source_dest = msg.split(split)
-						if len(source_dest) == 2:
+						if len(source_dest) >= 2:
 							inject_teleport(source_dest[0].strip(),source_dest[1].strip())
 			elif msg.startswith("INJECT"):
 				inject(msg.split())
@@ -236,13 +237,9 @@ def inject_useReturnScroll():
 	items = get_inventory()['items']
 	for slot, item in enumerate(items):
 		if item:
-			if item['name'] == 'Return Scroll' or item['name'] == 'Special Return Scroll' or item['name'] == 'Token Return Scroll' or item['name'] == 'Beginner instant recall scroll' or item['name'] == 'Instant Return Scroll':
-				Packet = bytearray()
-				Packet.append(slot)
-				Packet.append(0x30)
-				Packet.append(0x0C) 
-				Packet.append(0x03)
-				Packet.append(0x01)
+			if item['name'] == 'Return Scroll' or item['name'] == 'Special Return Scroll' or item['name'] == 'Instant Return Scroll' or item['name'] == 'Token Return Scroll' or item['name'] == 'Beginner Return Scroll' or item['name'] == 'Beginner instant recall scroll':
+				Packet = struct.pack('B', slot)
+				Packet += struct.pack('H',2540)
 				inject_joymax(0x704C, Packet, True)
 				log('Plugin: Using "'+item['name']+'"')
 				return
