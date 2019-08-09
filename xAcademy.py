@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.1.8'
+pVersion = '0.1.9'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -148,20 +148,16 @@ def handle_joymax(opcode, data):
 							log("Plugin: Not enough space to create a new character")
 					else:
 						waitSelection = 0.1
-						if deleteCharacter:
-							waitSelection = 10.0
+						# Wait at least seconds after trying deleting a character
+						if deleteCharacter != "":
+							waitSelection = 5.0
 						log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
-						Timer(waitSelection,Inject_SelectCharacter,(selectCharacter,));
+						Timer(waitSelection,select_character,(selectCharacter,)).start()
 		except:
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
 			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"] Locale ["+str(locale)+"]")
 	return True
-
-def Inject_SelectCharacter(charName):
-	p = struct.pack('H', len(charName))
-	p += charName.encode('ascii')
-	inject_joymax(0x7001,p, False)
 
 def create_character():
 	global creatingCharacterNick
