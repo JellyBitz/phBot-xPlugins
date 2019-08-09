@@ -192,4 +192,4 @@ def handle_joymax(opcode, data):
 
 # Load success
 loadConfigs()
-log('Plugin: '+pName+' v'+pVersion+' succesfully loaded.')
+log('Plugin: '+pName+' v'+pVersion+' succesfully loaded')

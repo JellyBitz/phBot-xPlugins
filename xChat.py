@@ -281,8 +281,8 @@ def event_loop():
 			delayCounter += 500
 
 # Plugin load success
-log('Plugin: '+pName+' v'+pVersion+' successfully loaded.')
+log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
 # Creating configs folder
 if not os.path.exists(getPath()):
 	os.makedirs(getPath())
-	log('Plugin: '+pName+' folder has been created.')
+	log('Plugin: '+pName+' folder has been created')

@@ -285,4 +285,4 @@ def getMobCount():
 
 # Plugin loading success
 loadConfig()
-log('Plugin: '+pName+' v'+pVersion+' succesfully loaded.')
+log('Plugin: '+pName+' v'+pVersion+' succesfully loaded')
