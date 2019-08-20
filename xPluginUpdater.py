@@ -5,7 +5,7 @@ import re
 import os
 
 pName = 'xPluginUpdater'
-pVersion = '0.1.1'
+pVersion = '0.1.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPluginUpdater.py'
 
 # Initializing GUI
@@ -88,7 +88,7 @@ def btnUpdate_clicked():
 			with urllib.request.urlopen(req) as w:
 				pyCode = str(w.read().decode("utf-8"))
 				filename = py[:py.find(' ')]
-				with open(filename+"a","w+") as f:
+				with open(GetPluginsFolder()+"\\"+filename,"w+") as f:
 					f.write(pyCode)
 				QtBind.remove(gui,lstPlugins,py)
 				pyVersion = py[py.rfind('(')+1:py.rfind(')')]
