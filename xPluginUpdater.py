@@ -5,7 +5,7 @@ import re
 import os
 
 pName = 'xPluginUpdater'
-pVersion = '0.1.0'
+pVersion = '0.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPluginUpdater.py'
 
 # Initializing GUI
@@ -15,19 +15,24 @@ lstPlugins = QtBind.createList(gui,21,30,700,200)
 btnCheck = QtBind.createButton(gui,'btnCheck_clicked',"  Check Updates  ",350,8)
 btnUpdate = QtBind.createButton(gui,'btnUpdate_clicked',"  Update Plugin (Selected)  ",450,8)
 
+def GetPluginsFolder():
+	return str(os.path.dirname(os.path.realpath(__file__)))
+
 # List and check all plugins from the same plugin folder
 def btnCheck_clicked():
-	# List all files around
-	files = os.listdir()
+	QtBind.clear(gui,lstPlugins)
+	# List all files from Plugins folder
+	files = os.listdir(GetPluginsFolder())
 	for filename in files:
 		# Check only python files
 		if(re.search("[.]py",filename)):
-			with open(filename,"r") as f:
+			pyFile = GetPluginsFolder()+"\\"+filename
+			with open(pyFile,"r") as f:
 				pyCode = str(f.read())
 				# Read file and check his version
-				if re.search("\npVersion = [0-9.'\"]*",pyCode):
-					pyVersion = re.search("\npVersion = ([0-9a-zA-Z.'\"]*)",pyCode)[1][1:-1]
-					pyName = re.search("\npName = ([0-9a-zA-Z'\"]*)",pyCode)[1][1:-1]
+				if re.search("\npVersion = [0-9a-zA-Z.'\"]*",pyCode):
+					pyVersion = re.search("\npVersion = ([0-9a-zA-Z.'\"]*)",pyCode).group(0)[1:-1]
+					pyName = re.search("\npName = ([0-9a-zA-Z'\"]*)",pyCode).group(0)[1:-1]
 					pyDesc = pyVersion
 					if pyName and pyName+".py" != filename:
 						pyDesc = pyName+" "+pyDesc
@@ -50,7 +55,7 @@ def getVersion(url):
 		with urllib.request.urlopen(req) as w:
 			pyCode = str(w.read().decode("utf-8"))
 			if re.search("\npVersion = [0-9.'\"]*",pyCode):
-				return re.search("\npVersion = ([0-9a-zA-Z.'\"]*)",pyCode)[1][1:-1]
+				return re.search("\npVersion = ([0-9a-zA-Z.'\"]*)",pyCode).group(0)[1:-1]
 	except:
 		pass
 	return None
@@ -66,8 +71,8 @@ def compareVersion(a, b):
 		# Check only numbers
 		# (letters are ignored, considered as beta)
 		for i in range(len(va)):
-			numA = re.search("(\d*)",va[i])[1]
-			numB = re.search("(\d*)",vb[i])[1]
+			numA = re.search("(\d*)",va[i]).group(0)
+			numB = re.search("(\d*)",vb[i]).group(0)
 			if numA < numB:
 				return True
 	return False
