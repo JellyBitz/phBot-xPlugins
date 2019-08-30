@@ -25,7 +25,7 @@ def btnCheck_clicked():
 	files = os.listdir(GetPluginsFolder())
 	for filename in files:
 		# Check only python files
-		if(re.search("[.]py",filename)):
+		if re.search("[.]py",filename):
 			pyFile = GetPluginsFolder()+"\\"+filename
 			with open(pyFile,"r") as f:
 				pyCode = str(f.read())
