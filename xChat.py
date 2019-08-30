@@ -6,7 +6,7 @@ import json
 import os
 
 pName = 'xChat'
-pVersion = '0.3.1'
+pVersion = '0.3.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xChat.py'
 
 # Avoid issues
@@ -153,7 +153,7 @@ def joined_game():
 	loadConfig()
 
 # Just saving everything everytime (slower method)
-def cbxLog_clicked():
+def cbxLog_clicked(checked):
 	saveConfig("cbxLogsInOne",QtBind.isChecked(gui,cbxLogsInOne))
 	saveConfig("cbxLogAll",QtBind.isChecked(gui,cbxLogAll))
 	saveConfig("cbxLogPrivate",QtBind.isChecked(gui,cbxLogPrivate))
