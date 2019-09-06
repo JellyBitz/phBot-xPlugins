@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.3.6'
+pVersion = '0.3.7'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -354,7 +354,7 @@ def near_party_player(player):
 	players = get_party()
 	if players:
 		for p in players:
-			if players[p]['name'] == player and p['player_id'] > 0:
+			if players[p]['name'] == player and players[p]['player_id'] > 0:
 				return [players[p]['x'],players[p]['y']]
 	return None
 
