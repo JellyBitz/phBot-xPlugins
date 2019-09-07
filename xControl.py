@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.3.7'
+pVersion = '0.3.8'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -17,6 +17,7 @@ inGame = False
 # Globals
 followPlayer = ''
 followDistance = 0
+followDelay = 1.0 # float, seconds
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
@@ -360,20 +361,21 @@ def near_party_player(player):
 
 # Timer loop (1s) to keep following the player
 def start_follow_loop():
-	if inGame:
-		if followPlayer:
-			Timer(1.0, start_follow_loop).start()
-			iniPoint = near_party_player(followPlayer)
-			if iniPoint:
-				finPoint = get_position()
-				x = finPoint['x'] - iniPoint[0]
-				y = finPoint['y'] - iniPoint[1]
-				finDist = ( (x)**2 + (y)**2 )**0.5
-				x = (followDistance * x) / finDist
-				y = (followDistance * y) / finDist
-				x += finPoint['x']
-				y += finPoint['y']
-				move_to(x,y,finPoint['z'])
+	if inGame and followPlayer:
+		Timer(followDelay, start_follow_loop).start()
+		playerPos = near_party_player(followPlayer)
+		if playerPos:
+			myPos = get_position()
+			x = playerPos[0] - myPos['x']
+			y = playerPos[1] - myPos['y']
+			finDist = ( (x)**2 + (y)**2 )**0.5
+			x = ((finDist - followDistance) * x) / finDist
+			y = ((finDist - followDistance) * y) / finDist
+			x += myPos['x']
+			y += myPos['y']
+			if finDist > followDistance:
+				log("Following "+followPlayer+"...")
+				move_to(x,y,myPos['z'])
 
 # Stop follow player
 def stop_follow():
