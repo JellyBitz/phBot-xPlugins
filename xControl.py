@@ -8,21 +8,22 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.3.8'
+pVersion = '0.3.9'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
 inGame = False
 
 # Globals
+followActivated = False
 followPlayer = ''
 followDistance = 0
 followDelay = 1.0 # float, seconds
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
-lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA : Set training area using the actual location\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data : Inject packet\n - CHAT #Type #Message : Send any message type\n - MOVEON #Radius? : Set a random movement',21,11)
-lblxControl02 = QtBind.createLabel(gui,' - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name',345,101)
+lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA : Set training area using the actual location\n - SETAREA #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
+lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
 lstLeaders = QtBind.createList(gui,511,32,176,48)
@@ -143,6 +144,22 @@ def handle_chat(t,player,msg):
 				p = get_position()
 				set_training_position(p['region'], p['x'], p['y'])
 				log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
+			elif msg.startswith("SETRADIUS"):
+				if msg == "SETRADIUS":
+					# default radius
+					radius = 35
+					set_training_radius(radius)
+					log("Plugin: Setting training radius ("+str(radius)+")")
+				else:
+					try:
+						# split and parse movement radius
+						radius = int(float(msg[9:].split()[0]))
+						# to absolute
+						radius = (radius if radius > 0 else radius*-1)
+						set_training_radius(radius)
+						log("Plugin: Setting training radius ("+str(radius)+")")
+					except:
+						log("Plugin: Training radius incorrect")
 			elif msg == "SIT":
 				log("Plugin: Sit/Stand")
 				inject(["","704F","04"])
@@ -333,11 +350,12 @@ def randomMovement(radiusMax=10):
 # Follow a player using distance. Return success
 def start_follow(player,distance=10):
 	if party_player(player):
-		global followPlayer,followDistance
-		if followPlayer == '':
-			Timer(0.5, start_follow_loop).start()
+		global followActivated,followPlayer,followDistance
 		followPlayer = player
 		followDistance = distance
+		if not followActivated:
+			followActivated = True
+			Timer(0.1, start_follow_loop).start()
 		return True
 	return False
 
@@ -361,7 +379,7 @@ def near_party_player(player):
 
 # Timer loop (1s) to keep following the player
 def start_follow_loop():
-	if inGame and followPlayer:
+	if inGame and followActivated:
 		Timer(followDelay, start_follow_loop).start()
 		playerPos = near_party_player(followPlayer)
 		if playerPos:
@@ -379,7 +397,8 @@ def start_follow_loop():
 
 # Stop follow player
 def stop_follow():
-	global followPlayer,followDistance
+	global followActivated,followPlayer,followDistance
+	followActivated = False
 	followPlayer = ""
 	followDistance = 0
 	return True
