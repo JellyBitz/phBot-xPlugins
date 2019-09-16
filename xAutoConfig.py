@@ -5,7 +5,7 @@ import time
 import os
 
 pName = 'xAutoConfig'
-pVersion = '0.2.4'
+pVersion = '0.2.5'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoConfig.py'
 
 # Copy or replace a file while print an user message
@@ -26,7 +26,7 @@ def joined_game():
 	configFile = get_config_path().replace(".json",".db3")
 	if os.path.exists(configFile):
 			# db3 default filter path
-		defaultConfig = get_config_dir()+"Default.json"
+		defaultConfig = get_config_dir()+"Default.db3"
 		if os.path.exists(defaultConfig):
 			# Check modification time at seconds
 			lastModification = time.time() - os.path.getmtime(configFile)
@@ -36,7 +36,7 @@ def joined_game():
 				log("Plugin: Filter by default will be loaded in 10 seconds..")
 				Timer(10.0,ReplaceFile,(defaultConfig,configFile,"Plugin: Default Filter loaded"),).start()
 	else:
-		defaultConfig = get_config_dir()+"Default.json"
+		defaultConfig = get_config_dir()+"Default.db3"
 		if os.path.exists(defaultConfig):
 			log("Plugin: Filter not found. Default will be loaded in 10 seconds..")
 			Timer(10.0,ReplaceFile,(get_config_dir()+"Default.db3",configFile,"Plugin: Default Filter loaded"),).start()
