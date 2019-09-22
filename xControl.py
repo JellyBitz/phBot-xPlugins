@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.3.9'
+pVersion = '0.3.10'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -269,17 +269,17 @@ def inject_teleport(source,destination):
 	if t:
 		npcs = get_npcs()
 		for key, npc in npcs.items():
-			if npc['name'] == source:
+			if npc['name'] == source or npc['servername'] == source:
 				log("Plugin: Selecting teleporter ["+source+"]")
-				# Teleport found
+				# Teleport found, select it
 				inject_joymax(0x7045, struct.pack('<I', key), False)
 				# Start a timer to teleport in 2.0 seconds
 				Timer(2.0, inject_joymax, (0x705A,struct.pack('<IBI', key, 2, t[1]),False)).start()
 				Timer(2.0, log, ("Plugin: Teleporting to ["+destination+"]")).start()
 				return
-		log('Plugin: Teleport not found')
+		log('Plugin: NPC not found. Wrong NPC name or servername')
 	else:
-		log('Plugin: Wrong teleport name')
+		log('Plugin: Teleport data not found. Wrong teleport name or servername')
 
 # Inject Packet, even through Script. All his data is separated by comma, encrypted will be false if it's not specified.
 # Example 1: "inject,Opcode?,ItsEncrypted?,Data?,Data?,Data?,..."
