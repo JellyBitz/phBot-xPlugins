@@ -5,7 +5,7 @@ import random
 import os
 
 pName = 'xAcademy'
-pVersion = '0.1.9'
+pVersion = '0.1.10'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -137,7 +137,7 @@ def handle_joymax(opcode, data):
 					# Check for deleting a character
 					if deleteCharacter:
 						log("Plugin: deleting character ["+deleteCharacter+"] Lv."+str(charLevel))
-						Timer(0.1,Inject_DeleteCharacter,(deleteCharacter,)).start()
+						Timer(0.1,Inject_DeleteCharacter(deleteCharacter)).start()
 					# Select or create character if is required
 					if not selectCharacter:
 						if nChars < 4:
@@ -152,7 +152,7 @@ def handle_joymax(opcode, data):
 						if deleteCharacter != "":
 							waitSelection = 5.0
 						log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
-						Timer(waitSelection,select_character,(selectCharacter,)).start()
+						Timer(waitSelection,select_character(selectCharacter)).start()
 		except:
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
