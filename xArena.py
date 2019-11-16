@@ -1,7 +1,8 @@
 from phBot import *
+import struct
 
 pName = 'xArena'
-pVersion = '0.1.0'
+pVersion = '0.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xArena.py'
 
 InBattleArena = False
@@ -54,7 +55,7 @@ def handle_joymax(opcode, data):
 			else:
 				if result == 0x11:
 					log('Plugin: You have won the match!')
-				elif result == 0x11:
+				elif result == 0x16:
 					log('Plugin: You have lost the match!')
 				elif result == 0x17:
 					log('Plugin: Match has ended in draw!')
@@ -107,19 +108,18 @@ def arena(arguments):
 		if len(arguments) < 3:
 			t2 = arguments[2].lower()
 
-		p = bytearray()
 		# 1 = register; 2 = cancel
-		p.append(0x01)
+		p = b'\x01'
 
-		# 0 = Random; 1 = Party; 2 = Guild (Only master can register); 3 = Job; 4 = CTF
+		# 0 = Random; 1 = Party; 2 = Guild (Only master can register); 3 = Job;
 		if t1 == 'random':
-			p.append(0x00)
+			p += struct.pack('B',0)
 		elif t1 == 'party':
-			p.append(0x01)
+			p += struct.pack('B',1)
 		elif t1 == 'guild':
-			p.append(0x02)
+			p += struct.pack('B',2)
 		elif t1 == 'job':
-			p.append(0x03)
+			p += struct.pack('B',3)
 		else:
 			log('Plugin: Wrong Battle Arena type. Please be sure to select one: Random, Party, Guild or Job')
 			return 0
@@ -127,14 +127,12 @@ def arena(arguments):
 		# 0 = random, 1 = Score; 2 = Flag;
 		if t2 == '':
 			pass
-		elif t2 == 'random':
-			p.append(0x00)
 		elif t2 == 'score':
-			p.append(0x01)
+			p += struct.pack('B',1)
 		elif t2 == 'flag':
-			p.append(0x02)
+			p += struct.pack('B',2)
 		else:
-			log('Plugin: Wrong Battle Arena type. Please be sure to select one: Score, Flag or Random')
+			log('Plugin: Wrong Battle Arena type. Please be sure to select one: Score, or Flag')
 			return 0
 
 		global isPluginRegistering
