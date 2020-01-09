@@ -4,7 +4,7 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.4.1'
+pVersion = '0.5.0'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -213,7 +213,7 @@ def ListContains(text,lst):
 def QtBind_ItemsContains(text,lst):
 	return ListContains(text,QtBind.getItems(gui,lst))
 
-# Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5"
+# Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5" or "AttackArea,5,30"
 # Will be checking mobs every 5 seconds at the area as default.
 def AttackArea(args):
 	# stop bot and kill mobs through bot or continue script normally
@@ -225,18 +225,22 @@ def AttackArea(args):
 		set_training_position(p['region'], p['x'], p['y'])
 		# waiting 5 seconds as default
 		wait = 5
-		if len(args) == 2:
+		if len(args) >= 2:
 			wait = float(args[1])
+		# radius maximum as default
+		radius = None
+		if len(args) >= 3:
+			radius = round(float(args[2]),2)
 		# start to kill mobs on other thread because interpreter lock
-		Timer(0.5,AttackMobs, (wait,False,p['x'],p['y'],p['z'])).start()
+		Timer(0.1,AttackMobs,(wait,False,p['x'],p['y'],p['z']),radius).start()
 	# otherwise continue normally
 	else:
-		log("Plugin: Not mobs at this area.")
+		log("Plugin: No mobs at this area.")
 	return 0
 
 # Attacking mobs using all configs from bot
-def AttackMobs(wait,isAttacking,x,y,z):
-	count = getMobCount()
+def AttackMobs(wait,isAttacking,x,y,z,radius):
+	count = getMobCount(radius)
 	if count > 0:
 		# Start to kill mobs using bot
 		if isAttacking:
@@ -245,7 +249,7 @@ def AttackMobs(wait,isAttacking,x,y,z):
 			start_bot()
 			log("Plugin: Starting to kill ("+str(count)+") mobs at this area.")
 		# Check if there is not mobs to continue script
-		Timer(wait,AttackMobs, (wait,True,x,y,z)).start()
+		Timer(wait,AttackMobs, (wait,True,x,y,z,radius)).start()
 	else:
 		# All mobs killed, stop botting
 		stop_bot()
@@ -258,11 +262,13 @@ def AttackMobs(wait,isAttacking,x,y,z):
 		Timer(3.0,start_bot).start()
 
 # Count all mobs around your character (60 or more it's the max. range I think)
-def getMobCount():
+def getMobCount(radius):
 	# Clear
 	QtBind.clear(gui,lstMonsterCounter)
 	QtBind.append(gui,lstMonsterCounter,'Name (Type)') # Header
 	count = 0
+	# Get my position to calc radius
+	p = get_position() if radius != None else None
 	# Check all mob around
 	monsters = get_monsters()
 	if monsters:
@@ -278,10 +284,18 @@ def getMobCount():
 			# Ignore mob names
 			elif QtBind_ItemsContains(mob['name'],lstMobs):
 				continue
+			# Checking radius
+			if radius != None:
+				if round(GetDistance(p['x'], p['y'],mob['x'],mob['y']),2) > radius:
+					continue
 			# Adding GUI for a complete UX
 			QtBind.append(gui,lstMonsterCounter,mob['name']+' ('+str(mob['type'])+')')
 			count+=1
 	return count
+
+# Calc the distance from point A to B
+def GetDistance(ax,ay,bx,by):
+	return ((bx-ax)**2 + (by-ay)**2)**(0.5)
 
 # Plugin loading success
 loadConfig()

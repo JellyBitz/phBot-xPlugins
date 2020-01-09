@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.3.10'
+pVersion = '0.4.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -23,7 +23,7 @@ followDelay = 1.0 # float, seconds
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
 lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA : Set training area using the actual location\n - SETAREA #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
-lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name',345,101)
+lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
 lstLeaders = QtBind.createList(gui,511,32,176,48)
@@ -163,6 +163,9 @@ def handle_chat(t,player,msg):
 			elif msg == "SIT":
 				log("Plugin: Sit/Stand")
 				inject(["","704F","04"])
+			elif msg == "JUMP":
+				log("Plugin: Trying to jump!")
+				inject(["","3091","0C"])
 			elif msg.startswith("CAPE"):
 				if msg == "CAPE":
 					log("Plugin: Using PVP Cape (Yellow)")
@@ -234,7 +237,7 @@ def handle_chat(t,player,msg):
 				else:
 					msg = msg[6:].split()
 					try:
-						if start_follow(msg[0],int(float(msg[1]))):
+						if start_follow(msg[0],float(msg[1])):
 							log("Plugin: Starting to follow to ["+msg[0]+"] using ["+msg[1]+"] as distance")
 					except:
 						log("Plugin: Follow distance incorrect")
@@ -255,7 +258,8 @@ def inject_useReturnScroll():
 	items = get_inventory()['items']
 	for slot, item in enumerate(items):
 		if item:
-			if item['name'] == 'Return Scroll' or item['name'] == 'Special Return Scroll' or item['name'] == 'Instant Return Scroll' or item['name'] == 'Token Return Scroll' or item['name'] == 'Beginner Return Scroll' or item['name'] == 'Beginner instant recall scroll':
+			# Search some kind return scroll by servername
+			if "ITEM_ETC_SCROLL_RETURN_0" in item['servername'] or item['servername'] == 'ITEM_ETC_SCROLL_RETURN_NEWBIE_01' or item['servername'] == 'ITEM_ETC_E041225_SANTA_WINGS' or item['servername'] == 'ITEM_MALL_RETURN_SCROLL_HIGH_SPEED' or item['servername'] == 'ITEM_EVENT_RETURN_SCROLL_HIGH_SPEED':
 				Packet = struct.pack('B', slot)
 				Packet += struct.pack('H',2540)
 				inject_joymax(0x704C, Packet, True)
@@ -374,26 +378,35 @@ def near_party_player(player):
 	if players:
 		for p in players:
 			if players[p]['name'] == player and players[p]['player_id'] > 0:
-				return [players[p]['x'],players[p]['y']]
+				return players[p]
 	return None
 
 # Timer loop (1s) to keep following the player
 def start_follow_loop():
 	if inGame and followActivated:
 		Timer(followDelay, start_follow_loop).start()
-		playerPos = near_party_player(followPlayer)
-		if playerPos:
-			myPos = get_position()
-			x = playerPos[0] - myPos['x']
-			y = playerPos[1] - myPos['y']
-			finDist = ( (x)**2 + (y)**2 )**0.5
-			x = ((finDist - followDistance) * x) / finDist
-			y = ((finDist - followDistance) * y) / finDist
-			x += myPos['x']
-			y += myPos['y']
-			if finDist > followDistance:
+		player = near_party_player(followPlayer)
+		if player:
+			if followDistance > 0:
+				p = get_position()
+				playerDistance = round(GetDistance(p['x'],p['y'],player['x'],player['y']),2)
+				# check if has to move
+				if followDistance < playerDistance:
+					# generate vector unit
+					x_unit = (player['x'] - p['x']) / playerDistance
+					y_unit = (player['y'] - p['y']) / playerDistance
+					# distance to move
+					movementDistance = playerDistance-followDistance
+					log("Following "+followPlayer+"...")
+					move_to(movementDistance * x_unit + p['x'],movementDistance * y_unit + p['y'],0)
+			else:
+				# Avoid negative numbers
 				log("Following "+followPlayer+"...")
-				move_to(x,y,myPos['z'])
+				move_to(player['x'],player['y'],0)
+
+# Calc the distance from point A to B
+def GetDistance(ax,ay,bx,by):
+	return ((bx-ax)**2 + (by-ay)**2)**0.5
 
 # Stop follow player
 def stop_follow():
