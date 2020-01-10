@@ -2,7 +2,7 @@ from phBot import *
 import struct
 
 pName = 'xArena'
-pVersion = '0.1.1'
+pVersion = '0.1.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xArena.py'
 
 InBattleArena = False
@@ -105,7 +105,7 @@ def arena(arguments):
 		# read register type
 		t1 = arguments[1].lower()
 		t2 = ''
-		if len(arguments) < 3:
+		if len(arguments) >= 3:
 			t2 = arguments[2].lower()
 
 		# 1 = register; 2 = cancel

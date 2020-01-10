@@ -3,12 +3,12 @@
 
 ## Content
 - [xAcademy](https://forum.projecthax.com/t/plugin-xacademy/2342 "v0.1.10") : Auto select/delete/create characters to be used on academy easily
-- [xArena](https://forum.projecthax.com/t/plugin-xarena/ "v0.1.1") : Battle arena script registration!
+- [xArena](https://forum.projecthax.com/t/plugin-xarena/ "v0.1.2") : Battle arena script registration!
 - [xAutoConfig](https://forum.projecthax.com/t/plugin-xautoconfig/331 "v0.2.5") : Load default settings to your new (not configured) character
 - [xAutoDungeon](https://forum.projecthax.com/t/plugin-xautodungeon/1579 "v0.5.0") : Forgotten World, Temple scripts? Yes!
 - [xChat](https://forum.projecthax.com/t/plugin-xchat/333 "v0.3.2") : Send messages through script or log it to a file (included tiny chat spam & item logger)
 - [xControl](https://forum.projecthax.com/t/plugin-xcontrol/784 "v0.4.0") : Manage your party(s) easily using the ingame chat
-- [xLoginController](https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xLoginController.py "v0.0.3") : Keep logged at time only the character than you need, don't waste your VIP at multiple accounts!
+- [xLoginController](https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xLoginController.py "v0.0.3") : Keep logged at time only the character that you need, don't waste your VIP at multiple accounts!
 - [xPacketTool](https://forum.projecthax.com/t/plugin-xpackettool/332 "v0.1.2") : Analyze and inject packets to server/client through phBot interface
 - [xPluginUpdater](https://forum.projecthax.com/t/plugin-xpluginupdater/2065 "v0.1.2") : Just forget all about keeping your plugins up to date!
 
