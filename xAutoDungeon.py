@@ -4,7 +4,7 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.5.0'
+pVersion = '0.5.1'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -216,8 +216,13 @@ def QtBind_ItemsContains(text,lst):
 # Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5" or "AttackArea,5,30"
 # Will be checking mobs every 5 seconds at the area as default.
 def AttackArea(args):
+	# radius maximum as default
+	radius = None
+	if len(args) >= 3:
+		radius = round(float(args[2]),2)
+
 	# stop bot and kill mobs through bot or continue script normally
-	if getMobCount() > 0:
+	if getMobCount(radius) > 0:
 		# stop scripting
 		stop_bot()
 		# set automatically the training area
@@ -225,14 +230,10 @@ def AttackArea(args):
 		set_training_position(p['region'], p['x'], p['y'])
 		# waiting 5 seconds as default
 		wait = 5
-		if len(args) >= 2:
+		if len(args) >= 2 and float(args[1]) > 0:
 			wait = float(args[1])
-		# radius maximum as default
-		radius = None
-		if len(args) >= 3:
-			radius = round(float(args[2]),2)
 		# start to kill mobs on other thread because interpreter lock
-		Timer(0.1,AttackMobs,(wait,False,p['x'],p['y'],p['z']),radius).start()
+		Timer(0.1,AttackMobs,(wait,False,p['x'],p['y'],p['z'],radius)).start()
 	# otherwise continue normally
 	else:
 		log("Plugin: No mobs at this area.")
