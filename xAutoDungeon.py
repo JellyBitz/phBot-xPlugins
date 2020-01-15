@@ -213,8 +213,9 @@ def ListContains(text,lst):
 def QtBind_ItemsContains(text,lst):
 	return ListContains(text,QtBind.getItems(gui,lst))
 
-# Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5" or "AttackArea,5,30"
+# Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5" or "AttackArea,5,75"
 # Will be checking mobs every 5 seconds at the area as default.
+# Will be using radius maximum (75 approx) as default
 def AttackArea(args):
 	# radius maximum as default
 	radius = None

@@ -286,7 +286,7 @@ def inject_teleport(source,destination):
 		log('Plugin: Teleport data not found. Wrong teleport name or servername')
 
 # Inject Packet, even through Script. All his data is separated by comma, encrypted will be false if it's not specified.
-# Example 1: "inject,Opcode?,ItsEncrypted?,Data?,Data?,Data?,..."
+# Example 1: "inject,Opcode,ItsEncrypted?,Data?,Data?,Data?,..."
 # Example 2: "inject,3091,False,0" or "inject,3091,0" (means greet action)
 def inject(args):
 	if len(args) >= 3:

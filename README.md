@@ -11,7 +11,7 @@
 - [xLoginController](https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xLoginController.py "v0.0.3") : Keep logged at time only the character that you need, don't waste your VIP at multiple accounts!
 - [xPacketTool](https://forum.projecthax.com/t/plugin-xpackettool/332 "v0.1.2") : Analyze and inject packets to server/client through phBot interface
 - [xPluginUpdater](https://forum.projecthax.com/t/plugin-xpluginupdater/2065 "v0.1.2") : Just forget all about keeping your plugins up to date!
-- [JellyDix](https://forum.projecthax.com/ "v0.0.1") : phBot notifications on Discord!
+- [JellyDix](https://forum.projecthax.com/t/plugin-jellydix/5996 "v0.0.1") : phBot notifications on Discord!
 
 ------------
 > https://repl.it/@JellyBitz/phBot-plugin-tester
