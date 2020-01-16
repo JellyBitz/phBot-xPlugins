@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'JellyDix'
-pVersion = '0.0.2'
+pVersion = '0.0.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -27,19 +27,27 @@ lblUrl = QtBind.createLabel(gui,"Website Url :",400,10)
 tbxUrl = QtBind.createLineEdit(gui,"",466,7,180,18)
 btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"  Save  ",660,7)
 
+# uniques
 lblTriggers = QtBind.createLabel(gui,"Check all notifications that you wish on Discord :",6,45)
-cbxEvtSpawn_uniqueNear = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawns near',6, 64)
+cbxEvtNear_unique = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawns near',6, 64)
 cbxEvtSpawn_uniqueSpawn = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawn',6, 83)
 cbxEvtSpawn_uniqueKilled = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique killed',6, 102)
 
+# picks
 cbxEvtDrop_item = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Item drop',6,121)
 cbxEvtDrop_rare = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Rare drop',6,140)
 
-cbxEvtSpawn_hunter = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Hunter/Trader spawn',6,159)
-cbxEvtSpawn_thief = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Thief spawn',6,178)
+# warnings
+cbxEvtNear_hunter = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Hunter/Trader spawn',6,159)
+cbxEvtNear_thief = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Thief spawn',6,178)
 cbxEvtChar_attacked = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Character attacked',6,197)
 cbxEvtChar_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Character died',6,216)
-cbxEvtPet_transport_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Transport/Horse died',6,235)
+cbxEvtPet_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Transport/Horse died',6,235)
+
+# messages
+cbxEvtMessage_private = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Private message',156, 64)
+cbxEvtMessage_stall = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Stall message',156, 83)
+cbxEvtMessage_global = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Global message',156, 102)
 
 # Return folder path
 def getPath():
@@ -56,16 +64,19 @@ def loadDefaultConfig():
 	QtBind.setText(gui, tbxChannel,"")
 	QtBind.setText(gui, tbxUrl,JELLYDIX_URL)
 	# Triggers
-	QtBind.setChecked(gui,cbxEvtSpawn_uniqueNear,False)
+	QtBind.setChecked(gui,cbxEvtNear_unique,False)
 	QtBind.setChecked(gui,cbxEvtSpawn_uniqueSpawn,False)
 	QtBind.setChecked(gui,cbxEvtSpawn_uniqueKilled,False)
-	QtBind.setChecked(gui,cbxEvtSpawn_hunter,False)
-	QtBind.setChecked(gui,cbxEvtSpawn_thief,False)
+	QtBind.setChecked(gui,cbxEvtNear_hunter,False)
+	QtBind.setChecked(gui,cbxEvtNear_thief,False)
 	QtBind.setChecked(gui,cbxEvtChar_attacked,False)
 	QtBind.setChecked(gui,cbxEvtChar_died,False)
-	QtBind.setChecked(gui,cbxEvtPet_transport_died,False)
+	QtBind.setChecked(gui,cbxEvtPet_died,False)
 	QtBind.setChecked(gui,cbxEvtDrop_item,False)
 	QtBind.setChecked(gui,cbxEvtDrop_rare,False)
+	QtBind.setChecked(gui,cbxEvtMessage_private,False)
+	QtBind.setChecked(gui,cbxEvtMessage_stall,False)
+	QtBind.setChecked(gui,cbxEvtMessage_global,False)
 
 # Loads all config previously saved
 def loadConfigs():
@@ -85,26 +96,32 @@ def loadConfigs():
 		# Load triggers
 		if "Triggers" in data:
 			triggers = data["Triggers"]
-			if "cbxEvtSpawn_uniqueNear" in triggers and triggers["cbxEvtSpawn_uniqueNear"]:
-				QtBind.setChecked(gui,cbxEvtSpawn_uniqueNear,True)
+			if "cbxEvtNear_unique" in triggers and triggers["cbxEvtNear_unique"]:
+				QtBind.setChecked(gui,cbxEvtNear_unique,True)
 			if "cbxEvtSpawn_uniqueSpawn" in triggers and triggers["cbxEvtSpawn_uniqueSpawn"]:
 				QtBind.setChecked(gui,cbxEvtSpawn_uniqueSpawn,True)
 			if "cbxEvtSpawn_uniqueKilled" in triggers and triggers["cbxEvtSpawn_uniqueKilled"]:
 				QtBind.setChecked(gui,cbxEvtSpawn_uniqueKilled,True)
-			if "cbxEvtSpawn_hunter" in triggers and triggers["cbxEvtSpawn_hunter"]:
-				QtBind.setChecked(gui,cbxEvtSpawn_hunter,True)
-			if "cbxEvtSpawn_thief" in triggers and triggers["cbxEvtSpawn_thief"]:
-				QtBind.setChecked(gui,cbxEvtSpawn_thief,True)
+			if "cbxEvtNear_hunter" in triggers and triggers["cbxEvtNear_hunter"]:
+				QtBind.setChecked(gui,cbxEvtNear_hunter,True)
+			if "cbxEvtNear_thief" in triggers and triggers["cbxEvtNear_thief"]:
+				QtBind.setChecked(gui,cbxEvtNear_thief,True)
 			if "cbxEvtChar_attacked" in triggers and triggers["cbxEvtChar_attacked"]:
 				QtBind.setChecked(gui,cbxEvtChar_attacked,True)
 			if "cbxEvtChar_died" in triggers and triggers["cbxEvtChar_died"]:
 				QtBind.setChecked(gui,cbxEvtChar_died,True)
-			if "cbxEvtPet_transport_died" in triggers and triggers["cbxEvtPet_transport_died"]:
-				QtBind.setChecked(gui,cbxEvtPet_transport_died,True)
+			if "cbxEvtPet_died" in triggers and triggers["cbxEvtPet_died"]:
+				QtBind.setChecked(gui,cbxEvtPet_died,True)
 			if "cbxEvtDrop_item" in triggers and triggers["cbxEvtDrop_item"]:
 				QtBind.setChecked(gui,cbxEvtDrop_item,True)
 			if "cbxEvtDrop_rare" in triggers and triggers["cbxEvtDrop_rare"]:
 				QtBind.setChecked(gui,cbxEvtDrop_rare,True)
+			if "cbxEvtMessage_private" in triggers and triggers["cbxEvtMessage_private"]:
+				QtBind.setChecked(gui,cbxEvtMessage_private,True)
+			if "cbxEvtMessage_stall" in triggers and triggers["cbxEvtMessage_stall"]:
+				QtBind.setChecked(gui,cbxEvtMessage_stall,True)
+			if "cbxEvtMessage_global" in triggers and triggers["cbxEvtMessage_global"]:
+				QtBind.setChecked(gui,cbxEvtMessage_global,True)
 
 # Save specific value at config
 def saveConfigs():
@@ -118,16 +135,19 @@ def saveConfigs():
 		# Save triggers
 		triggers = {}
 		data["Triggers"] = triggers
-		triggers["cbxEvtSpawn_uniqueNear"] = QtBind.isChecked(gui,cbxEvtSpawn_uniqueNear)
+		triggers["cbxEvtNear_unique"] = QtBind.isChecked(gui,cbxEvtNear_unique)
 		triggers["cbxEvtSpawn_uniqueSpawn"] = QtBind.isChecked(gui,cbxEvtSpawn_uniqueSpawn)
 		triggers["cbxEvtSpawn_uniqueKilled"] = QtBind.isChecked(gui,cbxEvtSpawn_uniqueKilled)
-		triggers["cbxEvtSpawn_hunter"] = QtBind.isChecked(gui,cbxEvtSpawn_hunter)
-		triggers["cbxEvtSpawn_thief"] = QtBind.isChecked(gui,cbxEvtSpawn_thief)
+		triggers["cbxEvtNear_hunter"] = QtBind.isChecked(gui,cbxEvtNear_hunter)
+		triggers["cbxEvtNear_thief"] = QtBind.isChecked(gui,cbxEvtNear_thief)
 		triggers["cbxEvtChar_attacked"] = QtBind.isChecked(gui,cbxEvtChar_attacked)
 		triggers["cbxEvtChar_died"] = QtBind.isChecked(gui,cbxEvtChar_died)
-		triggers["cbxEvtPet_transport_died"] = QtBind.isChecked(gui,cbxEvtPet_transport_died)
+		triggers["cbxEvtPet_died"] = QtBind.isChecked(gui,cbxEvtPet_died)
 		triggers["cbxEvtDrop_item"] = QtBind.isChecked(gui,cbxEvtDrop_item)
 		triggers["cbxEvtDrop_rare"] = QtBind.isChecked(gui,cbxEvtDrop_rare)
+		triggers["cbxEvtMessage_private"] = QtBind.isChecked(gui,cbxEvtMessage_private)
+		triggers["cbxEvtMessage_stall"] = QtBind.isChecked(gui,cbxEvtMessage_stall)
+		triggers["cbxEvtMessage_global"] = QtBind.isChecked(gui,cbxEvtMessage_global)
 		# Overrides
 		with open(getConfig(),"w") as f:
 			f.write(json.dumps(data, indent=4, sort_keys=True))
@@ -176,25 +196,35 @@ def SendNotification(message,channelID=None):
 # Called for specific events. data field will always be a string.
 def handle_event(t, data):
 	# Filter events
-	if t == 0 and QtBind.isChecked(gui,cbxEvtSpawn_uniqueNear):
+	if t == 0 and QtBind.isChecked(gui,cbxEvtNear_unique):
 		SendNotification("["+data+"] unique spawn near to you!")
-	elif t == 1 and QtBind.isChecked(gui,cbxEvtSpawn_hunter):
-		SendNotification("[Hunter or Trader] spawn near to you!")
-	elif t == 2 and QtBind.isChecked(gui,cbxEvtSpawn_thief):
-		SendNotification("[Thief] spawn near to you!")
-	elif t == 3 and QtBind.isChecked(gui,cbxEvtPet_transport_died):
+	elif t == 1 and QtBind.isChecked(gui,cbxEvtNear_hunter):
+		SendNotification("Hunter or Trader ["+data+"] spawn near to you!")
+	elif t == 2 and QtBind.isChecked(gui,cbxEvtNear_thief):
+		SendNotification("Thief ["+data+"] spawn near to you!")
+	elif t == 3 and QtBind.isChecked(gui,cbxEvtPet_died):
 		t = get_pets()[data]
-		SendNotification("Your pet ["+(t['type'].title())+" died")
+		SendNotification("Pet ["+(t['type'].title())+" died")
 	elif t == 4 and QtBind.isChecked(gui,cbxEvtChar_attacked):
 		SendNotification("["+data+"] is attacking you!")
 	elif t == 5 and QtBind.isChecked(gui,cbxEvtDrop_rare):
 		t = get_item(int(data))
-		SendNotification("You picked up a [Rare] item ["+t['name']+"]")
+		SendNotification("Item (Rare) picked up ["+t['name']+"]")
 	elif t == 6 and QtBind.isChecked(gui,cbxEvtDrop_item):
 		t = get_item(int(data))
-		SendNotification("You picked up an item ["+t['name']+"]")
+		SendNotification("Item picked up ["+t['name']+"]")
 	elif t == 7 and QtBind.isChecked(gui,cbxEvtChar_died):
-		SendNotification("You died :(")
+		SendNotification("You died")
+
+# All chat messages received are sent to this function
+def handle_chat(t,player,msg):
+	# Check message type
+	if t == 2 and QtBind.isChecked(gui,cbxEvtMessage_private):
+		SendNotification("[Private]["+player+"]: "+msg)
+	elif t == 6 and QtBind.isChecked(gui,cbxEvtMessage_global):
+		SendNotification("[Global]["+player+"]: "+msg)
+	elif t == 9 and QtBind.isChecked(gui,cbxEvtMessage_stall):
+		SendNotification("[Stall]["+player+"]: "+msg)
 
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
