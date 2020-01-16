@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'JellyDix'
-pVersion = '0.0.1'
+pVersion = '0.0.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -204,14 +204,14 @@ def handle_joymax(opcode, data):
 		if updateType == 5:
 			if QtBind.isChecked(gui,cbxEvtSpawn_uniqueSpawn):
 				modelID = struct.unpack_from("<I",data,2)[0]
-				unique = get_monster(int(uniqueModelID))
+				unique = get_monster(int(modelID))
 				SendNotification("["+unique['name']+"] spawned")
 		elif updateType == 6:
 			if QtBind.isChecked(gui,cbxEvtSpawn_uniqueSpawn):
 				modelID = struct.unpack_from("<I",data,2)[0]
 				killerNameLength = struct.unpack_from('<H', data, 6)[0]
-				killerName = struct.unpack_from('<' + str(charLength) + 's', data, 8)[0].decode('cp1252')
-				unique = get_monster(int(uniqueModelID))
+				killerName = struct.unpack_from('<' + str(killerNameLength) + 's', data, 8)[0].decode('cp1252')
+				unique = get_monster(int(modelID))
 				SendNotification("["+unique['name']+"] killed by ["+killerName+"]")
 	return True
 
