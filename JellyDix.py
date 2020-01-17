@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'JellyDix'
-pVersion = '0.0.3'
+pVersion = '0.0.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -45,9 +45,14 @@ cbxEvtChar_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Character died
 cbxEvtPet_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Transport/Horse died',6,235)
 
 # messages
-cbxEvtMessage_private = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Private message',156, 64)
-cbxEvtMessage_stall = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Stall message',156, 83)
-cbxEvtMessage_global = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Global message',156, 102)
+cbxEvtMessage_private = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Private',156, 64)
+cbxEvtMessage_party = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Party',156, 83)
+cbxEvtMessage_academy = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Academy',156, 102)
+cbxEvtMessage_guild = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Guild',156, 121)
+cbxEvtMessage_stall = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Stall',156, 140)
+cbxEvtMessage_global = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Global',156, 159)
+cbxEvtMessage_notice = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Notice',156, 178)
+cbxEvtMessage_gm = QtBind.createCheckBox(gui,'cbxTrigger_clicked','GM',156, 198)
 
 # Return folder path
 def getPath():
@@ -75,8 +80,13 @@ def loadDefaultConfig():
 	QtBind.setChecked(gui,cbxEvtDrop_item,False)
 	QtBind.setChecked(gui,cbxEvtDrop_rare,False)
 	QtBind.setChecked(gui,cbxEvtMessage_private,False)
+	QtBind.setChecked(gui,cbxEvtMessage_party,False)
+	QtBind.setChecked(gui,cbxEvtMessage_academy,False)
+	QtBind.setChecked(gui,cbxEvtMessage_guild,False)
 	QtBind.setChecked(gui,cbxEvtMessage_stall,False)
 	QtBind.setChecked(gui,cbxEvtMessage_global,False)
+	QtBind.setChecked(gui,cbxEvtMessage_notice,False)
+	QtBind.setChecked(gui,cbxEvtMessage_gm,False)
 
 # Loads all config previously saved
 def loadConfigs():
@@ -118,10 +128,20 @@ def loadConfigs():
 				QtBind.setChecked(gui,cbxEvtDrop_rare,True)
 			if "cbxEvtMessage_private" in triggers and triggers["cbxEvtMessage_private"]:
 				QtBind.setChecked(gui,cbxEvtMessage_private,True)
+			if "cbxEvtMessage_party" in triggers and triggers["cbxEvtMessage_party"]:
+				QtBind.setChecked(gui,cbxEvtMessage_party,True)
+			if "cbxEvtMessage_academy" in triggers and triggers["cbxEvtMessage_academy"]:
+				QtBind.setChecked(gui,cbxEvtMessage_academy,True)
+			if "cbxEvtMessage_guild" in triggers and triggers["cbxEvtMessage_guild"]:
+				QtBind.setChecked(gui,cbxEvtMessage_guild,True)
 			if "cbxEvtMessage_stall" in triggers and triggers["cbxEvtMessage_stall"]:
 				QtBind.setChecked(gui,cbxEvtMessage_stall,True)
 			if "cbxEvtMessage_global" in triggers and triggers["cbxEvtMessage_global"]:
 				QtBind.setChecked(gui,cbxEvtMessage_global,True)
+			if "cbxEvtMessage_notice" in triggers and triggers["cbxEvtMessage_notice"]:
+				QtBind.setChecked(gui,cbxEvtMessage_notice,True)
+			if "cbxEvtMessage_gm" in triggers and triggers["cbxEvtMessage_gm"]:
+				QtBind.setChecked(gui,cbxEvtMessage_gm,True)
 
 # Save specific value at config
 def saveConfigs():
@@ -146,8 +166,13 @@ def saveConfigs():
 		triggers["cbxEvtDrop_item"] = QtBind.isChecked(gui,cbxEvtDrop_item)
 		triggers["cbxEvtDrop_rare"] = QtBind.isChecked(gui,cbxEvtDrop_rare)
 		triggers["cbxEvtMessage_private"] = QtBind.isChecked(gui,cbxEvtMessage_private)
+		triggers["cbxEvtMessage_party"] = QtBind.isChecked(gui,cbxEvtMessage_party)
+		triggers["cbxEvtMessage_academy"] = QtBind.isChecked(gui,cbxEvtMessage_academy)
+		triggers["cbxEvtMessage_guild"] = QtBind.isChecked(gui,cbxEvtMessage_guild)
 		triggers["cbxEvtMessage_stall"] = QtBind.isChecked(gui,cbxEvtMessage_stall)
 		triggers["cbxEvtMessage_global"] = QtBind.isChecked(gui,cbxEvtMessage_global)
+		triggers["cbxEvtMessage_notice"] = QtBind.isChecked(gui,cbxEvtMessage_notice)
+		triggers["cbxEvtMessage_gm"] = QtBind.isChecked(gui,cbxEvtMessage_gm)
 		# Overrides
 		with open(getConfig(),"w") as f:
 			f.write(json.dumps(data, indent=4, sort_keys=True))
@@ -174,7 +199,7 @@ def SendNotification(message,channelID=None):
 	# Try to send notification
 	try:
 		# Prepare json to send through POST method
-		jsonData = {"key":key,"channel":channelID,"message":"**"+character_data['name']+"**: "+message}
+		jsonData = {"key":key,"channel":channelID,"message":message}
 		# Setup
 		params = json.dumps(jsonData).encode('utf8')
 		url = QtBind.text(gui,tbxUrl)
@@ -196,35 +221,47 @@ def SendNotification(message,channelID=None):
 # Called for specific events. data field will always be a string.
 def handle_event(t, data):
 	# Filter events
+	msgHeader = "**"+character_data['name']+"** - "
 	if t == 0 and QtBind.isChecked(gui,cbxEvtNear_unique):
-		SendNotification("["+data+"] unique spawn near to you!")
+		SendNotification(msgHeader+"["+data+"] unique spawn near to you!")
 	elif t == 1 and QtBind.isChecked(gui,cbxEvtNear_hunter):
-		SendNotification("Hunter or Trader ["+data+"] spawn near to you!")
+		SendNotification(msgHeader+"Hunter or Trader ["+data+"] spawn near to you!")
 	elif t == 2 and QtBind.isChecked(gui,cbxEvtNear_thief):
-		SendNotification("Thief ["+data+"] spawn near to you!")
+		SendNotification(msgHeader+"Thief ["+data+"] spawn near to you!")
 	elif t == 3 and QtBind.isChecked(gui,cbxEvtPet_died):
 		t = get_pets()[data]
-		SendNotification("Pet ["+(t['type'].title())+" died")
+		SendNotification(msgHeader+"Pet ["+(t['type'].title())+" died")
 	elif t == 4 and QtBind.isChecked(gui,cbxEvtChar_attacked):
-		SendNotification("["+data+"] is attacking you!")
+		SendNotification(msgHeader+"["+data+"] is attacking you!")
 	elif t == 5 and QtBind.isChecked(gui,cbxEvtDrop_rare):
 		t = get_item(int(data))
-		SendNotification("Item (Rare) picked up ["+t['name']+"]")
+		SendNotification(msgHeader+"Item (Rare) picked up ["+t['name']+"]")
 	elif t == 6 and QtBind.isChecked(gui,cbxEvtDrop_item):
 		t = get_item(int(data))
-		SendNotification("Item picked up ["+t['name']+"]")
+		SendNotification(msgHeader+"Item picked up ["+t['name']+"]")
 	elif t == 7 and QtBind.isChecked(gui,cbxEvtChar_died):
-		SendNotification("You died")
+		SendNotification(msgHeader+"You died")
 
 # All chat messages received are sent to this function
 def handle_chat(t,player,msg):
+	msgHeader = "**"+character_data['name']+"** - "
 	# Check message type
 	if t == 2 and QtBind.isChecked(gui,cbxEvtMessage_private):
-		SendNotification("[Private]["+player+"]: "+msg)
+		SendNotification(msgHeader+"**[Private] from ["+player+"]: "+msg)
+	elif t == 3 and QtBind.isChecked(gui,cbxEvtMessage_gm):
+		SendNotification("[GM] **"+player+"**:"+msg)
+	elif t == 4 and QtBind.isChecked(gui,cbxEvtMessage_party):
+		SendNotification("[Party] **"+player+"**:"+msg)
+	elif t == 5 and QtBind.isChecked(gui,cbxEvtMessage_guild):
+		SendNotification("[Guild] **"+player+"**:"+msg)
 	elif t == 6 and QtBind.isChecked(gui,cbxEvtMessage_global):
-		SendNotification("[Global]["+player+"]: "+msg)
+		SendNotification("[Global] **"+player+"**:"+msg)
+	elif t == 7 and QtBind.isChecked(gui,cbxEvtMessage_notice):
+		SendNotification("[Notice] "+msg)
 	elif t == 9 and QtBind.isChecked(gui,cbxEvtMessage_stall):
-		SendNotification("[Stall]["+player+"]: "+msg)
+		SendNotification(msgHeader+"[Stall] from ["+player+"]:"+msg)
+	elif t == 16 and QtBind.isChecked(gui,cbxEvtMessage_academy):
+		SendNotification("[Academy] **"+player+"**:"+msg)
 
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
@@ -237,7 +274,7 @@ def handle_joymax(opcode, data):
 				unique = get_monster(int(modelID))
 				SendNotification("["+unique['name']+"] spawned")
 		elif updateType == 6:
-			if QtBind.isChecked(gui,cbxEvtSpawn_uniqueSpawn):
+			if QtBind.isChecked(gui,cbxEvtSpawn_uniqueKilled):
 				modelID = struct.unpack_from("<I",data,2)[0]
 				killerNameLength = struct.unpack_from('<H', data, 6)[0]
 				killerName = struct.unpack_from('<' + str(killerNameLength) + 's', data, 8)[0].decode('cp1252')
