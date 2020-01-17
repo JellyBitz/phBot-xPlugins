@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'JellyDix'
-pVersion = '0.0.4'
+pVersion = '0.0.5'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -29,7 +29,7 @@ btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"  Save  ",660,7)
 
 # uniques
 lblTriggers = QtBind.createLabel(gui,"Check all notifications that you wish on Discord :",6,45)
-cbxEvtNear_unique = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawns near',6, 64)
+cbxEvtSpawn_uniqueNear = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawns near',6, 64)
 cbxEvtSpawn_uniqueSpawn = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawn',6, 83)
 cbxEvtSpawn_uniqueKilled = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique killed',6, 102)
 
@@ -53,6 +53,9 @@ cbxEvtMessage_stall = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Stall',156
 cbxEvtMessage_global = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Global',156, 159)
 cbxEvtMessage_notice = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Notice',156, 178)
 cbxEvtMessage_gm = QtBind.createCheckBox(gui,'cbxTrigger_clicked','GM',156, 198)
+cbxEvtMessage_battlearena = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Battle Arena',156, 216)
+cbxEvtMessage_ctf = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Capture the Flag',156, 235)
+cbxEvtMessage_quest = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Quest completed',156, 254)
 
 # Return folder path
 def getPath():
@@ -69,7 +72,7 @@ def loadDefaultConfig():
 	QtBind.setText(gui, tbxChannel,"")
 	QtBind.setText(gui, tbxUrl,JELLYDIX_URL)
 	# Triggers
-	QtBind.setChecked(gui,cbxEvtNear_unique,False)
+	QtBind.setChecked(gui,cbxEvtSpawn_uniqueNear,False)
 	QtBind.setChecked(gui,cbxEvtSpawn_uniqueSpawn,False)
 	QtBind.setChecked(gui,cbxEvtSpawn_uniqueKilled,False)
 	QtBind.setChecked(gui,cbxEvtNear_hunter,False)
@@ -87,6 +90,9 @@ def loadDefaultConfig():
 	QtBind.setChecked(gui,cbxEvtMessage_global,False)
 	QtBind.setChecked(gui,cbxEvtMessage_notice,False)
 	QtBind.setChecked(gui,cbxEvtMessage_gm,False)
+	QtBind.setChecked(gui,cbxEvtMessage_battlearena,False)
+	QtBind.setChecked(gui,cbxEvtMessage_ctf,False)
+	QtBind.setChecked(gui,cbxEvtMessage_quest,False)
 
 # Loads all config previously saved
 def loadConfigs():
@@ -106,8 +112,8 @@ def loadConfigs():
 		# Load triggers
 		if "Triggers" in data:
 			triggers = data["Triggers"]
-			if "cbxEvtNear_unique" in triggers and triggers["cbxEvtNear_unique"]:
-				QtBind.setChecked(gui,cbxEvtNear_unique,True)
+			if "cbxEvtSpawn_uniqueNear" in triggers and triggers["cbxEvtSpawn_uniqueNear"]:
+				QtBind.setChecked(gui,cbxEvtSpawn_uniqueNear,True)
 			if "cbxEvtSpawn_uniqueSpawn" in triggers and triggers["cbxEvtSpawn_uniqueSpawn"]:
 				QtBind.setChecked(gui,cbxEvtSpawn_uniqueSpawn,True)
 			if "cbxEvtSpawn_uniqueKilled" in triggers and triggers["cbxEvtSpawn_uniqueKilled"]:
@@ -142,6 +148,12 @@ def loadConfigs():
 				QtBind.setChecked(gui,cbxEvtMessage_notice,True)
 			if "cbxEvtMessage_gm" in triggers and triggers["cbxEvtMessage_gm"]:
 				QtBind.setChecked(gui,cbxEvtMessage_gm,True)
+			if "cbxEvtMessage_battlearena" in triggers and triggers["cbxEvtMessage_battlearena"]:
+				QtBind.setChecked(gui,cbxEvtMessage_battlearena,True)
+			if "cbxEvtMessage_ctf" in triggers and triggers["cbxEvtMessage_ctf"]:
+				QtBind.setChecked(gui,cbxEvtMessage_ctf,True)
+			if "cbxEvtMessage_quest" in triggers and triggers["cbxEvtMessage_quest"]:
+				QtBind.setChecked(gui,cbxEvtMessage_quest,True)
 
 # Save specific value at config
 def saveConfigs():
@@ -155,7 +167,7 @@ def saveConfigs():
 		# Save triggers
 		triggers = {}
 		data["Triggers"] = triggers
-		triggers["cbxEvtNear_unique"] = QtBind.isChecked(gui,cbxEvtNear_unique)
+		triggers["cbxEvtSpawn_uniqueNear"] = QtBind.isChecked(gui,cbxEvtSpawn_uniqueNear)
 		triggers["cbxEvtSpawn_uniqueSpawn"] = QtBind.isChecked(gui,cbxEvtSpawn_uniqueSpawn)
 		triggers["cbxEvtSpawn_uniqueKilled"] = QtBind.isChecked(gui,cbxEvtSpawn_uniqueKilled)
 		triggers["cbxEvtNear_hunter"] = QtBind.isChecked(gui,cbxEvtNear_hunter)
@@ -173,6 +185,9 @@ def saveConfigs():
 		triggers["cbxEvtMessage_global"] = QtBind.isChecked(gui,cbxEvtMessage_global)
 		triggers["cbxEvtMessage_notice"] = QtBind.isChecked(gui,cbxEvtMessage_notice)
 		triggers["cbxEvtMessage_gm"] = QtBind.isChecked(gui,cbxEvtMessage_gm)
+		triggers["cbxEvtMessage_battlearena"] = QtBind.isChecked(gui,cbxEvtMessage_battlearena)
+		triggers["cbxEvtMessage_ctf"] = QtBind.isChecked(gui,cbxEvtMessage_ctf)
+		triggers["cbxEvtMessage_quest"] = QtBind.isChecked(gui,cbxEvtMessage_quest)
 		# Overrides
 		with open(getConfig(),"w") as f:
 			f.write(json.dumps(data, indent=4, sort_keys=True))
@@ -222,7 +237,7 @@ def SendNotification(message,channelID=None):
 def handle_event(t, data):
 	# Filter events
 	msgHeader = "**"+character_data['name']+"** - "
-	if t == 0 and QtBind.isChecked(gui,cbxEvtNear_unique):
+	if t == 0 and QtBind.isChecked(gui,cbxEvtSpawn_uniqueNear):
 		SendNotification(msgHeader+"["+data+"] unique spawn near to you!")
 	elif t == 1 and QtBind.isChecked(gui,cbxEvtNear_hunter):
 		SendNotification(msgHeader+"Hunter or Trader ["+data+"] spawn near to you!")
@@ -249,19 +264,19 @@ def handle_chat(t,player,msg):
 	if t == 2 and QtBind.isChecked(gui,cbxEvtMessage_private):
 		SendNotification(msgHeader+"**[Private] from ["+player+"]: "+msg)
 	elif t == 3 and QtBind.isChecked(gui,cbxEvtMessage_gm):
-		SendNotification("[GM] **"+player+"**:"+msg)
+		SendNotification("[GM] **"+player+"** : "+msg)
 	elif t == 4 and QtBind.isChecked(gui,cbxEvtMessage_party):
-		SendNotification("[Party] **"+player+"**:"+msg)
+		SendNotification("[Party] **"+player+"** : "+msg)
 	elif t == 5 and QtBind.isChecked(gui,cbxEvtMessage_guild):
-		SendNotification("[Guild] **"+player+"**:"+msg)
+		SendNotification("[Guild] **"+player+"** : "+msg)
 	elif t == 6 and QtBind.isChecked(gui,cbxEvtMessage_global):
-		SendNotification("[Global] **"+player+"**:"+msg)
+		SendNotification("[Global] **"+player+"** : "+msg)
 	elif t == 7 and QtBind.isChecked(gui,cbxEvtMessage_notice):
 		SendNotification("[Notice] "+msg)
 	elif t == 9 and QtBind.isChecked(gui,cbxEvtMessage_stall):
-		SendNotification(msgHeader+"[Stall] from ["+player+"]:"+msg)
+		SendNotification(msgHeader+"[Stall] from ["+player+"] : "+msg)
 	elif t == 16 and QtBind.isChecked(gui,cbxEvtMessage_academy):
-		SendNotification("[Academy] **"+player+"**:"+msg)
+		SendNotification("[Academy] **"+player+"** : "+msg)
 
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
@@ -280,6 +295,41 @@ def handle_joymax(opcode, data):
 				killerName = struct.unpack_from('<' + str(killerNameLength) + 's', data, 8)[0].decode('cp1252')
 				unique = get_monster(int(modelID))
 				SendNotification("["+unique['name']+"] killed by ["+killerName+"]")
+	elif opcode == 0x34D2:
+		if QtBind.isChecked(gui,cbxEvtMessage_battlearena):
+			updateType = data[0]
+			if updateType == 2:
+				SendNotification("[Battle Arena] starts at 15 min.")
+			elif updateType == 13:
+				SendNotification("[Battle Arena] starts at 5 min.")
+			elif updateType == 14:
+				SendNotification("[Battle Arena] starts at 1 min.")
+			elif updateType == 3:
+				SendNotification("[Battle Arena] registration closed")
+			elif updateType == 4:
+				SendNotification("[Battle Arena] started")
+			elif updateType == 5:
+				SendNotification("[Battle Arena] finished")
+	elif opcode == 0x34B1:
+		if QtBind.isChecked(gui,cbxEvtMessage_ctf):
+			updateType = data[0]
+			if updateType == 2:
+				SendNotification("[Capture the Flag] starts at 15 min.")
+			elif updateType == 13:
+				SendNotification("[Capture the Flag] starts at 5 min.")
+			elif updateType == 14:
+				SendNotification("[Capture the Flag] starts at 1 min.")
+			elif updateType == 3:
+				SendNotification("[Capture the Flag] started")
+			elif updateType == 9:
+				SendNotification("[Capture the Flag] finished")
+	elif opcode == 0x30D5:
+		if QtBind.isChecked(gui,cbxEvtMessage_quest):
+			# Quest updated & Quest completed
+			if data[0] == 2 and data[10] == 2:
+				strLength = struct.unpack_from('<H', data, 11)[0]
+				questServerName = struct.unpack_from('<' + str(strLength) + 's', data, 13)[0].decode('cp1252')
+				SendNotification("**"+character_data['name']+"** - [Quest] has been completed ["+questServerName+"]")
 	return True
 
 # Plugin load success
