@@ -1,4 +1,5 @@
 from phBot import *
+from datetime import datetime
 import QtBind
 import urllib.request
 import urllib.parse
@@ -7,7 +8,7 @@ import json
 import os
 
 pName = 'JellyDix'
-pVersion = '0.0.7'
+pVersion = '0.0.8'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -29,6 +30,7 @@ btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"  Save  ",660,7)
 
 lblTriggers = QtBind.createLabel(gui,"Check all notifications that you wish on Discord :",6,45)
 
+cbxAddTimeStamp = QtBind.createCheckBox(gui,'cbxTrigger_clicked',"Add TimeStamp to notifications",350,45)
 # uniques
 cbxEvtSpawn_uniqueNear = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawns near',6, 64)
 cbxEvtSpawn_uniqueSpawn = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawn',6, 83)
@@ -47,18 +49,18 @@ cbxEvtChar_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Character died
 cbxEvtPet_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Transport/Horse died',6,254)
 
 # messages
-cbxEvtMessage_private = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Private',156,64)
-cbxEvtMessage_stall = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Stall',156,83)
-cbxEvtMessage_party = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Party',156,102)
-cbxEvtMessage_academy = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Academy',156,121)
-cbxEvtMessage_guild = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Guild',156,140)
-cbxEvtMessage_union = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Union',156,159)
-cbxEvtMessage_global = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Global',156,178)
-cbxEvtMessage_notice = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Notice',156,198)
-cbxEvtMessage_gm = QtBind.createCheckBox(gui,'cbxTrigger_clicked','GM',156,216)
-cbxEvtMessage_battlearena = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Battle Arena',156,235)
-cbxEvtMessage_ctf = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Capture the Flag',156,254)
-cbxEvtMessage_quest = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Quest completed',156,273)
+cbxEvtMessage_private = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Private',186,64)
+cbxEvtMessage_stall = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Stall',186,83)
+cbxEvtMessage_party = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Party',186,102)
+cbxEvtMessage_academy = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Academy',186,121)
+cbxEvtMessage_guild = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Guild',186,140)
+cbxEvtMessage_union = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Union',186,159)
+cbxEvtMessage_global = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Global',186,178)
+cbxEvtMessage_notice = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Notice',186,198)
+cbxEvtMessage_gm = QtBind.createCheckBox(gui,'cbxTrigger_clicked','GM',186,216)
+cbxEvtMessage_battlearena = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Battle Arena',186,235)
+cbxEvtMessage_ctf = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Capture the Flag',186,254)
+cbxEvtMessage_quest = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Quest completed',186,273)
 
 # Return folder path
 def getPath():
@@ -74,6 +76,7 @@ def loadDefaultConfig():
 	QtBind.setText(gui, tbxKey,JELLYDIX_KEY)
 	QtBind.setText(gui, tbxChannel,"")
 	QtBind.setText(gui, tbxUrl,JELLYDIX_URL)
+	QtBind.setChecked(gui,cbxAddTimeStamp,False)
 	# Triggers
 	QtBind.setChecked(gui,cbxEvtSpawn_uniqueNear,False)
 	QtBind.setChecked(gui,cbxEvtSpawn_uniqueSpawn,False)
@@ -114,6 +117,8 @@ def loadConfigs():
 			QtBind.setText(gui, tbxChannel,data["Channel"])
 		if "Url" in data:
 			QtBind.setText(gui, tbxUrl,data["Url"])
+		if "AddTimeStamp" in data and data["AddTimeStamp"]:
+			QtBind.setChecked(gui,cbxAddTimeStamp,True)
 		# Load triggers
 		if "Triggers" in data:
 			triggers = data["Triggers"]
@@ -173,6 +178,7 @@ def saveConfigs():
 		data["Key"] = QtBind.text(gui,tbxKey)
 		data["Channel"] = QtBind.text(gui,tbxChannel)
 		data["Url"] = QtBind.text(gui,tbxUrl)
+		data["AddTimeStamp"] = QtBind.isChecked(gui,cbxAddTimeStamp)
 		# Save triggers
 		triggers = {}
 		data["Triggers"] = triggers
@@ -230,6 +236,9 @@ def SendNotify(message,channel_id=None,data=None):
 		return
 	# Try to send notify
 	try:
+		# Add timestamp
+		if QtBind.isChecked(gui,cbxAddTimeStamp):
+			message = "|`"+datetime.now().strftime('%H:%M:%S')+"`| "+message
 		# Prepare json to send through POST method
 		jsonData = {"key":key,"channel":channel_id,"message":message}
 		if data:
