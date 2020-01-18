@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'JellyDix'
-pVersion = '0.0.6'
+pVersion = '0.0.7'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -286,7 +286,7 @@ def handle_chat(t,player,msg):
 		SendNotify("**"+character_data['name']+"** - "+"[Party] **"+player+"** : "+msg)
 	elif t == 16 and QtBind.isChecked(gui,cbxEvtMessage_academy):
 		SendNotify("**"+character_data['name']+"** - "+"[Academy] **"+player+"** : "+msg)
-		elif t == 5 and QtBind.isChecked(gui,cbxEvtMessage_guild):
+	elif t == 5 and QtBind.isChecked(gui,cbxEvtMessage_guild):
 		SendNotify("[Guild] **"+player+"** : "+msg)
 	elif t == 11 and QtBind.isChecked(gui,cbxEvtMessage_union):
 		SendNotify("[Union] **"+player+"** : "+msg)
