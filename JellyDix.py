@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'JellyDix'
-pVersion = '0.0.8'
+pVersion = '0.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -16,7 +16,7 @@ character_data = None
 
 # Default data
 JELLYDIX_KEY="JellyDix"
-JELLYDIX_URL="https://JellyDix.jellybitz.repl.co"
+JELLYDIX_URL="https://jellydix.jellybitz.repl.co"
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
@@ -213,19 +213,11 @@ def saveConfigs():
 def cbxTrigger_clicked(checked):
 	saveConfigs()
 
-# Called when the character enters the game world
-def joined_game():
-	global character_data
-	character_data = get_character_data()
-	loadConfigs()
-	if QtBind.isChecked(gui,cbxEvtChar_joined):
-		SendNotify("**"+character_data['name']+"** - Joined to the game")
-
 # Send a notify to discord
 # message : Text shown as discord notify
 # channel_id : ID from channel to be sent
-# data : Extra data used at server for some notifications
-def SendNotify(message,channel_id=None,data=None):
+# info : Extra data used at server for some notifications
+def SendNotify(message,channel_id=None,info=None):
 	# Load channel from GUI
 	if not channel_id:
 		channel_id = QtBind.text(gui,tbxChannel)
@@ -241,8 +233,8 @@ def SendNotify(message,channel_id=None,data=None):
 			message = "|`"+datetime.now().strftime('%H:%M:%S')+"`| "+message
 		# Prepare json to send through POST method
 		jsonData = {"key":key,"channel":channel_id,"message":message}
-		if data:
-			jsonData["data"] = data
+		if info:
+			jsonData["info"] = info
 		# Setup
 		params = json.dumps(jsonData).encode('utf8')
 		if not url.endswith("/"):
@@ -250,39 +242,41 @@ def SendNotify(message,channel_id=None,data=None):
 		req = urllib.request.Request(url+"api",data=params,headers={'content-type': 'application/json'})
 		with urllib.request.urlopen(req,timeout=5) as f:
 			try:
-				success = f.read().decode('utf-8')
-				if success == 'true':
-					log("Plugin: notify sent to Discord")
+				msg = f.read().decode('utf-8')
+				if msg == 'true':
+					log("Plugin: notify sent to Discord!")
 				else:
-					log("Plugin: notify failed loading!")
+					log("Plugin: notify failed ["+msg+"]")
 			except Exception as ex2:
 				log("Plugin: Error reading response from server ["+str(ex2)+"]")
 	except Exception as ex:
 		log("Plugin: Error loading url ["+str(ex)+"]")
+
+# Called when the character enters the game world
+def joined_game():
+	global character_data
+	character_data = get_character_data()
+	loadConfigs()
+	if QtBind.isChecked(gui,cbxEvtChar_joined):
+		SendNotify("**"+character_data['name']+"** - Joined to the game")
 
 # Called for specific events. data field will always be a string.
 def handle_event(t, data):
 	# Filter events
 	msgHeader = "**"+character_data['name']+"** - "
 	if t == 0 and QtBind.isChecked(gui,cbxEvtSpawn_uniqueNear):
-		SendNotify(msgHeader+"["+data+"] unique spawn near to you!")
+		SendNotify(msgHeader+"["+data+"] unique is near to you!",info=CreateInfo("position",get_position()))
 	elif t == 1 and QtBind.isChecked(gui,cbxEvtNear_hunter):
-		SendNotify(msgHeader+"Hunter or Trader ["+data+"] spawn near to you!")
+		SendNotify(msgHeader+"Hunter or Trader ["+data+"] spawn near to you!",info=CreateInfo("position",get_position()))
 	elif t == 2 and QtBind.isChecked(gui,cbxEvtNear_thief):
-		SendNotify(msgHeader+"Thief ["+data+"] spawn near to you!")
+		SendNotify(msgHeader+"Thief ["+data+"] spawn near to you!",info=CreateInfo("position",get_position()))
 	elif t == 3 and QtBind.isChecked(gui,cbxEvtPet_died):
 		t = get_pets()[data]
 		SendNotify(msgHeader+"Pet ["+(t['type'].title())+" died")
 	elif t == 4 and QtBind.isChecked(gui,cbxEvtChar_attacked):
 		SendNotify(msgHeader+"["+data+"] is attacking you!")
-	elif t == 5 and QtBind.isChecked(gui,cbxEvtDrop_rare):
-		t = get_item(int(data))
-		SendNotify(msgHeader+"Item (Rare) picked up ["+t['name']+"]")
-	elif t == 6 and QtBind.isChecked(gui,cbxEvtDrop_item):
-		t = get_item(int(data))
-		SendNotify(msgHeader+"Item picked up ["+t['name']+"]")
 	elif t == 7 and QtBind.isChecked(gui,cbxEvtChar_died):
-		SendNotify(msgHeader+"You died")
+		SendNotify(msgHeader+"You died",info=CreateInfo("position",get_position()))
 
 # All chat messages received are sent to this function
 def handle_chat(t,player,msg):
@@ -315,7 +309,7 @@ def handle_joymax(opcode, data):
 			if QtBind.isChecked(gui,cbxEvtSpawn_uniqueSpawn):
 				modelID = struct.unpack_from("<I",data,2)[0]
 				unique = get_monster(int(modelID))
-				SendNotify("["+unique['name']+"] spawned")
+				SendNotify("["+unique['name']+"] has appeared")
 		elif updateType == 6:
 			if QtBind.isChecked(gui,cbxEvtSpawn_uniqueKilled):
 				modelID = struct.unpack_from("<I",data,2)[0]
@@ -358,7 +352,34 @@ def handle_joymax(opcode, data):
 				strLength = struct.unpack_from('<H', data, 11)[0]
 				questServerName = struct.unpack_from('<' + str(strLength) + 's', data, 13)[0].decode('cp1252')
 				SendNotify("**"+character_data['name']+"** - [Quest] has been completed ["+questServerName+"]")
+	elif opcode == 0xB034:
+		# success?
+		if data[0] == 1:
+			updateType = data[1]
+			if updateType == 6: # Ground
+				handle_pickup(struct.unpack_from("<I",data,7)[0])
+			elif updateType == 17: # Pet
+				handle_pickup(struct.unpack_from("<I",data,11)[0])
+			elif updateType == 28: # Pet (Full/Quest)
+				slotInventory = data[6]
+				if slotInventory != 254:
+					handle_pickup(struct.unpack_from("<I",data,11)[0])
 	return True
+
+def handle_pickup(itemID):
+	item = get_item(itemID)
+	# check rarity
+	if "_RARE" in item["servername"] and QtBind.isChecked(gui,cbxEvtDrop_rare):
+		SendNotify("**"+character_data['name']+"** - Item (Rare) picked up ["+item['name']+"]")
+	elif QtBind.isChecked(gui,cbxEvtDrop_item):
+		SendNotify("**"+character_data['name']+"** - Item picked up ["+item['name']+"]")
+
+# Create data to send through notify
+def CreateInfo(t,data):
+	info = {}
+	info["type"] = t
+	info["data"] = data
+	return info
 
 # Plugin load success
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
