@@ -2,7 +2,7 @@ from phBot import *
 import struct
 
 pName = 'xArena'
-pVersion = '0.1.2'
+pVersion = '0.1.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xArena.py'
 
 InBattleArena = False
@@ -152,10 +152,24 @@ def capturetheflag(arguments):
 		return 500
 	return 0
 
-# The most dumb anti afk system working ever
+# Move to a random position from the actual position using a maximum radius
+def randomMovement(radiusMax=10):
+	# Generating a random new point
+	pX = random.uniform(-radiusMax,radiusMax)
+	pY = random.uniform(-radiusMax,radiusMax)
+	# Mixing with the actual position
+	p = get_position()
+	pX = pX + p["x"]
+	pY = pY + p["y"]
+	# Moving to new position
+	move_to(pX,pY,p["z"])
+	log("Plugin: Random movement to (X:%.1f,Y:%.1f)"%(pX,pY))
+
+# Anti AFK system by random movement
 def AntiAFK():
 	if InBattleArena or InCTF:
-		inject_joymax(0x3091,b'\x01', False)
-		Timer(15.0, AntiAFK).start()
+		#inject_joymax(0x3091,b'\x01', False)
+		randomMovement(2)
+		Timer(5.0, AntiAFK).start()
 
 log('Plugin: '+pName+' v'+pVersion+' succesfully loaded')
