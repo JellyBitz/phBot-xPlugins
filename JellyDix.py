@@ -6,9 +6,10 @@ import urllib.parse
 import struct
 import json
 import os
+import re
 
 pName = 'JellyDix'
-pVersion = '0.1.0'
+pVersion = '0.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -20,47 +21,54 @@ JELLYDIX_URL="https://jellydix.jellybitz.repl.co"
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
-lblKey = QtBind.createLabel(gui,"JellyDix Key :",6,10)
-tbxKey = QtBind.createLineEdit(gui,"",75,7,80,18)
-lblChannel = QtBind.createLabel(gui,"Discord Channel :",170,10)
-tbxChannel = QtBind.createLineEdit(gui,"",258,7,120,18)
-lblUrl = QtBind.createLabel(gui,"Website Url :",400,10)
-tbxUrl = QtBind.createLineEdit(gui,"",466,7,180,18)
+lblKey = QtBind.createLabel(gui,"Public Key :",6,10)
+tbxKey = QtBind.createLineEdit(gui,"",65,7,60,18)
+lblChannel = QtBind.createLabel(gui,"Discord Channel :",140,10)
+tbxChannel = QtBind.createLineEdit(gui,"",228,7,160,18)
+lblUrl = QtBind.createLabel(gui,"Website/Host :",400,10)
+tbxUrl = QtBind.createLineEdit(gui,"",476,7,160,18)
 btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"  Save  ",660,7)
 
-lblTriggers = QtBind.createLabel(gui,"Check all notifications that you wish on Discord :",6,45)
+lblTriggers = QtBind.createLabel(gui,"Check all notifications you wish to appear on your Discord Channel -",6,35)
 
-cbxAddTimeStamp = QtBind.createCheckBox(gui,'cbxTrigger_clicked',"Add TimeStamp to notifications",350,45)
-# uniques
-cbxEvtSpawn_uniqueNear = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawns near',6, 64)
-cbxEvtSpawn_uniqueSpawn = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawn',6, 83)
-cbxEvtSpawn_uniqueKilled = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique killed',6, 102)
+cbxAddTimeStamp = QtBind.createCheckBox(gui,'cbxTrigger_clicked',"Add TimeStamps",335,35)
 
-# picks
-cbxEvtDrop_item = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Item drop',6,121)
-cbxEvtDrop_rare = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Rare drop',6,140)
+cbxEvtChar_joined = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Joined to Game',6,54)
+# messages
+cbxEvtMessage_private = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Private',6,74)
+cbxEvtMessage_stall = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Stall',6,89)
+cbxEvtMessage_party = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Party',6,104)
+cbxEvtMessage_academy = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Academy',6,119)
+cbxEvtMessage_guild = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Guild',6,134)
+cbxEvtMessage_union = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Union',6,149)
+cbxEvtMessage_global = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Global',6,164)
+cbxEvtMessage_notice = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Notice',6,179)
+cbxEvtMessage_gm = QtBind.createCheckBox(gui,'cbxTrigger_clicked','GameMaster',6,194)
+
+# events
+cbxEvtMessage_battlearena = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Battle Arena',6,214)
+cbxEvtMessage_ctf = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Capture the Flag',6,229)
+
+cbxEvtMessage_uniqueSpawn = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique spawn',6,249)
+cbxEvtMessage_uniqueKilled = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique killed',6,264)
 
 # warnings
-cbxEvtChar_joined = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Joined to Game',6,159)
-cbxEvtNear_hunter = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Hunter/Trader spawn',6,178)
-cbxEvtNear_thief = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Thief spawn',6,197)
-cbxEvtChar_attacked = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Character attacked',6,216)
-cbxEvtChar_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Character died',6,235)
-cbxEvtPet_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Transport/Horse died',6,254)
+cbxEvtNear_unique = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Unique near',140, 54)
+cbxEvtNear_hunter = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Hunter/Trader near',140,69)
+cbxEvtNear_thief = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Thief near',140,84)
+cbxEvtChar_attacked = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Character attacked',140,99)
+cbxEvtChar_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Character died',140,114)
+cbxEvtPet_died = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Transport/Horse died',140,129)
 
-# messages
-cbxEvtMessage_private = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Private',186,64)
-cbxEvtMessage_stall = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Stall',186,83)
-cbxEvtMessage_party = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Party',186,102)
-cbxEvtMessage_academy = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Academy',186,121)
-cbxEvtMessage_guild = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Guild',186,140)
-cbxEvtMessage_union = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Union',186,159)
-cbxEvtMessage_global = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Global',186,178)
-cbxEvtMessage_notice = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Notice',186,198)
-cbxEvtMessage_gm = QtBind.createCheckBox(gui,'cbxTrigger_clicked','GM',186,216)
-cbxEvtMessage_battlearena = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Battle Arena',186,235)
-cbxEvtMessage_ctf = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Capture the Flag',186,254)
-cbxEvtMessage_quest = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Quest completed',186,273)
+
+# picks
+cbxEvtDrop_item = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Any item picked up',140,149)
+cbxEvtDrop_rare = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Rare item picked up',140,164)
+cbxEvtDrop_name = QtBind.createCheckBox(gui,'cbxTrigger_clicked','[ - - - - - - - - - - ] pick',140,179)
+tbxEvtDrop_name = QtBind.createLineEdit(gui,"",158,179,80,14)
+
+# character
+cbxEvtMessage_quest = QtBind.createCheckBox(gui,'cbxTrigger_clicked','Quest completed',140,199)
 
 # Return folder path
 def getPath():
@@ -78,17 +86,7 @@ def loadDefaultConfig():
 	QtBind.setText(gui, tbxUrl,JELLYDIX_URL)
 	QtBind.setChecked(gui,cbxAddTimeStamp,False)
 	# Triggers
-	QtBind.setChecked(gui,cbxEvtSpawn_uniqueNear,False)
-	QtBind.setChecked(gui,cbxEvtSpawn_uniqueSpawn,False)
-	QtBind.setChecked(gui,cbxEvtSpawn_uniqueKilled,False)
 	QtBind.setChecked(gui,cbxEvtChar_joined,False)
-	QtBind.setChecked(gui,cbxEvtNear_hunter,False)
-	QtBind.setChecked(gui,cbxEvtNear_thief,False)
-	QtBind.setChecked(gui,cbxEvtChar_attacked,False)
-	QtBind.setChecked(gui,cbxEvtChar_died,False)
-	QtBind.setChecked(gui,cbxEvtPet_died,False)
-	QtBind.setChecked(gui,cbxEvtDrop_item,False)
-	QtBind.setChecked(gui,cbxEvtDrop_rare,False)
 	QtBind.setChecked(gui,cbxEvtMessage_private,False)
 	QtBind.setChecked(gui,cbxEvtMessage_stall,False)
 	QtBind.setChecked(gui,cbxEvtMessage_party,False)
@@ -100,6 +98,18 @@ def loadDefaultConfig():
 	QtBind.setChecked(gui,cbxEvtMessage_gm,False)
 	QtBind.setChecked(gui,cbxEvtMessage_battlearena,False)
 	QtBind.setChecked(gui,cbxEvtMessage_ctf,False)
+	QtBind.setChecked(gui,cbxEvtMessage_uniqueSpawn,False)
+	QtBind.setChecked(gui,cbxEvtMessage_uniqueKilled,False)
+	QtBind.setChecked(gui,cbxEvtNear_unique,False)
+	QtBind.setChecked(gui,cbxEvtNear_hunter,False)
+	QtBind.setChecked(gui,cbxEvtNear_thief,False)
+	QtBind.setChecked(gui,cbxEvtChar_attacked,False)
+	QtBind.setChecked(gui,cbxEvtChar_died,False)
+	QtBind.setChecked(gui,cbxEvtPet_died,False)
+	QtBind.setChecked(gui,cbxEvtDrop_item,False)
+	QtBind.setChecked(gui,cbxEvtDrop_rare,False)
+	QtBind.setChecked(gui,cbxEvtDrop_name,False)
+	QtBind.setText(gui,tbxEvtDrop_name,"")
 	QtBind.setChecked(gui,cbxEvtMessage_quest,False)
 
 # Loads all config previously saved
@@ -122,12 +132,12 @@ def loadConfigs():
 		# Load triggers
 		if "Triggers" in data:
 			triggers = data["Triggers"]
-			if "cbxEvtSpawn_uniqueNear" in triggers and triggers["cbxEvtSpawn_uniqueNear"]:
-				QtBind.setChecked(gui,cbxEvtSpawn_uniqueNear,True)
-			if "cbxEvtSpawn_uniqueSpawn" in triggers and triggers["cbxEvtSpawn_uniqueSpawn"]:
-				QtBind.setChecked(gui,cbxEvtSpawn_uniqueSpawn,True)
-			if "cbxEvtSpawn_uniqueKilled" in triggers and triggers["cbxEvtSpawn_uniqueKilled"]:
-				QtBind.setChecked(gui,cbxEvtSpawn_uniqueKilled,True)
+			if "cbxEvtNear_unique" in triggers and triggers["cbxEvtNear_unique"]:
+				QtBind.setChecked(gui,cbxEvtNear_unique,True)
+			if "cbxEvtMessage_uniqueSpawn" in triggers and triggers["cbxEvtMessage_uniqueSpawn"]:
+				QtBind.setChecked(gui,cbxEvtMessage_uniqueSpawn,True)
+			if "cbxEvtMessage_uniqueKilled" in triggers and triggers["cbxEvtMessage_uniqueKilled"]:
+				QtBind.setChecked(gui,cbxEvtMessage_uniqueKilled,True)
 			if "cbxEvtChar_joined" in triggers and triggers["cbxEvtChar_joined"]:
 				QtBind.setChecked(gui,cbxEvtChar_joined,True)
 			if "cbxEvtNear_hunter" in triggers and triggers["cbxEvtNear_hunter"]:
@@ -144,6 +154,10 @@ def loadConfigs():
 				QtBind.setChecked(gui,cbxEvtDrop_item,True)
 			if "cbxEvtDrop_rare" in triggers and triggers["cbxEvtDrop_rare"]:
 				QtBind.setChecked(gui,cbxEvtDrop_rare,True)
+			if "cbxEvtDrop_name" in triggers and triggers["cbxEvtDrop_name"]:
+				QtBind.setChecked(gui,cbxEvtDrop_name,True)
+			if "tbxEvtDrop_name" in triggers:
+				QtBind.setText(gui,tbxEvtDrop_name,triggers["tbxEvtDrop_name"])
 			if "cbxEvtMessage_private" in triggers and triggers["cbxEvtMessage_private"]:
 				QtBind.setChecked(gui,cbxEvtMessage_private,True)
 			if "cbxEvtMessage_stall" in triggers and triggers["cbxEvtMessage_stall"]:
@@ -182,9 +196,9 @@ def saveConfigs():
 		# Save triggers
 		triggers = {}
 		data["Triggers"] = triggers
-		triggers["cbxEvtSpawn_uniqueNear"] = QtBind.isChecked(gui,cbxEvtSpawn_uniqueNear)
-		triggers["cbxEvtSpawn_uniqueSpawn"] = QtBind.isChecked(gui,cbxEvtSpawn_uniqueSpawn)
-		triggers["cbxEvtSpawn_uniqueKilled"] = QtBind.isChecked(gui,cbxEvtSpawn_uniqueKilled)
+		triggers["cbxEvtNear_unique"] = QtBind.isChecked(gui,cbxEvtNear_unique)
+		triggers["cbxEvtMessage_uniqueSpawn"] = QtBind.isChecked(gui,cbxEvtMessage_uniqueSpawn)
+		triggers["cbxEvtMessage_uniqueKilled"] = QtBind.isChecked(gui,cbxEvtMessage_uniqueKilled)
 		triggers["cbxEvtChar_joined"] = QtBind.isChecked(gui,cbxEvtChar_joined)
 		triggers["cbxEvtNear_hunter"] = QtBind.isChecked(gui,cbxEvtNear_hunter)
 		triggers["cbxEvtNear_thief"] = QtBind.isChecked(gui,cbxEvtNear_thief)
@@ -193,6 +207,8 @@ def saveConfigs():
 		triggers["cbxEvtPet_died"] = QtBind.isChecked(gui,cbxEvtPet_died)
 		triggers["cbxEvtDrop_item"] = QtBind.isChecked(gui,cbxEvtDrop_item)
 		triggers["cbxEvtDrop_rare"] = QtBind.isChecked(gui,cbxEvtDrop_rare)
+		triggers["cbxEvtDrop_name"] = QtBind.isChecked(gui,cbxEvtDrop_name)
+		triggers["tbxEvtDrop_name"] = QtBind.text(gui,tbxEvtDrop_name)
 		triggers["cbxEvtMessage_private"] = QtBind.isChecked(gui,cbxEvtMessage_private)
 		triggers["cbxEvtMessage_stall"] = QtBind.isChecked(gui,cbxEvtMessage_stall)
 		triggers["cbxEvtMessage_party"] = QtBind.isChecked(gui,cbxEvtMessage_party)
@@ -264,7 +280,7 @@ def joined_game():
 def handle_event(t, data):
 	# Filter events
 	msgHeader = "**"+character_data['name']+"** - "
-	if t == 0 and QtBind.isChecked(gui,cbxEvtSpawn_uniqueNear):
+	if t == 0 and QtBind.isChecked(gui,cbxEvtNear_unique):
 		SendNotify(msgHeader+"["+data+"] unique is near to you!",info=CreateInfo("position",get_position()))
 	elif t == 1 and QtBind.isChecked(gui,cbxEvtNear_hunter):
 		SendNotify(msgHeader+"Hunter or Trader ["+data+"] spawn near to you!",info=CreateInfo("position",get_position()))
@@ -306,12 +322,12 @@ def handle_joymax(opcode, data):
 	if opcode == 0x300C:
 		updateType = data[0]
 		if updateType == 5:
-			if QtBind.isChecked(gui,cbxEvtSpawn_uniqueSpawn):
+			if QtBind.isChecked(gui,cbxEvtMessage_uniqueSpawn):
 				modelID = struct.unpack_from("<I",data,2)[0]
 				unique = get_monster(int(modelID))
 				SendNotify("["+unique['name']+"] has appeared")
 		elif updateType == 6:
-			if QtBind.isChecked(gui,cbxEvtSpawn_uniqueKilled):
+			if QtBind.isChecked(gui,cbxEvtMessage_uniqueKilled):
 				modelID = struct.unpack_from("<I",data,2)[0]
 				killerNameLength = struct.unpack_from('<H', data, 6)[0]
 				killerName = struct.unpack_from('<' + str(killerNameLength) + 's', data, 8)[0].decode('cp1252')
@@ -373,6 +389,14 @@ def handle_pickup(itemID):
 		SendNotify("**"+character_data['name']+"** - Item (Rare) picked up ["+item['name']+"]")
 	elif QtBind.isChecked(gui,cbxEvtDrop_item):
 		SendNotify("**"+character_data['name']+"** - Item picked up ["+item['name']+"]")
+	elif QtBind.isChecked(gui,cbxEvtDrop_name):
+		searchName = QtBind.text(gui,tbxEvtDrop_name)
+		if searchName:
+			try:
+				if re.search(searchName,item['name']):
+					SendNotify("**"+character_data['name']+"** - Item (Filtered) picked up ["+item['name']+"]")
+			except:
+				pass
 
 # Create data to send through notify
 def CreateInfo(t,data):
