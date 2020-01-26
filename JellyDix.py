@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.2.0'
+pVersion = '0.2.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -321,7 +321,10 @@ def btnAddChannel_clicked():
 				if os.path.exists(getConfig()):
 					with open(getConfig(), 'r') as f:
 						data = json.load(f)
-				data["Channels"] = QtBind.getItems(gui,lstChannels)
+				# Add new channel
+				if not "Channels" in data:
+					data['Channels'] = []
+				data["Channels"].append(channel_id)
 				# Replace configs
 				with open(getConfig(),"w") as f:
 					f.write(json.dumps(data, indent=4, sort_keys=True))
@@ -344,13 +347,20 @@ def btnRemChannel_clicked():
 		channelItem = QtBind.text(gui,lstChannels)
 		if channelItem:
 			# Remove channel from all combo's
-			for cmbx in cmbxTriggers:
+			for name,cmbx in cmbxTriggers.items():
 				channelReset = False
 				if QtBind.text(gui,cmbx) == channelItem:
 					channelReset = True
 				QtBind.remove(gui,cmbx,channelItem)
 				if channelReset:
 					QtBind.setText(gui,cmbx,"")
+			for name,cmbx in cmbxTriggers_.items():
+				channelReset = False
+				if QtBind.text(gui_,cmbx) == channelItem:
+					channelReset = True
+				QtBind.remove(gui_,cmbx,channelItem)
+				if channelReset:
+					QtBind.setText(gui_,cmbx,"")
 			# Update config file
 			if os.path.exists(getConfig()):
 				data = {"Channels":[]}
