@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.2.1'
+pVersion = '0.2.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -513,31 +513,31 @@ def handle_joymax(opcode, data):
 		if channel_id:
 			updateType = data[0]
 			if updateType == 2:
-				Notify("**Battle Arena** starts at 15 min.")
+				Notify(channel_id,"**Battle Arena** starts at 15 min.")
 			elif updateType == 13:
-				Notify("**Battle Arena** starts at 5 min.")
+				Notify(channel_id,"**Battle Arena** starts at 5 min.")
 			elif updateType == 14:
-				Notify("**Battle Arena** starts at 1 min.")
+				Notify(channel_id,"**Battle Arena** starts at 1 min.")
 			elif updateType == 3:
-				Notify("**Battle Arena** registration closed")
+				Notify(channel_id,"**Battle Arena** registration closed")
 			elif updateType == 4:
-				Notify("**Battle Arena** started")
+				Notify(channel_id,"**Battle Arena** started")
 			elif updateType == 5:
-				Notify("**Battle Arena** finished")
+				Notify(channel_id,"**Battle Arena** finished")
 	elif opcode == 0x34B1:
 		channel_id = QtBind.text(gui,cmbxEvtMessage_ctf)
 		if channel_id:
 			updateType = data[0]
 			if updateType == 2:
-				Notify("**Capture the Flag** starts at 15 min.")
+				Notify(channel_id,"**Capture the Flag** starts at 15 min.")
 			elif updateType == 13:
-				Notify("**Capture the Flag** starts at 5 min.")
+				Notify(channel_id,"**Capture the Flag** starts at 5 min.")
 			elif updateType == 14:
-				Notify("**Capture the Flag** starts at 1 min.")
+				Notify(channel_id,"**Capture the Flag** starts at 1 min.")
 			elif updateType == 3:
-				Notify("**Capture the Flag** started")
+				Notify(channel_id,"**Capture the Flag** started")
 			elif updateType == 9:
-				Notify("**Capture the Flag** finished")
+				Notify(channel_id,"**Capture the Flag** finished")
 	elif opcode == 0x30D5:
 		channel_id = QtBind.text(gui_,cmbxEvtMessage_quest)
 		if channel_id:
@@ -580,26 +580,29 @@ def handle_pickup(itemID):
 		if channel_id:
 			Notify(channel_id,"|`"+character_data['name']+"`| - Item (Equipable) picked up ***"+item['name']+"***")
 			return
-	# check filter name
-	if QtBind.isChecked(gui_,cbxEvtPick_name_filter):
-		searchName = QtBind.text(gui_,tbxEvtPick_name_filter)
-		if searchName:
-			try:
-				if re.search(searchName,item['name']):
-					Notify("|`"+character_data['name']+"`| - Item (Filtered) picked up ***"+item['name']+"***")
-					return
-			except Exception as ex:
-				log("Plugin: Error at regex ["+str(ex)+"]")
-	# check filter servername
-	if QtBind.isChecked(gui_,cbxEvtPick_servername_filter):
-		searchServername = QtBind.text(gui_,tbxEvtPick_servername_filter)
-		if searchServername:
-			try:
-				if re.search(searchServername,item['servername']):
-					Notify("|`"+character_data['name']+"`| - Item (Filtered) picked up ***"+item['name']+"***")
-					return
-			except Exception as ex:
-				log("Plugin: Error at regex ["+str(ex)+"]")
+
+	channel_id = QtBind.text(gui_,cmbxEvtPick_item)
+	if channel_id:
+		# check filter name
+		if QtBind.isChecked(gui_,cbxEvtPick_name_filter):
+			searchName = QtBind.text(gui_,tbxEvtPick_name_filter)
+			if searchName:
+				try:
+					if re.search(searchName,item['name']):
+						Notify(channel_id,"|`"+character_data['name']+"`| - Item (Filtered) picked up ***"+item['name']+"***")
+						return
+				except Exception as ex:
+					log("Plugin: Error at regex ["+str(ex)+"]")
+		# check filter servername
+		if QtBind.isChecked(gui_,cbxEvtPick_servername_filter):
+			searchServername = QtBind.text(gui_,tbxEvtPick_servername_filter)
+			if searchServername:
+				try:
+					if re.search(searchServername,item['servername']):
+						Notify(channel_id,"|`"+character_data['name']+"`| - Item (Filtered) picked up ***"+item['name']+"***")
+						return
+				except Exception as ex:
+					log("Plugin: Error at regex ["+str(ex)+"]")
 
 # Plugin load success
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
