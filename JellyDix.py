@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.2.2'
+pVersion = '0.2.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -35,8 +35,8 @@ tbxKey = QtBind.createLineEdit(gui,JELLYDIX_KEY,205,7,45,19)
 lblUrl = QtBind.createLabel(gui,"Website :",260,10)
 tbxUrl = QtBind.createLineEdit(gui,JELLYDIX_URL,310,7,155,19)
 
-btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"  Save Changes  ",630,7)
-cbxAddTimeStamp = QtBind.createCheckBox(gui,'cbxDoNothing',"Add Timestamps",475,7)
+btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"     Save Changes     ",475,7)
+cbxAddTimeStamp = QtBind.createCheckBox(gui,'cbxDoNothing',"Attach timestamps",590,10)
 
 lblTriggers = QtBind.createLabel(gui,"Select the Discord channel to send the notification ( Filters are using regex )",175,35)
 
@@ -155,7 +155,6 @@ def loadDefaultConfig():
 		QtBind.clear(gui_,cmbx)
 		QtBind.append(gui_,cmbx,"")
 
-
 # Save specific value at config
 def saveConfigs():
 	# Save if data has been loaded
@@ -193,7 +192,7 @@ def saveConfigs():
 		# Overrides
 		with open(getConfig(),"w") as f:
 			f.write(json.dumps(data, indent=4, sort_keys=True))
-		log("Plugin: "+pName+" configs are now saved!")
+		log("Plugin: "+pName+" config is now saved!")
 
 # Loads all config previously saved
 def loadConfigs():
@@ -389,9 +388,11 @@ def CreateInfo(t,data):
 # info : Extra data used at server for some notifications
 def Notify(channel_id,message,info=None):
 	# Check if there is enough data to create a notification
+	if not channel_id or not message:
+		return
 	key = QtBind.text(gui,tbxKey)
 	url = QtBind.text(gui,tbxUrl)
-	if not key or not url or not channel_id or not message:
+	if not key or not url:
 		return
 	# Try to send notification
 	try:
