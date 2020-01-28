@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.2.3'
+pVersion = '0.2.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -492,7 +492,7 @@ def handle_joymax(opcode, data):
 				modelID = struct.unpack_from("<I",data,2)[0]
 				uniqueName = get_monster(int(modelID))['name']
 				if QtBind.isChecked(gui,cbxEvtMessage_uniqueSpawn_filter):
-					searchName = QtBind.text(gui,cbxEvtMessage_uniqueSpawn_filter)
+					searchName = QtBind.text(gui,tbxEvtMessage_uniqueSpawn_filter)
 					if searchName:
 						try:
 							if re.search(searchName,uniqueName):
