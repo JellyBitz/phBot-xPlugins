@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.2.4'
+pVersion = '0.2.5'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -480,6 +480,19 @@ def handle_event(t, data):
 		Notify(QtBind.text(gui_,cmbxEvtChar_attacked),"|`"+character_data['name']+"`| - **"+(t['type'].title())+"** pet died")
 	elif t == 7:
 		Notify(QtBind.text(gui_,cmbxEvtPet_died),"|`"+character_data['name']+"`| - You died",CreateInfo("position",get_position()))
+	else:
+		# check rarity
+		if t == 5:
+			channel_id = QtBind.text(gui_,cmbxEvtPick_rare)
+			if channel_id:
+				item = get_item(int(data))
+				Notify(channel_id,"|`"+character_data['name']+"`| - Item (Rare) picked up ***"+item['name']+"***")
+		# check equipable
+		elif t == 6:
+			channel_id = QtBind.text(gui_,cmbxEvtPick_equip)
+			if channel_id:
+				item = get_item(int(data))
+				Notify(channel_id,"|`"+character_data['name']+"`| - Item (Equipable) picked up ***"+item['name']+"***")
 
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
@@ -548,46 +561,30 @@ def handle_joymax(opcode, data):
 				quest = get_quests()[questID]
 				Notify(channel_id,"|`"+character_data['name']+"`| - **Quest** has been completed ***"+quest['name']+"***")
 	elif opcode == 0xB034:
-		try:
-			# success?
-			if data[0] == 1:
-				updateType = data[1]
-				if updateType == 6: # Ground
-					handle_pickup(struct.unpack_from("<I",data,7)[0])
-				elif updateType == 17: # Pet
+		# vSRO filter
+		locale = get_locale()
+		if locale == 22:
+			# parse
+			updateType = data[1]
+			if updateType == 6: # Ground
+				handle_pickup(struct.unpack_from("<I",data,7)[0])
+			elif updateType == 17: # Pet
+				handle_pickup(struct.unpack_from("<I",data,11)[0])
+			elif updateType == 28: # Pet (Full/Quest)
+				slotInventory = data[6]
+				if slotInventory != 254:
 					handle_pickup(struct.unpack_from("<I",data,11)[0])
-				elif updateType == 28: # Pet (Full/Quest)
-					slotInventory = data[6]
-					if slotInventory != 254:
-						handle_pickup(struct.unpack_from("<I",data,11)[0])
-		except:
-			log("Plugin: Oops! Pick up parsing error..")
-			log("If you want support, send me all this via private message:")
-			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"]\nLocale ["+str(get_locale())+"]")
 	return True
 
 # All picked up items are sent to this function (only vSRO working at the moment) 
 def handle_pickup(itemID):
-	item = get_item(itemID)
-	# check rarity
-	if "_RARE" in item["servername"]:
-		channel_id = QtBind.text(gui_,cmbxEvtPick_rare)
-		if channel_id:
-			Notify(channel_id,"|`"+character_data['name']+"`| - Item (Rare) picked up ***"+item['name']+"***")
-			return
-	# check equipable
-	if item['tid1'] == 1:
-		channel_id = QtBind.text(gui_,cmbxEvtPick_equip)
-		if channel_id:
-			Notify(channel_id,"|`"+character_data['name']+"`| - Item (Equipable) picked up ***"+item['name']+"***")
-			return
-
 	channel_id = QtBind.text(gui_,cmbxEvtPick_item)
 	if channel_id:
 		# check filter name
 		if QtBind.isChecked(gui_,cbxEvtPick_name_filter):
 			searchName = QtBind.text(gui_,tbxEvtPick_name_filter)
 			if searchName:
+				item = get_item(itemID)
 				try:
 					if re.search(searchName,item['name']):
 						Notify(channel_id,"|`"+character_data['name']+"`| - Item (Filtered) picked up ***"+item['name']+"***")
@@ -598,6 +595,7 @@ def handle_pickup(itemID):
 		if QtBind.isChecked(gui_,cbxEvtPick_servername_filter):
 			searchServername = QtBind.text(gui_,tbxEvtPick_servername_filter)
 			if searchServername:
+				item = get_item(itemID)
 				try:
 					if re.search(searchServername,item['servername']):
 						Notify(channel_id,"|`"+character_data['name']+"`| - Item (Filtered) picked up ***"+item['name']+"***")
