@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.2.5'
+pVersion = '0.2.6'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -73,24 +73,14 @@ cbxEvtMessage_uniqueSpawn_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',4
 tbxEvtMessage_uniqueSpawn_filter = QtBind.createLineEdit(gui,"",463,75,118,19)
 lblEvtMessage_uniqueKilled = QtBind.createLabel(gui,'Unique killed',585,98)
 cmbxEvtMessage_uniqueKilled = QtBind.createCombobox(gui,450,95,131,19)
+cbxEvtMessage_uniqueKilled_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,115)
+tbxEvtMessage_uniqueKilled_filter = QtBind.createLineEdit(gui,"",463,115,118,19)
 
 # events
-lblEvtMessage_battlearena = QtBind.createLabel(gui,'Battle Arena',585,123)
-cmbxEvtMessage_battlearena = QtBind.createCombobox(gui,450,120,131,19)
-lblEvtMessage_ctf = QtBind.createLabel(gui,'Capture the Flag',585,143)
-cmbxEvtMessage_ctf = QtBind.createCombobox(gui,450,140,131,19)
-
-# picks
-lblEvtPick_item = QtBind.createLabel(gui,'Item picked up (vSRO)',585,168)
-cmbxEvtPick_item = QtBind.createCombobox(gui,450,165,131,19)
-cbxEvtPick_name_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,185)
-tbxEvtPick_name_filter = QtBind.createLineEdit(gui,"",463,185,118,19)
-cbxEvtPick_servername_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,205)
-tbxEvtPick_servername_filter = QtBind.createLineEdit(gui,"",463,205,118,19)
-lblEvtPick_rare = QtBind.createLabel(gui,'Item (Rare) picked up',585,228)
-cmbxEvtPick_rare = QtBind.createCombobox(gui,450,225,131,19)
-lblEvtPick_equip = QtBind.createLabel(gui,'Item (Equipable) picked up',585,248)
-cmbxEvtPick_equip = QtBind.createCombobox(gui,450,245,131,19)
+lblEvtMessage_battlearena = QtBind.createLabel(gui,'Battle Arena',585,143)
+cmbxEvtMessage_battlearena = QtBind.createCombobox(gui,450,140,131,19)
+lblEvtMessage_ctf = QtBind.createLabel(gui,'Capture the Flag',585,163)
+cmbxEvtMessage_ctf = QtBind.createCombobox(gui,450,160,131,19)
 
 # Initializing GUI(+)
 gui_ = QtBind.init(__name__,pName+"(+)")
@@ -109,12 +99,24 @@ cmbxEvtChar_died = QtBind.createCombobox(gui_,6,87,131,19)
 lblEvtPet_died = QtBind.createLabel(gui_,'Transport/Horse died',141,110)
 cmbxEvtPet_died = QtBind.createCombobox(gui_,6,107,131,19)
 
-lblEvtMessage_quest = QtBind.createLabel(gui_,'Quest completed',416,10)
-cmbxEvtMessage_quest = QtBind.createCombobox(gui_,281,7,131,19)
+# picks
+lblEvtPick_item = QtBind.createLabel(gui_,'Item picked up (vSRO)',416,10)
+cmbxEvtPick_item = QtBind.createCombobox(gui_,281,7,131,19)
+cbxEvtPick_name_filter = QtBind.createCheckBox(gui_,'cbxDoNothing','',281,30)
+tbxEvtPick_name_filter = QtBind.createLineEdit(gui_,"",294,27,118,19)
+cbxEvtPick_servername_filter = QtBind.createCheckBox(gui_,'cbxDoNothing','',281,50)
+tbxEvtPick_servername_filter = QtBind.createLineEdit(gui_,"",294,47,118,19)
+lblEvtPick_rare = QtBind.createLabel(gui_,'Item (Rare) picked up',416,70)
+cmbxEvtPick_rare = QtBind.createCombobox(gui_,281,67,131,19)
+lblEvtPick_equip = QtBind.createLabel(gui_,'Item (Equipable) picked up',416,90)
+cmbxEvtPick_equip = QtBind.createCombobox(gui_,281,87,131,19)
+
+lblEvtMessage_quest = QtBind.createLabel(gui_,'Quest completed',416,115)
+cmbxEvtMessage_quest = QtBind.createCombobox(gui_,281,112,131,19)
 
 # wrap to iterate
-cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died}
-cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtMessage_quest":cmbxEvtMessage_quest}
+cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died}
+cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest}
 
 # Return folder path
 def getPath():
@@ -145,15 +147,17 @@ def loadDefaultConfig():
 
 	QtBind.setChecked(gui,cbxEvtMessage_uniqueSpawn_filter,False)
 	QtBind.setText(gui,tbxEvtMessage_uniqueSpawn_filter," Filter by name")
-
-	QtBind.setChecked(gui,cbxEvtPick_name_filter,False)
-	QtBind.setText(gui,tbxEvtPick_name_filter," Filter by name")
-	QtBind.setChecked(gui,cbxEvtPick_servername_filter,False)
-	QtBind.setText(gui,tbxEvtPick_servername_filter," Filter by servername")
+	QtBind.setChecked(gui,cbxEvtMessage_uniqueKilled_filter,False)
+	QtBind.setText(gui,tbxEvtMessage_uniqueKilled_filter," Filter by name")
 
 	for name,cmbx in cmbxTriggers_.items():
 		QtBind.clear(gui_,cmbx)
 		QtBind.append(gui_,cmbx,"")
+
+	QtBind.setChecked(gui_,cbxEvtPick_name_filter,False)
+	QtBind.setText(gui_,tbxEvtPick_name_filter," Filter by name")
+	QtBind.setChecked(gui_,cbxEvtPick_servername_filter,False)
+	QtBind.setText(gui_,tbxEvtPick_servername_filter," Filter by servername")
 
 # Save specific value at config
 def saveConfigs():
@@ -180,14 +184,16 @@ def saveConfigs():
 
 		triggers["cbxEvtMessage_uniqueSpawn_filter"] = QtBind.isChecked(gui,cbxEvtMessage_uniqueSpawn_filter)
 		triggers["tbxEvtMessage_uniqueSpawn_filter"] = QtBind.text(gui,tbxEvtMessage_uniqueSpawn_filter)
-
-		triggers["cbxEvtPick_name_filter"] = QtBind.isChecked(gui,cbxEvtPick_name_filter)
-		triggers["tbxEvtPick_name_filter"] = QtBind.text(gui,tbxEvtPick_name_filter)
-		triggers["cbxEvtPick_servername_filter"] = QtBind.isChecked(gui,cbxEvtPick_servername_filter)
-		triggers["tbxEvtPick_servername_filter"] = QtBind.text(gui,tbxEvtPick_servername_filter)
+		triggers["cbxEvtMessage_uniqueKilled_filter"] = QtBind.isChecked(gui,cbxEvtMessage_uniqueKilled_filter)
+		triggers["tbxEvtMessage_uniqueKilled_filter"] = QtBind.text(gui,tbxEvtMessage_uniqueKilled_filter)
 
 		for name,cmbx in cmbxTriggers_.items():
 			triggers[name] = QtBind.text(gui_,cmbx)
+
+		triggers["cbxEvtPick_name_filter"] = QtBind.isChecked(gui_,cbxEvtPick_name_filter)
+		triggers["tbxEvtPick_name_filter"] = QtBind.text(gui_,tbxEvtPick_name_filter)
+		triggers["cbxEvtPick_servername_filter"] = QtBind.isChecked(gui_,cbxEvtPick_servername_filter)
+		triggers["tbxEvtPick_servername_filter"] = QtBind.text(gui_,tbxEvtPick_servername_filter)
 
 		# Overrides
 		with open(getConfig(),"w") as f:
@@ -258,26 +264,15 @@ def loadConfigs():
 					QtBind.setText(gui,tbxEvtMessage_uniqueSpawn_filter,triggers["tbxEvtMessage_uniqueSpawn_filter"])
 				if "cmbxEvtMessage_uniqueKilled" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_uniqueKilled,triggers["cmbxEvtMessage_uniqueKilled"])
+				if "cbxEvtMessage_uniqueKilled_filter" in triggers and triggers["cbxEvtMessage_uniqueKilled_filter"]:
+					QtBind.setChecked(gui,cbxEvtMessage_uniqueKilled_filter,True)
+				if "tbxEvtMessage_uniqueKilled_filter" in triggers and triggers["tbxEvtMessage_uniqueKilled_filter"]:
+					QtBind.setText(gui,tbxEvtMessage_uniqueKilled_filter,triggers["tbxEvtMessage_uniqueKilled_filter"])
 
 				if "cmbxEvtMessage_battlearena" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_battlearena,triggers["cmbxEvtMessage_battlearena"])
 				if "cmbxEvtMessage_ctf" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_ctf,triggers["cmbxEvtMessage_ctf"])
-
-				if "cmbxEvtPick_item" in triggers:
-					QtBind.setText(gui,cmbxEvtPick_item,triggers["cmbxEvtPick_item"])
-				if "cbxEvtPick_name_filter" in triggers and triggers["cbxEvtPick_name_filter"]:
-					QtBind.setChecked(gui,cbxEvtPick_name_filter,True)
-				if "tbxEvtPick_name_filter" in triggers and triggers["tbxEvtPick_name_filter"]:
-					QtBind.setText(gui,tbxEvtPick_name_filter,triggers["tbxEvtPick_name_filter"])
-				if "cbxEvtPick_servername_filter" in triggers and triggers["cbxEvtPick_servername_filter"]:
-					QtBind.setChecked(gui,cbxEvtPick_servername_filter,True)
-				if "tbxEvtPick_servername_filter" in triggers and triggers["tbxEvtPick_servername_filter"]:
-					QtBind.setText(gui,tbxEvtPick_servername_filter,triggers["tbxEvtPick_servername_filter"])
-				if "cmbxEvtPick_rare" in triggers:
-					QtBind.setText(gui,cmbxEvtPick_rare,triggers["cmbxEvtPick_rare"])
-				if "cmbxEvtPick_equip" in triggers:
-					QtBind.setText(gui,cmbxEvtPick_equip,triggers["cmbxEvtPick_equip"])
 
 				if "cmbxEvtNear_unique" in triggers:
 					QtBind.setText(gui_,cmbxEvtNear_unique,triggers["cmbxEvtNear_unique"])
@@ -291,6 +286,21 @@ def loadConfigs():
 					QtBind.setText(gui_,cmbxEvtChar_died,triggers["cmbxEvtChar_died"])
 				if "cmbxEvtPet_died" in triggers:
 					QtBind.setText(gui_,cmbxEvtPet_died,triggers["cmbxEvtPet_died"])
+
+				if "cmbxEvtPick_item" in triggers:
+					QtBind.setText(gui_,cmbxEvtPick_item,triggers["cmbxEvtPick_item"])
+				if "cbxEvtPick_name_filter" in triggers and triggers["cbxEvtPick_name_filter"]:
+					QtBind.setChecked(gui_,cbxEvtPick_name_filter,True)
+				if "tbxEvtPick_name_filter" in triggers and triggers["tbxEvtPick_name_filter"]:
+					QtBind.setText(gui_,tbxEvtPick_name_filter,triggers["tbxEvtPick_name_filter"])
+				if "cbxEvtPick_servername_filter" in triggers and triggers["cbxEvtPick_servername_filter"]:
+					QtBind.setChecked(gui_,cbxEvtPick_servername_filter,True)
+				if "tbxEvtPick_servername_filter" in triggers and triggers["tbxEvtPick_servername_filter"]:
+					QtBind.setText(gui_,tbxEvtPick_servername_filter,triggers["tbxEvtPick_servername_filter"])
+				if "cmbxEvtPick_rare" in triggers:
+					QtBind.setText(gui_,cmbxEvtPick_rare,triggers["cmbxEvtPick_rare"])
+				if "cmbxEvtPick_equip" in triggers:
+					QtBind.setText(gui_,cmbxEvtPick_equip,triggers["cmbxEvtPick_equip"])
 
 				if "cmbxEvtMessage_quest" in triggers:
 					QtBind.setText(gui_,cmbxEvtMessage_quest,triggers["cmbxEvtMessage_quest"])
@@ -476,23 +486,20 @@ def handle_event(t, data):
 	elif t == 4:
 		Notify(QtBind.text(gui_,cmbxEvtChar_died),"|`"+character_data['name']+"`| - `"+data+"` is attacking you!")
 	elif t == 3:
-		t = get_pets()[data]
-		Notify(QtBind.text(gui_,cmbxEvtChar_attacked),"|`"+character_data['name']+"`| - **"+(t['type'].title())+"** pet died")
+		pet = get_pets()[data]
+		Notify(QtBind.text(gui_,cmbxEvtChar_attacked),"|`"+character_data['name']+"`| - **"+(pet['type'].title())+"** pet died")
 	elif t == 7:
 		Notify(QtBind.text(gui_,cmbxEvtPet_died),"|`"+character_data['name']+"`| - You died",CreateInfo("position",get_position()))
-	else:
-		# check rarity
-		if t == 5:
-			channel_id = QtBind.text(gui_,cmbxEvtPick_rare)
-			if channel_id:
-				item = get_item(int(data))
-				Notify(channel_id,"|`"+character_data['name']+"`| - Item (Rare) picked up ***"+item['name']+"***")
-		# check equipable
-		elif t == 6:
-			channel_id = QtBind.text(gui_,cmbxEvtPick_equip)
-			if channel_id:
-				item = get_item(int(data))
-				Notify(channel_id,"|`"+character_data['name']+"`| - Item (Equipable) picked up ***"+item['name']+"***")
+	elif t == 5:
+		channel_id = QtBind.text(gui_,cmbxEvtPick_rare)
+		if channel_id:
+			item = get_item(int(data))
+			Notify(channel_id,"|`"+character_data['name']+"`| - Item (Rare) picked up ***"+item['name']+"***")
+	elif t == 6:
+		channel_id = QtBind.text(gui_,cmbxEvtPick_equip)
+		if channel_id:
+			item = get_item(int(data))
+			Notify(channel_id,"|`"+character_data['name']+"`| - Item (Equipable) picked up ***"+item['name']+"***")
 
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
@@ -520,8 +527,17 @@ def handle_joymax(opcode, data):
 				modelID = struct.unpack_from("<I",data,2)[0]
 				killerNameLength = struct.unpack_from('<H', data, 6)[0]
 				killerName = struct.unpack_from('<' + str(killerNameLength) + 's', data, 8)[0].decode('cp1252')
-				unique = get_monster(int(modelID))
-				Notify(channel_id,"**"+unique['name']+"** killed by `"+killerName+"`")
+				uniqueName = get_monster(int(modelID))['name']
+				if QtBind.isChecked(gui,cbxEvtMessage_uniqueKilled_filter):
+					searchName = QtBind.text(gui,tbxEvtMessage_uniqueKilled_filter)
+					if searchName:
+						try:
+							if re.search(searchName,uniqueName):
+								Notify(channel_id,"**"+uniqueName+"** killed by `"+killerName+"`")
+						except Exception as ex:
+							log("Plugin: Error at regex ["+str(ex)+"]")
+				else:
+					Notify(channel_id,"**"+uniqueName+"** killed by `"+killerName+"`")
 	elif opcode == 0x34D2:
 		channel_id = QtBind.text(gui,cmbxEvtMessage_battlearena)
 		if channel_id:
@@ -580,28 +596,32 @@ def handle_joymax(opcode, data):
 def handle_pickup(itemID):
 	channel_id = QtBind.text(gui_,cmbxEvtPick_item)
 	if channel_id:
+		item = get_item(itemID)
+		# no filters
+		if not QtBind.isChecked(gui_,cbxEvtPick_name_filter) and not QtBind.isChecked(gui_,cbxEvtPick_servername_filter):
+			Notify(channel_id,"|`"+character_data['name']+"`| - Item picked up ***"+item['name']+"***")
+			return
 		# check filter name
 		if QtBind.isChecked(gui_,cbxEvtPick_name_filter):
 			searchName = QtBind.text(gui_,tbxEvtPick_name_filter)
 			if searchName:
-				item = get_item(itemID)
 				try:
-					if re.search(searchName,item['name']):
-						Notify(channel_id,"|`"+character_data['name']+"`| - Item (Filtered) picked up ***"+item['name']+"***")
+					if not re.search(searchName,item['name']):
 						return
 				except Exception as ex:
-					log("Plugin: Error at regex ["+str(ex)+"]")
+					log("Plugin: Error at regex (name) ["+str(ex)+"]")
 		# check filter servername
 		if QtBind.isChecked(gui_,cbxEvtPick_servername_filter):
 			searchServername = QtBind.text(gui_,tbxEvtPick_servername_filter)
 			if searchServername:
-				item = get_item(itemID)
 				try:
-					if re.search(searchServername,item['servername']):
-						Notify(channel_id,"|`"+character_data['name']+"`| - Item (Filtered) picked up ***"+item['name']+"***")
+					if not re.search(searchServername,item['servername']):
 						return
 				except Exception as ex:
-					log("Plugin: Error at regex ["+str(ex)+"]")
+					log("Plugin: Error at regex (servername) ["+str(ex)+"]")
+
+		# Filtered through both if checked
+		Notify(channel_id,"|`"+character_data['name']+"`| - Item (Filtered) picked up ***"+item['name']+"***")
 
 # Plugin load success
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
