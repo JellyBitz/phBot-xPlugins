@@ -1,47 +1,170 @@
 from phBot import *
+import QtBind
 from threading import Timer
 import struct
 import random
+import json
 import os
 
 pName = 'xAcademy'
-pVersion = '0.1.10'
+pVersion = '0.2.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
-# will try to create "Jelly100","Jelly101","Jelly102"
-CUSTOM_NAME = "" # Will be random if you leave it empty
-SEQUENCE_START_NUMBER = 100
-CUSTOM_RACE = "EU" # Will be random if you leave it empty
+# will try to create "Jelly100","Jelly101",..
+# Custom Nickname will be random if you leave it empty
+# Custom Race will be as default CH
+SEQUENCE_DEFAULT_NUMBER = 100
 
-# Var to check if this plugin is creating the character
-creatingCharacter = False
-creatingCharacterNick = ""
+# Globals
+isCreatingCharacter = False
+CreatingNickname = ""
+
+# Initializing GUI
+gui = QtBind.init(__name__,pName)
+cbxEnabled = QtBind.createCheckBox(gui,'cbxDoNothing','Enabled',6,10)
+
+lblProfileName = QtBind.createLabel(gui,"Config profile name :",345,10)
+tbxProfileName = QtBind.createLineEdit(gui,"",450,7,110,19)
+
+btnSaveConfig = QtBind.createButton(gui,'btnSaveConfig_clicked',"  Save  ",580,7)
+btnLoadConfig = QtBind.createButton(gui,'btnLoadConfig_clicked',"  Load  ",630,7)
+
+lblNickname = QtBind.createLabel(gui,"Custom Nickname :",6,35)
+tbxNickname = QtBind.createLineEdit(gui,"",100,32,102,19)
+
+lblSequence = QtBind.createLabel(gui,"Number sequence :",6,55)
+tbxSequence = QtBind.createLineEdit(gui,"",102,52,100,19)
+
+lblRace = QtBind.createLabel(gui,"Custom Race :",6,75)
+cmbxRace = QtBind.createCombobox(gui,79,72,123,19)
+QtBind.append(gui,cmbxRace,"CH")
+QtBind.append(gui,cmbxRace,"EU")
+
+
+lblFullCharacters = QtBind.createLabel(gui,"The next action(s) will be executed if the account cannot create more characters :",6,100)
+lblCMD = QtBind.createLabel(gui,"Run system command (CMD) :",15,120)
+tbxCMD = QtBind.createLineEdit(gui,"",163,117,235,19)
+cbxExit = QtBind.createCheckBox(gui,'cbxDoNothing','Close bot',15,140)
+
+# Return folder path
+def getPath():
+	return get_config_dir()+pName+"\\"
+
+# Return character configs path (JSON)
+def getConfig(name):
+	return getPath()+name+".json"
+
+# Load default configs
+def loadDefaultConfig():
+	# Clear data
+	QtBind.setText(gui,tbxProfileName,"")
+	QtBind.setChecked(gui,cbxEnabled,False)
+
+	QtBind.setText(gui,tbxNickname,"")
+	QtBind.setText(gui,tbxSequence,str(SEQUENCE_DEFAULT_NUMBER))
+	QtBind.setText(gui,cmbxRace,"CH")
+
+	QtBind.setText(gui,tbxCMD,"")
+	QtBind.setChecked(gui,cbxExit,False)
+
+# Loads all config previously saved
+def loadConfigs(fileName=""):
+	# Check config exists to load
+	if os.path.exists(getConfig(fileName)):
+		data = {}
+		with open(getConfig(fileName),"r") as f:
+			data = json.load(f)
+		# Load all data
+		QtBind.setText(gui,tbxProfileName,fileName)
+
+		if "Enabled" in data and data['Enabled']:
+			QtBind.setChecked(gui,cbxEnabled,True)
+
+		if "Nickname" in data:
+			QtBind.setText(gui,tbxNickname,data["Nickname"])
+		if "Sequence" in data and data["Sequence"]:
+			QtBind.setText(gui,tbxSequence,data["Sequence"])
+		if "Race" in data:
+			QtBind.setText(gui,cmbxRace,data["Race"])
+		
+		if "CMD" in data:
+			QtBind.setText(gui,tbxCMD,data["CMD"])
+		if "Exit" in data and data['Exit']:
+			QtBind.setChecked(gui,cbxExit,True)
+		
+		return True
+	return False
+
+# Save specific value at config
+def saveConfigs(fileName=""):
+	data = {}
+	# Save all data
+	data["Enabled"] = QtBind.isChecked(gui,cbxEnabled)
+
+	data["Nickname"] = QtBind.text(gui,tbxNickname)
+
+	sequence = QtBind.text(gui,tbxSequence)
+	if sequence.isnumeric():
+		data["Sequence"] = sequence
+	else:
+		data["Sequence"] = str(SEQUENCE_DEFAULT_NUMBER)
+		QtBind.setText(gui,tbxSequence,data["Sequence"])
+
+	data["Race"] = QtBind.text(gui,cmbxRace)
+
+	data["CMD"] = QtBind.text(gui,tbxCMD)
+	data["Exit"] = QtBind.isChecked(gui,cbxExit)
+	# Overrides
+	with open(getConfig(fileName),"w") as f:
+		f.write(json.dumps(data,indent=4,sort_keys=True))
+
+# Button event
+def btnSaveConfig_clicked():
+	# Check the config name
+	strConfigName = QtBind.text(gui,tbxProfileName)
+	saveConfigs(strConfigName)
+	if strConfigName:
+		log('Plugin: Profile ['+strConfigName+'] config has been saved')
+	else:
+		log("Plugin: Configs has been saved")
+
+# Button event
+def btnLoadConfig_clicked():
+	# Check the config name
+	strConfigName = QtBind.text(gui,tbxProfileName)
+	if loadConfigs(strConfigName):
+		if strConfigName:
+			log("Plugin: Profile ["+strConfigName+"] config has been loaded")
+		else:
+			log("Plugin: Configs has been loaded")
+	elif strConfigName:
+		log("Plugin: Profile ["+strConfigName+"] not found")
 
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
-def handle_joymax(opcode, data):
+def handle_joymax(opcode,data):
 	# SERVER_CHARACTER_SELECTION_RESPONSE
 	if opcode == 0xB007:
-		locale = get_locale()
 		# Filter packet parsing
+		locale = get_locale()
 		try:
-			global creatingCharacter
-			index = 0 # Packet index
+			global isCreatingCharacter
+			index = 0 # Packet cursor
 			# ReadUInt8 / byte (1)
 			action = data[index]
 			index+=1
 			success = data[index]
 			index+=1
 			if action == 1:
-				if creatingCharacter:
-					creatingCharacter = False
+				if isCreatingCharacter:
+					isCreatingCharacter = False
 					if success:
 						log("Plugin: Character created successfully!")
 					else:
 						log("Plugin: Character creation failed")
 			elif action == 4:
-				if creatingCharacter:
+				if isCreatingCharacter:
 					if success:
 						log("Plugin: Nickname available!")
 						create_character()
@@ -57,44 +180,55 @@ def handle_joymax(opcode, data):
 					index+=1
 					log("Plugin: xAcademy character list: "+ ("None" if not nChars else ""))
 					for i in range(nChars):
-						# ReadUInt32() / uint (4)
-						struct.unpack_from("<I",data,index)[0]
 						index+=4 # model id
 						# ReadAscii() / ushort (2) + string (length)
-						charLength = struct.unpack_from('<H', data, index)[0]
+						charLength = struct.unpack_from('<H',data,index)[0]
 						index+=2 # name length
-						charName = struct.unpack_from('<' + str(charLength) + 's', data, index)[0].decode('cp1252')
+						charName = struct.unpack_from('<' + str(charLength) + 's',data,index)[0].decode('cp1252')
 						index+= charLength # name
+						
 						if locale == 18:
-							index+=2 # ???
+							index+=2
+						elif locale == 54:
+							taiwanUnkByte01 = data[index]
+							index+=2
+							if taiwanUnkByte01 == 5:
+								index+=5
+						
 						index+=1 # scale
 						charLevel = data[index]
 						index+=1 # level
-						exp = struct.unpack_from('<Q', data, index)[0]
 						index+=8 # exp
 						index+=2 # str
 						index+=2 # int
 						index+=2 # stats
+
 						if locale == 18:
-							unk01 = struct.unpack_from("<I",data,index)[0]
-							index+=4 # ???
+							index+=4
+
 						index+=4 # hp
 						index+=4 # mp
+
 						if locale == 18:
-							index+=2 # ???
+							index+=2
+						elif locale == 54:
+							index+=10
+
 						charIsDeleting = data[index]
 						index+=1 # isDeleting
 						if charIsDeleting:
 							index+=4
-						if locale == 18:
-							index+=4 # ???
+
+						if locale == 18 or locale == 54:
+							index+=4
+						
 						index+=1 # guildMemberClass
 						# isGuildRenameRequired
 						if data[index]:
 							index+=1
 							# guildName
 							strLength = struct.unpack_from('<H', data, index)[0]
-							index+= (2 + strLength)
+							index+=(2 + strLength)
 						else:
 							index+=1
 						index+=1 # academyMemberClass
@@ -108,8 +242,6 @@ def handle_joymax(opcode, data):
 						for j in range(forCount):
 							index+=4 # RefItemID
 							index+=1 # plus
-						if locale == 18 and unk01 == 0:
-							index+=1 # ???
 						
 						# Show info about previous character
 						log(str(i+1)+") "+charName+" Lv."+str(charLevel)+(" (*)" if charIsDeleting else ""))
@@ -140,12 +272,22 @@ def handle_joymax(opcode, data):
 						Timer(0.1,Inject_DeleteCharacter(deleteCharacter)).start()
 					# Select or create character if is required
 					if not selectCharacter:
+						# Check the char limit
 						if nChars < 4:
-							creatingCharacter = True
+							isCreatingCharacter = True
 							# Wait 10 seconds, then start looking for nicknames
 							Timer(10.0,create_nickname).start()
 						else:
 							log("Plugin: Not enough space to create a new character")
+
+							# Check actions
+							cmd = QtBind.text(gui,tbxCMD)
+							if cmd:
+								log("Plugin: Trying to execute command ["+cmd+"]")
+								os.system(cmd)
+							if QtBind.isChecked(gui,cbxExit):
+								log("Plugin: Your bot will be closed at 3 seconds..")
+								Timer(3.0,Exit).start()
 					else:
 						waitSelection = 0.1
 						# Wait at least seconds after trying deleting a character
@@ -160,44 +302,44 @@ def handle_joymax(opcode, data):
 	return True
 
 def create_character():
-	global creatingCharacterNick
-	
 	# select class
-	charClass = CUSTOM_RACE
-	if charClass == "":
-		charClass = "CH" if random.randint(0,100)%2 == 0 else "EU"
-	if charClass == 'CH':
-		c_model = get_monster_string('CHAR_CH_MAN_ADVENTURER')['model']
+	race = QtBind.text(gui,cmbxRace)
+	if race != 'EU':
+		race = 'CH'
+
+		model = get_monster_string('CHAR_CH_MAN_ADVENTURER')['model']
 		chest = get_item_string('ITEM_CH_M_HEAVY_01_BA_A_DEF')['model']
 		legs = get_item_string('ITEM_CH_M_HEAVY_01_LA_A_DEF')['model']
 		shoes = get_item_string('ITEM_CH_M_HEAVY_01_FA_A_DEF')['model']
 		weapon = get_item_string('ITEM_CH_SWORD_01_A_DEF')['model']
 	else:
-		c_model = get_monster_string('CHAR_EU_MAN_NOBLE')['model']
+		race = 'EU'
+
+		model = get_monster_string('CHAR_EU_MAN_NOBLE')['model']
 		chest = get_item_string('ITEM_EU_M_HEAVY_01_BA_A_DEF')['model']
 		legs = get_item_string('ITEM_EU_M_HEAVY_01_LA_A_DEF')['model']
 		shoes = get_item_string('ITEM_EU_M_HEAVY_01_FA_A_DEF')['model']
 		weapon = get_item_string('ITEM_EU_DAGGER_01_A_DEF')['model']
 
-	if c_model == 0 or chest == 0 or legs == 0 or shoes == 0 or weapon == 0:
-		log('Plugin: Could not retrieve item models')
+	if model == 0 or chest == 0 or legs == 0 or shoes == 0 or weapon == 0:
+		log('Plugin: Error, the CodeName has changed on this server')
 		return
 
-	creatingCharacter = True
-	log('Plugin: Creating character with name [%s] [%s]' % (creatingCharacterNick, charClass))
+	isCreatingCharacter = True
+	log('Plugin: Creating character ['+CreatingNickname+'] ('+race+')')
 	p = b'\x01'
-	p += struct.pack('H', len(creatingCharacterNick))
-	p += creatingCharacterNick.encode('ascii')
-	p += struct.pack('I', c_model)
+	p += struct.pack('H', len(CreatingNickname))
+	p += CreatingNickname.encode('ascii')
+	p += struct.pack('I', model)
 	p += struct.pack('B', 0)
 	p += struct.pack('I', chest)
 	p += struct.pack('I', legs)
 	p += struct.pack('I', shoes)
 	p += struct.pack('I', weapon)
-	Timer(0.1,inject_joymax,(0x7007,p, False)).start()
-	# Request char listing
-	# CLIENT_CHARACTER_SELECTION_REQUEST
-	Timer(5.0,inject_joymax,(0x7007, b'\x02', False)).start()
+	# Try to create character
+	inject_joymax(0x7007,p, False)
+	# Wait 3s to request character list
+	Timer(3.0,inject_joymax,(0x7007, b'\x02', False)).start()
 
 # Inject Packet
 def Inject_DeleteCharacter(charName):
@@ -228,33 +370,68 @@ def getRandomNick():
 	return name
 
 # Get the sequence previously saved or start a new one if not
-def getSequence():
-	seq = SEQUENCE_START_NUMBER -1
-	if os.path.exists(pName+".Sequence.txt"):
-		with open(pName+".Sequence.txt","r") as f:
-			seq = int(f.read())
-	seq += 1
-	with open(pName+".Sequence.txt","w") as f:
-		f.write(str(seq))
-	return seq
+def getSequence():	
+	sequence = QtBind.text(gui,tbxSequence)
+	# Check valid value
+	if sequence.isnumeric():
+		sequence = int(sequence)
+	else:
+		sequence = SEQUENCE_DEFAULT_NUMBER
+
+	QtBind.setText(gui,tbxSequence,str(sequence+1))
+	saveConfigs(QtBind.text(gui,tbxProfileName))
+	
+	return sequence
 
 # Check the name length and sequence and return it
-def getNickSequence():
+def getNickSequence(nickname):
 	seq = str(getSequence())
-	nick = CUSTOM_NAME+seq
+	nick = nickname+seq
 	nickLength = len(nick)
 	if nickLength > 12: # as max. character restriction
 		nickLength -= 12
-		nick = CUSTOM_NAME[:-nickLength]+seq
+		nick = nickname[:-nickLength]+seq
 	return nick
 
+# Check nickname if is available
 def create_nickname():
-	global creatingCharacterNick
-	if CUSTOM_NAME != "":
-		creatingCharacterNick = getNickSequence()
+	global CreatingNickname
+	customName = QtBind.text(gui,tbxNickname) 
+	if customName:
+		CreatingNickname = getNickSequence(customName)
 	else:
-		creatingCharacterNick = getRandomNick()
-	log("Plugin: Checking nickname ["+creatingCharacterNick+"]")
-	Timer(0.1,Inject_CheckName,(creatingCharacterNick,)).start()
+		CreatingNickname = getRandomNick()
+	log("Plugin: Checking nickname ["+CreatingNickname+"]")
+	Inject_CheckName(CreatingNickname)
 
+# Kill current bot
+def Exit():
+	log("Plugin: Closing bot...")
+	os._exit(0)
+
+# Plugin load success
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
+
+loadDefaultConfig()
+# Check configs folder
+if os.path.exists(getPath()):
+	useDefaultConfig = True 
+	# Try to load config through command line
+	bot_args = get_command_line_args()
+	if bot_args:
+		for i in range(len(bot_args)): 
+			param = bot_args[i].lower()
+			if param.startswith('-xacademy-config='):
+				# remove command
+				configName = param[17:]
+				# try to load config file
+				if loadConfigs(configName):
+					log("Plugin: Profile ["+strConfigName+"] loaded from commandline")
+					useDefaultConfig = False
+				break
+	if useDefaultConfig:
+		loadConfigs()
+else:
+	# Creating configs folder
+	os.makedirs(getPath())
+	log('Plugin: "'+pName+'" folder has been created')
