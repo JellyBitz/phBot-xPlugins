@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'xAcademy'
-pVersion = '0.2.0'
+pVersion = '0.2.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -75,9 +75,10 @@ def loadConfigs(fileName=""):
 		data = {}
 		with open(getConfig(fileName),"r") as f:
 			data = json.load(f)
+		# Reset config
+		loadDefaultConfig()
 		# Load all data
 		QtBind.setText(gui,tbxProfileName,fileName)
-
 		if "Enabled" in data and data['Enabled']:
 			QtBind.setChecked(gui,cbxEnabled,True)
 
@@ -145,7 +146,7 @@ def btnLoadConfig_clicked():
 # Returning True will keep the packet and False will not forward it to the game server
 def handle_joymax(opcode,data):
 	# SERVER_CHARACTER_SELECTION_RESPONSE
-	if opcode == 0xB007:
+	if opcode == 0xB007 and QtBind.isChecked(gui,cbxEnabled):
 		# Filter packet parsing
 		locale = get_locale()
 		try:
