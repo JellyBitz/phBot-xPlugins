@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'xAcademy'
-pVersion = '0.2.1'
+pVersion = '0.2.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -151,8 +151,7 @@ def handle_joymax(opcode,data):
 		locale = get_locale()
 		try:
 			global isCreatingCharacter
-			index = 0 # Packet cursor
-			# ReadUInt8 / byte (1)
+			index = 0 # cursor
 			action = data[index]
 			index+=1
 			success = data[index]
@@ -160,22 +159,23 @@ def handle_joymax(opcode,data):
 			if action == 1:
 				if isCreatingCharacter:
 					isCreatingCharacter = False
-					if success:
+					if success == 1:
 						log("Plugin: Character created successfully!")
 					else:
 						log("Plugin: Character creation failed")
 			elif action == 4:
 				if isCreatingCharacter:
-					if success:
+					if success == 1:
 						log("Plugin: Nickname available!")
 						create_character()
 					else:
 						log("Plugin: Nickname has been already taken!")
 						Timer(1.0,create_nickname).start()
 			elif action == 2:
-				if success:
+				if success == 1:
 					selectCharacter = ""
 					deleteCharacter = ""
+					deleteCharacterLevel = 0
 					# Check all characters at selection screen
 					nChars = data[index]
 					index+=1
@@ -245,7 +245,7 @@ def handle_joymax(opcode,data):
 							index+=1 # plus
 						
 						# Show info about previous character
-						log(str(i+1)+") "+charName+" Lv."+str(charLevel)+(" (*)" if charIsDeleting else ""))
+						log(str(i+1)+") "+charName+" (Lv."+str(charLevel)+(") [*]" if charIsDeleting else ""))
 
 						# Conditions for auto select the first character
 						if not selectCharacter:
@@ -255,6 +255,10 @@ def handle_joymax(opcode,data):
 						if not deleteCharacter:
 							if charLevel >= 40 and charLevel <= 50 and not charIsDeleting:
 								deleteCharacter = charName
+								deleteCharacterLevel = charLevel
+
+					if locale == 18 or locale == 54:
+						index+=1 # Removing warning
 
 					try:
 						if i == (nChars-1):
@@ -269,7 +273,7 @@ def handle_joymax(opcode,data):
 
 					# Check for deleting a character
 					if deleteCharacter:
-						log("Plugin: deleting character ["+deleteCharacter+"] Lv."+str(charLevel))
+						log("Plugin: deleting character ["+deleteCharacter+"] (Lv."+str(deleteCharacterLevel)+")")
 						Timer(0.1,Inject_DeleteCharacter(deleteCharacter)).start()
 					# Select or create character if is required
 					if not selectCharacter:
