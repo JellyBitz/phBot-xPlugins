@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'xAcademy'
-pVersion = '0.2.2'
+pVersion = '0.2.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -190,10 +190,10 @@ def handle_joymax(opcode,data):
 						
 						if locale == 18:
 							index+=2
-						elif locale == 54:
-							taiwanUnkByte01 = data[index]
+						elif locale == 54: # Probably different
+							unkUShort01 = struct.unpack_from('<H',data,index)[0]
 							index+=2
-							if taiwanUnkByte01 == 5:
+							if unkUShort01:
 								index+=5
 						
 						index+=1 # scale
@@ -204,16 +204,14 @@ def handle_joymax(opcode,data):
 						index+=2 # int
 						index+=2 # stats
 
-						if locale == 18:
+						if locale == 18 or locale == 54:
 							index+=4
 
 						index+=4 # hp
 						index+=4 # mp
 
-						if locale == 18:
+						if locale == 18 or locale == 54:
 							index+=2
-						elif locale == 54:
-							index+=10
 
 						charIsDeleting = data[index]
 						index+=1 # isDeleting
@@ -245,7 +243,7 @@ def handle_joymax(opcode,data):
 							index+=1 # plus
 						
 						# Show info about previous character
-						log(str(i+1)+") "+charName+" (Lv."+str(charLevel)+(") [*]" if charIsDeleting else ""))
+						log(str(i+1)+") "+charName+" (Lv."+str(charLevel)+")"+(" [*]" if charIsDeleting else ""))
 
 						# Conditions for auto select the first character
 						if not selectCharacter:
