@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.2.6'
+pVersion = '0.2.7'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -77,10 +77,12 @@ cbxEvtMessage_uniqueKilled_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',
 tbxEvtMessage_uniqueKilled_filter = QtBind.createLineEdit(gui,"",463,115,118,19)
 
 # events
-lblEvtMessage_battlearena = QtBind.createLabel(gui,'Battle Arena',585,143)
-cmbxEvtMessage_battlearena = QtBind.createCombobox(gui,450,140,131,19)
-lblEvtMessage_ctf = QtBind.createLabel(gui,'Capture the Flag',585,163)
-cmbxEvtMessage_ctf = QtBind.createCombobox(gui,450,160,131,19)
+lblEvtMessage_ctf = QtBind.createLabel(gui,'Capture the Flag',585,143)
+cmbxEvtMessage_ctf = QtBind.createCombobox(gui,450,140,131,19)
+lblEvtMessage_battlearena = QtBind.createLabel(gui,'Battle Arena',585,163)
+cmbxEvtMessage_battlearena = QtBind.createCombobox(gui,450,160,131,19)
+lblEvtMessage_fortress = QtBind.createLabel(gui,'Fortress War',585,183)
+cmbxEvtMessage_fortress = QtBind.createCombobox(gui,450,180,131,19)
 
 # Initializing GUI(+)
 gui_ = QtBind.init(__name__,pName+"(+)")
@@ -115,7 +117,7 @@ lblEvtMessage_quest = QtBind.createLabel(gui_,'Quest completed',416,115)
 cmbxEvtMessage_quest = QtBind.createCombobox(gui_,281,112,131,19)
 
 # wrap to iterate
-cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died}
+cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
 cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest}
 
 # Return folder path
@@ -159,7 +161,7 @@ def loadDefaultConfig():
 	QtBind.setChecked(gui_,cbxEvtPick_servername_filter,False)
 	QtBind.setText(gui_,tbxEvtPick_servername_filter," Filter by servername")
 
-# Save specific value at config
+# Save all config
 def saveConfigs():
 	# Save if data has been loaded
 	if isJoined():
@@ -198,7 +200,7 @@ def saveConfigs():
 		# Overrides
 		with open(getConfig(),"w") as f:
 			f.write(json.dumps(data, indent=4, sort_keys=True))
-		log("Plugin: "+pName+" config is now saved!")
+		log("Plugin: "+pName+" configs has been saved")
 
 # Loads all config previously saved
 def loadConfigs():
@@ -273,6 +275,8 @@ def loadConfigs():
 					QtBind.setText(gui,cmbxEvtMessage_battlearena,triggers["cmbxEvtMessage_battlearena"])
 				if "cmbxEvtMessage_ctf" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_ctf,triggers["cmbxEvtMessage_ctf"])
+				if "cmbxEvtMessage_fortress" in triggers:
+					QtBind.setText(gui,cmbxEvtMessage_fortress,triggers["cmbxEvtMessage_fortress"])
 
 				if "cmbxEvtNear_unique" in triggers:
 					QtBind.setText(gui_,cmbxEvtNear_unique,triggers["cmbxEvtNear_unique"])
@@ -422,9 +426,9 @@ def Notify(channel_id,message,info=None):
 			try:
 				msg = f.read().decode('utf-8')
 				if msg == 'true' or msg == 'success':
-					log("Plugin: notify sent to Discord!")
+					log("Plugin: Notification sent to Discord!")
 				else:
-					log("Plugin: notify failed ["+msg+"]")
+					log("Plugin: Notification failed ["+msg+"]")
 			except Exception as ex2:
 				log("Plugin: Error reading response from server ["+str(ex2)+"]")
 	except Exception as ex:
@@ -437,6 +441,32 @@ def isJoined():
 	if character_data and "name" in character_data and character_data["name"]:
 		return True
 	return False
+
+# Get battle arena text by type
+def getBattleArenaText(t):
+	if t == 0:
+		return 'Random'
+	if t == 1:
+		return 'Party'
+	if t == 2:
+		return 'Guild'
+	if t == 3:
+		return 'Job'
+	if t == 4:
+		return 'Flag'
+	return 'Unknown['+str(t)+']'
+
+# Get Fortress text by id 
+def getFortressText(fw_id):
+	if fw_id == 1:
+		return "Jangan"
+	if fw_id == 3:
+		return "Hotan"
+	if fw_id == 6:
+		return "Bandit"
+	return 'Fortress (#'+str(fw_id)+')'
+
+"""______________________________ Handling events ______________________________"""
 
 # Called when the character enters the game world
 def joined_game():
@@ -543,31 +573,31 @@ def handle_joymax(opcode, data):
 		if channel_id:
 			updateType = data[0]
 			if updateType == 2:
-				Notify(channel_id,"**Battle Arena** starts at 15 min.")
+				Notify(channel_id,"[**Battle Arena**] ("+getBattleArenaText(data[1])+") will start at 10 minutes")
 			elif updateType == 13:
-				Notify(channel_id,"**Battle Arena** starts at 5 min.")
+				Notify(channel_id,"[**Battle Arena**] ("+getBattleArenaText(data[1])+") will start at 5 minutes")
 			elif updateType == 14:
-				Notify(channel_id,"**Battle Arena** starts at 1 min.")
+				Notify(channel_id,"[**Battle Arena**] ("+getBattleArenaText(data[1])+") will start at 1 minute")
 			elif updateType == 3:
-				Notify(channel_id,"**Battle Arena** registration closed")
+				Notify(channel_id,"[**Battle Arena**] registration period has ended")
 			elif updateType == 4:
-				Notify(channel_id,"**Battle Arena** started")
+				Notify(channel_id,"[**Battle Arena**] started")
 			elif updateType == 5:
-				Notify(channel_id,"**Battle Arena** finished")
+				Notify(channel_id,"[**Battle Arena**] has ended")
 	elif opcode == 0x34B1:
 		channel_id = QtBind.text(gui,cmbxEvtMessage_ctf)
 		if channel_id:
 			updateType = data[0]
 			if updateType == 2:
-				Notify(channel_id,"**Capture the Flag** starts at 15 min.")
+				Notify(channel_id,"[**Capture the Flag**] will start at 10 minutes")
 			elif updateType == 13:
-				Notify(channel_id,"**Capture the Flag** starts at 5 min.")
+				Notify(channel_id,"[**Capture the Flag**] will start at 5 minutes")
 			elif updateType == 14:
-				Notify(channel_id,"**Capture the Flag** starts at 1 min.")
+				Notify(channel_id,"[**Capture the Flag**] will start at 1 minute")
 			elif updateType == 3:
-				Notify(channel_id,"**Capture the Flag** started")
+				Notify(channel_id,"[**Capture the Flag**] started")
 			elif updateType == 9:
-				Notify(channel_id,"**Capture the Flag** finished")
+				Notify(channel_id,"[**Capture the Flag**] has ended")
 	elif opcode == 0x30D5:
 		channel_id = QtBind.text(gui_,cmbxEvtMessage_quest)
 		if channel_id:
@@ -590,6 +620,29 @@ def handle_joymax(opcode, data):
 				slotInventory = data[6]
 				if slotInventory != 254:
 					handle_pickup(struct.unpack_from("<I",data,11)[0])
+	elif opcode == 0x385F:
+		channel_id = QtBind.text(gui,cmbxEvtMessage_fortress)
+		if channel_id:
+			updateType = data[0]
+			if updateType == 1:
+				Notify(channel_id, "[**Fortress War**] will start in 30 minutes")
+			elif updateType == 2:
+				Notify(channel_id, "[**Fortress War**] started")
+			elif updateType == 3:
+				Notify(channel_id, "[**Fortress War**] has 30 minutes before the end")
+			elif updateType == 4:
+				Notify(channel_id, "[**Fortress War**] has 20 minutes before the end")
+			elif updateType == 5:
+				Notify(channel_id, "[**Fortress War**] has 10 minutes before the end")
+			elif updateType == 8:
+				fortressID = struct.unpack_from("<I",data,1)[0]
+				guildNameLength = struct.unpack_from("<H",data,5)[0]
+				guildName = data[7:7+guildNameLength].decode('cp1252')
+				Notify(channel_id, "[**Fortress War**] "+getFortressText(fortressID)+" has been taken by "+guildName)
+			elif updateType == 9:
+				Notify(channel_id, "[**Fortress War**] has 1 minute before the end")
+			elif updateType == 6:
+				Notify(channel_id, "[**Fortress War**] has ended")
 	return True
 
 # All picked up items are sent to this function (only vSRO working at the moment) 
