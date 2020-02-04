@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.4.0'
+pVersion = '0.4.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -99,9 +99,10 @@ def btnRemLeader_clicked():
 
 # Return True if nickname exist at the leader list
 def lstLeaders_exist(nickname):
+	nickname = nickname.lower()
 	players = QtBind.getItems(gui,lstLeaders)
 	for i in range(len(players)):
-		if players[i].lower() == nickname.lower():
+		if players[i].lower() == nickname:
 			return True
 	return False
 
@@ -199,7 +200,7 @@ def handle_chat(t,player,msg):
 				inject(["","70A7","1"])
 			elif msg == "RETURN":
 				# Trying avoid high CPU usage with many chars at the same time
-				Timer(random.random(), inject_useReturnScroll).start()
+				Timer(random.uniform(0.5,2),inject_useReturnScroll).start()
 			elif msg.startswith("TELEPORT"):
 				msg = msg[8:]
 				if msg:
@@ -258,11 +259,12 @@ def inject_useReturnScroll():
 	items = get_inventory()['items']
 	for slot, item in enumerate(items):
 		if item:
+			sn = item['servername']
 			# Search some kind return scroll by servername
-			if "ITEM_ETC_SCROLL_RETURN_0" in item['servername'] or item['servername'] == 'ITEM_ETC_SCROLL_RETURN_NEWBIE_01' or item['servername'] == 'ITEM_ETC_E041225_SANTA_WINGS' or item['servername'] == 'ITEM_MALL_RETURN_SCROLL_HIGH_SPEED' or item['servername'] == 'ITEM_EVENT_RETURN_SCROLL_HIGH_SPEED':
-				Packet = struct.pack('B', slot)
-				Packet += struct.pack('H',2540)
-				inject_joymax(0x704C, Packet, True)
+			if sn.startswith('ITEM_ETC_SCROLL_RETURN_0') or 'RETURN_SCROLL_HIGH_SPEED' in sn or sn == 'ITEM_ETC_SCROLL_RETURN_NEWBIE_01' or sn == 'ITEM_ETC_LEVEL_SCROLL_RETURN_01' or sn == 'ITEM_ETC_E041225_SANTA_WINGS':
+				packet = struct.pack('B',slot)
+				packet += struct.pack('H',2540)
+				inject_joymax(0x704C,packet,True)
 				log('Plugin: Using "'+item['name']+'"')
 				return
 	log('Plugin: "Return Scroll" not found at your inventory')
@@ -300,8 +302,10 @@ def inject(args):
 		for i in range(dataPos, len(args)):
 			Packet.append(int(args[i],16))
 		inject_joymax(opcode,Packet,encrypted)
-		log("Plugin: Injecting packet")
-		log("[Opcode:"+args[1]+"][Data:"+' '.join('{:02X}'.format(int(args[x],16)) for x in range(dataPos, len(args)))+"][Encrypted:"+("Yes" if encrypted else "No")+"]")
+		# Show only if is scripting
+		if args[0]:
+			log("Plugin: Injecting packet")
+			log("[Opcode:"+args[1]+"][Data:"+' '.join('{:02X}'.format(int(args[x],16)) for x in range(dataPos, len(args)))+"][Encrypted:"+("Yes" if encrypted else "No")+"]")
 	else:
 		log("Plugin: Incorrect structure to inject packet")
 	return 0
