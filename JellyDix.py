@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.2.7'
+pVersion = '0.2.8'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -63,7 +63,7 @@ cbxEvtMessage_global_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',175,22
 tbxEvtMessage_global_filter = QtBind.createLineEdit(gui,"",188,220,118,19)
 lblEvtMessage_notice = QtBind.createLabel(gui,'Notice',310,243)
 cmbxEvtMessage_notice = QtBind.createCombobox(gui,175,240,131,19)
-lblEvtMessage_gm = QtBind.createLabel(gui,'GameMaster',310,263)
+lblEvtMessage_gm = QtBind.createLabel(gui,'GM Talk',310,263)
 cmbxEvtMessage_gm = QtBind.createCombobox(gui,175,260,131,19)
 
 # uniques
@@ -115,10 +115,12 @@ cmbxEvtPick_equip = QtBind.createCombobox(gui_,281,87,131,19)
 
 lblEvtMessage_quest = QtBind.createLabel(gui_,'Quest completed',416,115)
 cmbxEvtMessage_quest = QtBind.createCombobox(gui_,281,112,131,19)
+lblEvtBot_alchemy = QtBind.createLabel(gui_,'Alchemy completed',416,135)
+cmbxEvtBot_alchemy = QtBind.createCombobox(gui_,281,132,131,19)
 
 # wrap to iterate
 cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
-cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest}
+cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy}
 
 # Return folder path
 def getPath():
@@ -309,6 +311,9 @@ def loadConfigs():
 				if "cmbxEvtMessage_quest" in triggers:
 					QtBind.setText(gui_,cmbxEvtMessage_quest,triggers["cmbxEvtMessage_quest"])
 
+				if "cmbxEvtBot_alchemy" in triggers:
+					QtBind.setText(gui_,cmbxEvtBot_alchemy,triggers["cmbxEvtBot_alchemy"])
+
 # Checkbox trigger clicked
 def cbxDoNothing(checked):
 	pass
@@ -452,8 +457,6 @@ def getBattleArenaText(t):
 		return 'Guild'
 	if t == 3:
 		return 'Job'
-	if t == 4:
-		return 'Flag'
 	return 'Unknown['+str(t)+']'
 
 # Get Fortress text by id 
@@ -524,12 +527,14 @@ def handle_event(t, data):
 		channel_id = QtBind.text(gui_,cmbxEvtPick_rare)
 		if channel_id:
 			item = get_item(int(data))
-			Notify(channel_id,"|`"+character_data['name']+"`| - Item (Rare) picked up ***"+item['name']+"***")
+			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Rare)** picked up ***"+item['name']+"***")
 	elif t == 6:
 		channel_id = QtBind.text(gui_,cmbxEvtPick_equip)
 		if channel_id:
 			item = get_item(int(data))
-			Notify(channel_id,"|`"+character_data['name']+"`| - Item (Equipable) picked up ***"+item['name']+"***")
+			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Equipable)** picked up ***"+item['name']+"***")
+	elif t == 8:
+		Notify(QtBind.text(gui_,cmbxEvtBot_alchemy),"|`"+character_data['name']+"`| - **Auto alchemy** has been completed")
 
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
@@ -638,7 +643,7 @@ def handle_joymax(opcode, data):
 				fortressID = struct.unpack_from("<I",data,1)[0]
 				guildNameLength = struct.unpack_from("<H",data,5)[0]
 				guildName = data[7:7+guildNameLength].decode('cp1252')
-				Notify(channel_id, "[**Fortress War**] "+getFortressText(fortressID)+" has been taken by "+guildName)
+				Notify(channel_id, "[**Fortress War**] "+getFortressText(fortressID)+" has been taken by `"+guildName+"`")
 			elif updateType == 9:
 				Notify(channel_id, "[**Fortress War**] has 1 minute before the end")
 			elif updateType == 6:
