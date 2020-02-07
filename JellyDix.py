@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.2.8'
+pVersion = '0.2.9'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -615,16 +615,18 @@ def handle_joymax(opcode, data):
 		# vSRO filter
 		locale = get_locale()
 		if locale == 22:
-			# parse
-			updateType = data[1]
-			if updateType == 6: # Ground
-				handle_pickup(struct.unpack_from("<I",data,7)[0])
-			elif updateType == 17: # Pet
-				handle_pickup(struct.unpack_from("<I",data,11)[0])
-			elif updateType == 28: # Pet (Full/Quest)
-				slotInventory = data[6]
-				if slotInventory != 254:
-					handle_pickup(struct.unpack_from("<I",data,11)[0])
+			channel_id = QtBind.text(gui_,cmbxEvtPick_item)
+			if channel_id:
+				# parse
+				updateType = data[1]
+				if updateType == 6: # Ground
+					notify_pickup(channel_id,struct.unpack_from("<I",data,7)[0])
+				elif updateType == 17: # Pet
+					notify_pickup(channel_id,struct.unpack_from("<I",data,11)[0])
+				elif updateType == 28: # Pet (Full/Quest)
+					slotInventory = data[6]
+					if slotInventory != 254:
+						notify_pickup(channel_id,struct.unpack_from("<I",data,11)[0])
 	elif opcode == 0x385F:
 		channel_id = QtBind.text(gui,cmbxEvtMessage_fortress)
 		if channel_id:
@@ -651,35 +653,35 @@ def handle_joymax(opcode, data):
 	return True
 
 # All picked up items are sent to this function (only vSRO working at the moment) 
-def handle_pickup(itemID):
-	channel_id = QtBind.text(gui_,cmbxEvtPick_item)
-	if channel_id:
-		item = get_item(itemID)
-		# no filters
-		if not QtBind.isChecked(gui_,cbxEvtPick_name_filter) and not QtBind.isChecked(gui_,cbxEvtPick_servername_filter):
-			Notify(channel_id,"|`"+character_data['name']+"`| - Item picked up ***"+item['name']+"***")
-			return
-		# check filter name
-		if QtBind.isChecked(gui_,cbxEvtPick_name_filter):
-			searchName = QtBind.text(gui_,tbxEvtPick_name_filter)
-			if searchName:
-				try:
-					if not re.search(searchName,item['name']):
-						return
-				except Exception as ex:
-					log("Plugin: Error at regex (name) ["+str(ex)+"]")
-		# check filter servername
-		if QtBind.isChecked(gui_,cbxEvtPick_servername_filter):
-			searchServername = QtBind.text(gui_,tbxEvtPick_servername_filter)
-			if searchServername:
-				try:
-					if not re.search(searchServername,item['servername']):
-						return
-				except Exception as ex:
-					log("Plugin: Error at regex (servername) ["+str(ex)+"]")
+def notify_pickup(channel_id,itemID):
+	item = get_item(itemID)
+	# no filters
+	usefilterName = QtBind.isChecked(gui_,cbxEvtPick_name_filter)
+	usefilterServerName = QtBind.isChecked(gui_,cbxEvtPick_servername_filter)
+	if not usefilterName and not usefilterServerName:
+		Notify(channel_id,"|`"+character_data['name']+"`| - **Item** picked up ***"+item['name']+"***")
+		return
+	# check filter name
+	if usefilterName:
+		searchName = QtBind.text(gui_,tbxEvtPick_name_filter)
+		if searchName:
+			try:
+				if not re.search(searchName,item['name']):
+					return
+			except Exception as ex:
+				log("Plugin: Error at regex (name) ["+str(ex)+"]")
+	# check filter servername
+	if usefilterServerName:
+		searchServername = QtBind.text(gui_,tbxEvtPick_servername_filter)
+		if searchServername:
+			try:
+				if not re.search(searchServername,item['servername']):
+					return
+			except Exception as ex:
+				log("Plugin: Error at regex (servername) ["+str(ex)+"]")
 
-		# Filtered through both if checked
-		Notify(channel_id,"|`"+character_data['name']+"`| - Item (Filtered) picked up ***"+item['name']+"***")
+	# Filtered through both if checked
+	Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+"***")
 
 # Plugin load success
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
