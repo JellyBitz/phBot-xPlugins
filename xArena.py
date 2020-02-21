@@ -2,7 +2,7 @@ from phBot import *
 import struct
 
 pName = 'xArena'
-pVersion = '0.1.3'
+pVersion = '0.1.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xArena.py'
 
 InBattleArena = False
@@ -15,27 +15,28 @@ def handle_joymax(opcode, data):
 		global InBattleArena
 		if data[0] == 0xFF:
 			result = data[1]
-			if result == 0x00:
+			if result == 0:
 				log('Plugin: Successfully registered to arena')
 				if isPluginRegistering:
 					stop_bot()
-			elif result == 0x02:
+			elif result == 2:
 				log('Plugin: You already registered!')
 			else:
-				if result == 0x04:
+				if result == 4:
 					log('Plugin: You may not register at this time')
-				elif result == 0x06:
+				elif result == 6:
 					log('Plugin: Match has been canceled, not enough players!')
 				elif result == 0x0B:
 					log("Plugin: Unable to register you're not in party")
 				elif result == 0x0D:
 					log("Plugin: You're not wearing the suit to register!")
 				isPluginRegistering = False
-		elif data[0] == 0x08:
+		elif data[0] == 8:
 			InBattleArena = True
 			if isPluginRegistering:
+				log("Plugin: Activating Anti-AFK...")
 				AntiAFK()
-		elif data[0] == 0x09:
+		elif data[0] == 9:
 			result = data[2]
 			coins = data[3]
 			log('Plugin: You have '+('lost' if result == 2 else 'won')+', you gained '+str(coins)+' coins!')
@@ -43,12 +44,13 @@ def handle_joymax(opcode, data):
 				InBattleArena = False
 				if isPluginRegistering:
 					isPluginRegistering = False
+					log("Plugin: Deactivating Anti-AFK. Starting bot...")
 					start_bot()
 	elif opcode == 0x34B1:
 		global InCTF
 		if data[0] == 0xFF:
 			result = data[1]
-			if result == 0x00:
+			if result == 0:
 				log('Plugin: Successfully registered to CTF')
 				if isPluginRegistering:
 					stop_bot()
@@ -64,17 +66,19 @@ def handle_joymax(opcode, data):
 				elif result == 0x15:
 					log('Plugin: You are outside of the town!')
 				isPluginRegistering = False
-		elif data[0] == 0x08:
+		elif data[0] == 8:
 			InCTF = True
 			if isPluginRegistering:
+				log("Plugin: Activating Anti-AFK...")
 				AntiAFK()
-		elif data[0] == 0x09:
+		elif data[0] == 9:
 			result = data[2]
 			if InCTF:
 				InCTF = False
-				log('Plugin: Capture The Flag event finished')
+				log('Plugin: Capture The Flag event has ended')
 				if isPluginRegistering:
 					isPluginRegistering = False
+					log("Plugin: Deactivating Anti-AFK. Starting bot...")
 					start_bot()
 	return True
 
@@ -148,6 +152,9 @@ def capturetheflag(arguments):
 		log('Plugin: NPC "So-Ok" is not near. Be sure to use the script command near to the NPC')
 	else:
 		p = bytearray()
+
+		global isPluginRegistering
+		isPluginRegistering = True
 		inject_joymax(0x74B2, p, False)
 		return 500
 	return 0
