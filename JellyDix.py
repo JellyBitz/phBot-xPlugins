@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.3.0'
+pVersion = '0.3.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -689,16 +689,16 @@ def handle_joymax(opcode, data):
 				Notify(channel_id,"[**Fortress War**] has ended")
 	elif opcode == 0x3065:
 		party_data = get_party()
-		channel_id = QtBind.text(_gui,cmbxEvtParty_joined)
+		channel_id = QtBind.text(gui_,cmbxEvtParty_joined)
 		if channel_id:
 			Notify(channel_id,"|`"+character_data['name']+"`| You has been joined to the party\n"+getPartyTextList(party_data))
 	elif opcode == 0x3864:
 		updateType = data[0]
 		if updateType == 1:
-			Notify(QtBind.text(_gui,cmbxEvtParty_left),"|`"+character_data['name']+"`| You left the party!")
+			Notify(QtBind.text(gui_,cmbxEvtParty_left),"|`"+character_data['name']+"`| You left the party!")
 		elif updateType == 2:
 			party_data = get_party()
-			channel_id = QtBind.text(_gui,cmbxEvtParty_memberJoin)
+			channel_id = QtBind.text(gui_,cmbxEvtParty_memberJoin)
 			if channel_id:
 				memberNameLength = struct.unpack_from('<H',data,6)[0]
 				memberName = struct.unpack_from('<'+str(memberNameLength)+'s',data,8)[0].decode('cp1252')
@@ -706,15 +706,15 @@ def handle_joymax(opcode, data):
 		elif updateType == 3:
 			joinID = struct.unpack_from("<I",data,1)[0]
 			if party_data[joinID]['name'] == character_data['name']:
-				Notify(QtBind.text(_gui,cmbxEvtParty_left),"|`"+character_data['name']+"`| You left the party")
+				Notify(QtBind.text(gui_,cmbxEvtParty_left),"|`"+character_data['name']+"`| You left the party")
 			else:
 				party_data = get_party()
-				channel_id = QtBind.text(_gui,cmbxEvtParty_memberLeft)
+				channel_id = QtBind.text(gui_,cmbxEvtParty_memberLeft)
 				if channel_id:
 					Notify(channel_id,"|`"+character_data['name']+"`| `"+memberName+"` left the party\n"+getPartyTextList(party_data))
 		elif updateType == 6: # update member
 			if data[5] == 2: # level
-				channel_id = QtBind.text(_gui,cmbxEvtParty_memberLvlUp)
+				channel_id = QtBind.text(gui_,cmbxEvtParty_memberLvlUp)
 				if channel_id:
 					joinID = struct.unpack_from("<I",data,1)[0]
 					newLevel = data[6]
