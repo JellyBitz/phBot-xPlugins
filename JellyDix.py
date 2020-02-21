@@ -9,11 +9,12 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.2.9'
+pVersion = '0.3.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
 character_data = None
+party_data = None
 
 # Default data
 JELLYDIX_KEY="JellyDix"
@@ -101,6 +102,18 @@ cmbxEvtChar_died = QtBind.createCombobox(gui_,6,87,131,19)
 lblEvtPet_died = QtBind.createLabel(gui_,'Transport/Horse died',141,110)
 cmbxEvtPet_died = QtBind.createCombobox(gui_,6,107,131,19)
 
+# party
+lblEvtParty_joined = QtBind.createLabel(gui_,'Party joined',141,135)
+cmbxEvtParty_joined = QtBind.createCombobox(gui_,6,132,131,19)
+lblEvtParty_left = QtBind.createLabel(gui_,'Party left',141,155)
+cmbxEvtParty_left = QtBind.createCombobox(gui_,6,152,131,19)
+lblEvtParty_memberJoin = QtBind.createLabel(gui_,'Party member joined',141,175)
+cmbxEvtParty_memberJoin = QtBind.createCombobox(gui_,6,172,131,19)
+lblEvtParty_memberLeft = QtBind.createLabel(gui_,'Party member left',141,195)
+cmbxEvtParty_memberLeft = QtBind.createCombobox(gui_,6,192,131,19)
+lblEvtParty_memberLvlUp = QtBind.createLabel(gui_,'Party member level up',141,215)
+cmbxEvtParty_memberLvlUp = QtBind.createCombobox(gui_,6,212,131,19)
+
 # picks
 lblEvtPick_item = QtBind.createLabel(gui_,'Item picked up (vSRO)',416,10)
 cmbxEvtPick_item = QtBind.createCombobox(gui_,281,7,131,19)
@@ -120,7 +133,7 @@ cmbxEvtBot_alchemy = QtBind.createCombobox(gui_,281,132,131,19)
 
 # wrap to iterate
 cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
-cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy}
+cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy}
 
 # Return folder path
 def getPath():
@@ -293,6 +306,17 @@ def loadConfigs():
 				if "cmbxEvtPet_died" in triggers:
 					QtBind.setText(gui_,cmbxEvtPet_died,triggers["cmbxEvtPet_died"])
 
+				if "cmbxEvtParty_joined" in triggers:
+					QtBind.setText(gui_,cmbxEvtParty_joined,triggers["cmbxEvtParty_joined"])
+				if "cmbxEvtParty_left" in triggers:
+					QtBind.setText(gui_,cmbxEvtParty_left,triggers["cmbxEvtParty_left"])
+				if "cmbxEvtParty_memberJoin" in triggers:
+					QtBind.setText(gui_,cmbxEvtParty_memberJoin,triggers["cmbxEvtParty_memberJoin"])
+				if "cmbxEvtParty_memberLeft" in triggers:
+					QtBind.setText(gui_,cmbxEvtParty_memberLeft,triggers["cmbxEvtParty_memberLeft"])
+				if "cmbxEvtParty_memberLvlUp" in triggers:
+					QtBind.setText(gui_,cmbxEvtParty_memberLvlUp,triggers["cmbxEvtParty_memberLvlUp"])
+
 				if "cmbxEvtPick_item" in triggers:
 					QtBind.setText(gui_,cmbxEvtPick_item,triggers["cmbxEvtPick_item"])
 				if "cbxEvtPick_name_filter" in triggers and triggers["cbxEvtPick_name_filter"]:
@@ -310,7 +334,6 @@ def loadConfigs():
 
 				if "cmbxEvtMessage_quest" in triggers:
 					QtBind.setText(gui_,cmbxEvtMessage_quest,triggers["cmbxEvtMessage_quest"])
-
 				if "cmbxEvtBot_alchemy" in triggers:
 					QtBind.setText(gui_,cmbxEvtBot_alchemy,triggers["cmbxEvtBot_alchemy"])
 
@@ -469,6 +492,18 @@ def getFortressText(fw_id):
 		return "Bandit"
 	return 'Fortress (#'+str(fw_id)+')'
 
+# Get the party list as discord formatted text
+def getPartyTextList(party):
+	txt = '```\n'
+	if party:
+		for joinId,member in party.items():
+			txt += member['name']
+			if member['guild']:
+				txt += ' ['+member['guild']+']'
+			txt += ' (Lvl.'+str(member['level'])+')\n'
+	txt += '```'
+	return txt
+
 """______________________________ Handling events ______________________________"""
 
 # Called when the character enters the game world
@@ -539,6 +574,8 @@ def handle_event(t, data):
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
 def handle_joymax(opcode, data):
+	global party_data
+	
 	if opcode == 0x300C:
 		updateType = data[0]
 		if updateType == 5:
@@ -632,24 +669,59 @@ def handle_joymax(opcode, data):
 		if channel_id:
 			updateType = data[0]
 			if updateType == 1:
-				Notify(channel_id, "[**Fortress War**] will start in 30 minutes")
+				Notify(channel_id,"[**Fortress War**] will start in 30 minutes")
 			elif updateType == 2:
-				Notify(channel_id, "[**Fortress War**] started")
+				Notify(channel_id,"[**Fortress War**] started")
 			elif updateType == 3:
-				Notify(channel_id, "[**Fortress War**] has 30 minutes before the end")
+				Notify(channel_id,"[**Fortress War**] has 30 minutes before the end")
 			elif updateType == 4:
-				Notify(channel_id, "[**Fortress War**] has 20 minutes before the end")
+				Notify(channel_id,"[**Fortress War**] has 20 minutes before the end")
 			elif updateType == 5:
-				Notify(channel_id, "[**Fortress War**] has 10 minutes before the end")
+				Notify(channel_id,"[**Fortress War**] has 10 minutes before the end")
 			elif updateType == 8:
 				fortressID = struct.unpack_from("<I",data,1)[0]
 				guildNameLength = struct.unpack_from("<H",data,5)[0]
 				guildName = data[7:7+guildNameLength].decode('cp1252')
-				Notify(channel_id, "[**Fortress War**] "+getFortressText(fortressID)+" has been taken by `"+guildName+"`")
+				Notify(channel_id,"[**Fortress War**] "+getFortressText(fortressID)+" has been taken by `"+guildName+"`")
 			elif updateType == 9:
-				Notify(channel_id, "[**Fortress War**] has 1 minute before the end")
+				Notify(channel_id,"[**Fortress War**] has 1 minute before the end")
 			elif updateType == 6:
-				Notify(channel_id, "[**Fortress War**] has ended")
+				Notify(channel_id,"[**Fortress War**] has ended")
+	elif opcode == 0x3065:
+		party_data = get_party()
+		channel_id = QtBind.text(_gui,cmbxEvtParty_joined)
+		if channel_id:
+			Notify(channel_id,"|`"+character_data['name']+"`| You has been joined to the party\n"+getPartyTextList(party_data))
+	elif opcode == 0x3864:
+		updateType = data[0]
+		if updateType == 1:
+			Notify(QtBind.text(_gui,cmbxEvtParty_left),"|`"+character_data['name']+"`| You left the party!")
+		elif updateType == 2:
+			party_data = get_party()
+			channel_id = QtBind.text(_gui,cmbxEvtParty_memberJoin)
+			if channel_id:
+				memberNameLength = struct.unpack_from('<H',data,6)[0]
+				memberName = struct.unpack_from('<'+str(memberNameLength)+'s',data,8)[0].decode('cp1252')
+				Notify(channel_id,"|`"+character_data['name']+"`| `"+memberName+"` joined to the party\n"+getPartyTextList(party_data))
+		elif updateType == 3:
+			joinID = struct.unpack_from("<I",data,1)[0]
+			if party_data[joinID]['name'] == character_data['name']:
+				Notify(QtBind.text(_gui,cmbxEvtParty_left),"|`"+character_data['name']+"`| You left the party")
+			else:
+				party_data = get_party()
+				channel_id = QtBind.text(_gui,cmbxEvtParty_memberLeft)
+				if channel_id:
+					Notify(channel_id,"|`"+character_data['name']+"`| `"+memberName+"` left the party\n"+getPartyTextList(party_data))
+		elif updateType == 6: # update member
+			if data[5] == 2: # level
+				channel_id = QtBind.text(_gui,cmbxEvtParty_memberLvlUp)
+				if channel_id:
+					joinID = struct.unpack_from("<I",data,1)[0]
+					newLevel = data[6]
+					oldLevel = party_data[joinID]['level']
+					party_data[joinID]['level'] = newLevel
+					if oldLevel < newLevel:
+						Notify(channel_id,"|`"+character_data['name']+"`| `"+party_data[joinID]['name']+"` level up!\n"+getPartyTextList(party_data))
 	return True
 
 # All picked up items are sent to this function (only vSRO working at the moment) 
