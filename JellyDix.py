@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.3.1'
+pVersion = '0.3.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -705,10 +705,11 @@ def handle_joymax(opcode, data):
 				Notify(channel_id,"|`"+character_data['name']+"`| `"+memberName+"` joined to the party\n"+getPartyTextList(party_data))
 		elif updateType == 3:
 			joinID = struct.unpack_from("<I",data,1)[0]
-			if party_data[joinID]['name'] == character_data['name']:
+			memberName = party_data[joinID]['name']
+			party_data = get_party()
+			if memberName == character_data['name']:
 				Notify(QtBind.text(gui_,cmbxEvtParty_left),"|`"+character_data['name']+"`| You left the party")
 			else:
-				party_data = get_party()
 				channel_id = QtBind.text(gui_,cmbxEvtParty_memberLeft)
 				if channel_id:
 					Notify(channel_id,"|`"+character_data['name']+"`| `"+memberName+"` left the party\n"+getPartyTextList(party_data))
