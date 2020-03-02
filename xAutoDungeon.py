@@ -4,9 +4,13 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.5.1'
+pVersion = '0.6.0'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
+
+# globals
+# check every x seconds for mobs around
+MOB_CHECK_DELAY = 1.0
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
@@ -219,9 +223,8 @@ def QtBind_ItemsContains(text,lst):
 def AttackArea(args):
 	# radius maximum as default
 	radius = None
-	if len(args) >= 3:
-		radius = round(float(args[2]),2)
-
+	if len(args) >= 2:
+		radius = round(float(args[1]),2)
 	# stop bot and kill mobs through bot or continue script normally
 	if getMobCount(radius) > 0:
 		# stop scripting
@@ -229,15 +232,15 @@ def AttackArea(args):
 		# set automatically the training area
 		p = get_position()
 		set_training_position(p['region'], p['x'], p['y'])
-		# waiting 5 seconds as default
-		wait = 5
-		if len(args) >= 2 and float(args[1]) > 0:
-			wait = float(args[1])
+		# checking mobs delay
+		wait = MOB_CHECK_DELAY
+		if len(args) >= 3 and float(args[2]) > 0:
+			wait = float(args[2])
 		# start to kill mobs on other thread because interpreter lock
-		Timer(0.1,AttackMobs,(wait,False,p['x'],p['y'],p['z'],radius)).start()
+		Timer(0.1,AttackMobs(wait,False,p['x'],p['y'],p['z'],radius)).start()
 	# otherwise continue normally
 	else:
-		log("Plugin: No mobs at this area.")
+		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
 	return 0
 
 # Attacking mobs using all configs from bot
@@ -249,9 +252,9 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 			log("Plugin: Killing ("+str(count)+") mobs at this area.")
 		else:
 			start_bot()
-			log("Plugin: Starting to kill ("+str(count)+") mobs at this area.")
+			log("Plugin: Starting to kill ("+str(count)+") mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
 		# Check if there is not mobs to continue script
-		Timer(wait,AttackMobs, (wait,True,x,y,z,radius)).start()
+		Timer(wait,AttackMobs(wait,True,x,y,z,radius)).start()
 	else:
 		# All mobs killed, stop botting
 		stop_bot()
@@ -261,7 +264,7 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 		move_to(x,y,z)
 		log("Plugin: All mobs killed.. Getting back to the script.")
 		# give it some time to reach the movement
-		Timer(3.0,start_bot).start()
+		Timer(2.5,start_bot).start()
 
 # Count all mobs around your character (60 or more it's the max. range I think)
 def getMobCount(radius):
