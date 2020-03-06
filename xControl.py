@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.4.2'
+pVersion = '0.4.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -141,10 +141,22 @@ def handle_chat(t,player,msg):
 			elif msg == "NOTRACE":
 				stop_trace()
 				log("Plugin: Trace stopped")
-			elif msg == "SETAREA":
-				p = get_position()
-				set_training_position(p['region'], p['x'], p['y'])
-				log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
+
+			elif msg.startswith("SETAREA"):
+				if msg == "SETAREA":
+					p = get_position()
+					set_training_position(p['region'], p['x'], p['y'])
+					log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
+				elif:
+					try:
+						p = msg[7:].split()
+						x = float(p[0])
+						y = float(p[1])
+						region = int(p[2]) if len(p) >= 3 else 0
+						set_training_position(region,x,y)
+						log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(x,y))
+					except:
+						log("Plugin: Training area coordinates incorrect")
 			elif msg.startswith("SETRADIUS"):
 				if msg == "SETRADIUS":
 					# default radius
