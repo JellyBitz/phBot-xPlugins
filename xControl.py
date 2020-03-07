@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.4.3'
+pVersion = '0.4.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -141,13 +141,12 @@ def handle_chat(t,player,msg):
 			elif msg == "NOTRACE":
 				stop_trace()
 				log("Plugin: Trace stopped")
-
 			elif msg.startswith("SETAREA"):
 				if msg == "SETAREA":
 					p = get_position()
 					set_training_position(p['region'], p['x'], p['y'])
 					log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
-				elif:
+				else:
 					try:
 						p = msg[7:].split()
 						x = float(p[0])
