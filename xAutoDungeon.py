@@ -4,7 +4,7 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.6.0'
+pVersion = '0.6.1'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -225,19 +225,23 @@ def AttackArea(args):
 	radius = None
 	if len(args) >= 2:
 		radius = round(float(args[1]),2)
-	# stop bot and kill mobs through bot or continue script normally
+	# stop bot and kill mobs through bot
 	if getMobCount(radius) > 0:
 		# stop scripting
 		stop_bot()
 		# set automatically the training area
 		p = get_position()
 		set_training_position(p['region'], p['x'], p['y'])
+		if radius != None:
+			set_training_radius(radius)
+		else:
+			set_training_radius(100.0)
 		# checking mobs delay
 		wait = MOB_CHECK_DELAY
 		if len(args) >= 3 and float(args[2]) > 0:
 			wait = float(args[2])
 		# start to kill mobs on other thread because interpreter lock
-		Timer(0.1,AttackMobs(wait,False,p['x'],p['y'],p['z'],radius)).start()
+		Timer(0.1,AttackMobs,(wait,False,p['x'],p['y'],p['z'],radius)).start()
 	# otherwise continue normally
 	else:
 		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
@@ -254,7 +258,7 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 			start_bot()
 			log("Plugin: Starting to kill ("+str(count)+") mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
 		# Check if there is not mobs to continue script
-		Timer(wait,AttackMobs(wait,True,x,y,z,radius)).start()
+		Timer(wait,AttackMobs,(wait,True,x,y,z,radius)).start()
 	else:
 		# All mobs killed, stop botting
 		stop_bot()
