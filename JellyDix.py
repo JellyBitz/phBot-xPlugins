@@ -9,12 +9,14 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.3.2'
+pVersion = '0.3.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
 character_data = None
 party_data = None
+checking_disconnect = False
+timer_disconnect = None
 
 # Default data
 JELLYDIX_KEY="JellyDix"
@@ -41,12 +43,14 @@ cbxAddTimeStamp = QtBind.createCheckBox(gui,'cbxDoNothing',"Attach timestamps",5
 
 lblTriggers = QtBind.createLabel(gui,"Select the Discord channel to send the notification ( Filters are using regex )",175,35)
 
-# Adding triggers options
+## Adding triggers options
+
+# Login
 lblEvtChar_joined = QtBind.createLabel(gui,'Joined to the game',310,58)
 cmbxEvtChar_joined = QtBind.createCombobox(gui,175,55,131,19)
 
 # messages
-lblEvtChar_joined = QtBind.createLabel(gui,'Private',310,83)
+lblEvtMessage_private = QtBind.createLabel(gui,'Private',310,83)
 cmbxEvtMessage_private = QtBind.createCombobox(gui,175,80,131,19)
 lblEvtMessage_stall = QtBind.createLabel(gui,'Stall',310,103)
 cmbxEvtMessage_stall = QtBind.createCombobox(gui,175,100,131,19)
@@ -67,23 +71,27 @@ cmbxEvtMessage_notice = QtBind.createCombobox(gui,175,240,131,19)
 lblEvtMessage_gm = QtBind.createLabel(gui,'GM Talk',310,263)
 cmbxEvtMessage_gm = QtBind.createCombobox(gui,175,260,131,19)
 
+# Login
+lblEvtChar_disconnected = QtBind.createLabel(gui,'Disconnected from the game',585,58)
+cmbxEvtChar_disconnected = QtBind.createCombobox(gui,450,55,131,19)
+
 # uniques
-lblEvtMessage_uniqueSpawn = QtBind.createLabel(gui,'Unique spawn',585,58)
-cmbxEvtMessage_uniqueSpawn = QtBind.createCombobox(gui,450,55,131,19)
-cbxEvtMessage_uniqueSpawn_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,75)
-tbxEvtMessage_uniqueSpawn_filter = QtBind.createLineEdit(gui,"",463,75,118,19)
-lblEvtMessage_uniqueKilled = QtBind.createLabel(gui,'Unique killed',585,98)
-cmbxEvtMessage_uniqueKilled = QtBind.createCombobox(gui,450,95,131,19)
-cbxEvtMessage_uniqueKilled_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,115)
-tbxEvtMessage_uniqueKilled_filter = QtBind.createLineEdit(gui,"",463,115,118,19)
+lblEvtMessage_uniqueSpawn = QtBind.createLabel(gui,'Unique spawn',585,83)
+cmbxEvtMessage_uniqueSpawn = QtBind.createCombobox(gui,450,80,131,19)
+cbxEvtMessage_uniqueSpawn_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,103)
+tbxEvtMessage_uniqueSpawn_filter = QtBind.createLineEdit(gui,"",463,103,118,19)
+lblEvtMessage_uniqueKilled = QtBind.createLabel(gui,'Unique killed',585,123)
+cmbxEvtMessage_uniqueKilled = QtBind.createCombobox(gui,450,120,131,19)
+cbxEvtMessage_uniqueKilled_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,143)
+tbxEvtMessage_uniqueKilled_filter = QtBind.createLineEdit(gui,"",463,143,118,19)
 
 # events
-lblEvtMessage_ctf = QtBind.createLabel(gui,'Capture the Flag',585,143)
-cmbxEvtMessage_ctf = QtBind.createCombobox(gui,450,140,131,19)
-lblEvtMessage_battlearena = QtBind.createLabel(gui,'Battle Arena',585,163)
-cmbxEvtMessage_battlearena = QtBind.createCombobox(gui,450,160,131,19)
-lblEvtMessage_fortress = QtBind.createLabel(gui,'Fortress War',585,183)
-cmbxEvtMessage_fortress = QtBind.createCombobox(gui,450,180,131,19)
+lblEvtMessage_ctf = QtBind.createLabel(gui,'Capture the Flag',585,168)
+cmbxEvtMessage_ctf = QtBind.createCombobox(gui,450,165,131,19)
+lblEvtMessage_battlearena = QtBind.createLabel(gui,'Battle Arena',585,188)
+cmbxEvtMessage_battlearena = QtBind.createCombobox(gui,450,185,131,19)
+lblEvtMessage_fortress = QtBind.createLabel(gui,'Fortress War',585,208)
+cmbxEvtMessage_fortress = QtBind.createCombobox(gui,450,205,131,19)
 
 # Initializing GUI(+)
 gui_ = QtBind.init(__name__,pName+"(+)")
@@ -132,7 +140,7 @@ lblEvtBot_alchemy = QtBind.createLabel(gui_,'Alchemy completed',416,135)
 cmbxEvtBot_alchemy = QtBind.createCombobox(gui_,281,132,131,19)
 
 # wrap to iterate
-cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
+cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtChar_disconnected":cmbxEvtChar_disconnected,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
 cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy}
 
 # Return folder path
@@ -221,6 +229,11 @@ def saveConfigs():
 def loadConfigs():
 	loadDefaultConfig()
 	if isJoined():
+
+		# Start checking the ping
+		global checking_disconnect
+		checking_disconnect = True
+
 		# Check config exists to load
 		if os.path.exists(getConfig()):
 			data = {}
@@ -272,6 +285,9 @@ def loadConfigs():
 					QtBind.setText(gui,cmbxEvtMessage_notice,triggers["cmbxEvtMessage_notice"])
 				if "cmbxEvtMessage_gm" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_gm,triggers["cmbxEvtMessage_gm"])
+
+				if "cmbxEvtChar_disconnected" in triggers:
+					QtBind.setText(gui,cmbxEvtChar_disconnected,triggers["cmbxEvtChar_disconnected"])
 
 				if "cmbxEvtMessage_uniqueSpawn" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_uniqueSpawn,triggers["cmbxEvtMessage_uniqueSpawn"])
@@ -466,9 +482,7 @@ def Notify(channel_id,message,info=None):
 def isJoined():
 	global character_data
 	character_data = get_character_data()
-	if character_data and "name" in character_data and character_data["name"]:
-		return True
-	return False
+	return character_data and "name" in character_data and character_data["name"]
 
 # Get battle arena text by type
 def getBattleArenaText(t):
@@ -504,7 +518,30 @@ def getPartyTextList(party):
 	txt += '```'
 	return txt
 
+# Restart the timer and set a new interval
+def RestartDisconnectTimer(interval):
+	global timer_disconnect
+	# Stop if is running
+	if timer_disconnect:
+		timer_disconnect.cancel()
+	# Start it again
+	timer_disconnect = Timer(interval,on_disconnect)
+	timer_disconnect.start()
+
+# Stop the timer and dispose it
+def StopDisconnectTimer():
+	global timer_disconnect
+	# Stop if is running
+	if timer_disconnect:
+		timer_disconnect.cancel()
+		timer_disconnect = None
+
 """______________________________ Handling events ______________________________"""
+
+# Called when the bot successfully connects to the game server
+def connected():
+	global checking_disconnect
+	checking_disconnect = False
 
 # Called when the character enters the game world
 def joined_game():
@@ -575,8 +612,10 @@ def handle_event(t, data):
 # Returning True will keep the packet and False will not forward it to the game server
 def handle_joymax(opcode, data):
 	global party_data
-	
-	if opcode == 0x300C:
+	if opcode == 0x2002 and checking_disconnect:
+		# Set 15s as the maximum time to be disconnected
+		RestartDisconnectTimer(15.0)
+	elif opcode == 0x300C:
 		updateType = data[0]
 		if updateType == 5:
 			channel_id = QtBind.text(gui,cmbxEvtMessage_uniqueSpawn)
@@ -755,6 +794,12 @@ def notify_pickup(channel_id,itemID):
 
 	# Filtered through both if checked
 	Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+"***")
+
+# Called when the character has not received the ping for a long time which means is disconnected
+def on_disconnect():
+	channel_id = QtBind.text(gui_,cmbxEvtChar_disconnected)
+	if channel_id:
+		Notify(channel_id,"|`"+character_data['name']+"`| You has been disconnected")
 
 # Plugin load success
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
