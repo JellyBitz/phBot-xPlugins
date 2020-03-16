@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.3.3'
+pVersion = '0.4.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -535,6 +535,12 @@ def StopDisconnectTimer():
 	if timer_disconnect:
 		timer_disconnect.cancel()
 		timer_disconnect = None
+
+# Scripting support to send notifications like "JellyDix,Channel ID,Message"
+# Usage example "JellyDix,010010000110100100100001,This is a script notification"
+def JellyDix(args):
+	if len(args) >= 3:
+		Notify(args[1],"|`"+character_data['name']+"`| - "+args[2])
 
 """______________________________ Handling events ______________________________"""
 
