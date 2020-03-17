@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.4.0'
+pVersion = '0.4.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -541,6 +541,7 @@ def StopDisconnectTimer():
 def JellyDix(args):
 	if len(args) >= 3:
 		Notify(args[1],"|`"+character_data['name']+"`| - "+args[2])
+	return 0
 
 """______________________________ Handling events ______________________________"""
 
