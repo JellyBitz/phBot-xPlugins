@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.4.1'
+pVersion = '0.4.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -502,6 +502,8 @@ def getFortressText(fw_id):
 		return "Jangan"
 	if fw_id == 3:
 		return "Hotan"
+	if fw_id == 3:
+		return "Constantinople"
 	if fw_id == 6:
 		return "Bandit"
 	return 'Fortress (#'+str(fw_id)+')'
