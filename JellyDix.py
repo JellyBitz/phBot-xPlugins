@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.4.2'
+pVersion = '0.5.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # Globals
@@ -17,6 +17,7 @@ character_data = None
 party_data = None
 checking_disconnect = False
 timer_disconnect = None
+hasStall = False
 
 # Default data
 JELLYDIX_KEY="JellyDix"
@@ -138,10 +139,12 @@ lblEvtMessage_quest = QtBind.createLabel(gui_,'Quest completed',416,115)
 cmbxEvtMessage_quest = QtBind.createCombobox(gui_,281,112,131,19)
 lblEvtBot_alchemy = QtBind.createLabel(gui_,'Alchemy completed',416,135)
 cmbxEvtBot_alchemy = QtBind.createCombobox(gui_,281,132,131,19)
+lblEvtMessage_item_sold = QtBind.createLabel(gui_,'Stall item sold',416,155)
+cmbxEvtMessage_item_sold = QtBind.createCombobox(gui_,281,152,131,19)
 
 # wrap to iterate
 cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtChar_disconnected":cmbxEvtChar_disconnected,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
-cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy}
+cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy,"cmbxEvtMessage_item_sold":cmbxEvtMessage_item_sold}
 
 # Return folder path
 def getPath():
@@ -352,6 +355,8 @@ def loadConfigs():
 					QtBind.setText(gui_,cmbxEvtMessage_quest,triggers["cmbxEvtMessage_quest"])
 				if "cmbxEvtBot_alchemy" in triggers:
 					QtBind.setText(gui_,cmbxEvtBot_alchemy,triggers["cmbxEvtBot_alchemy"])
+				if "cmbxEvtMessage_item_sold" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_item_sold,triggers["cmbxEvtMessage_item_sold"])
 
 # Checkbox trigger clicked
 def cbxDoNothing(checked):
@@ -520,6 +525,12 @@ def getPartyTextList(party):
 	txt += '```'
 	return txt
 
+# Returns the current gold as text
+def getGoldText():
+	global character_data
+	character_data = get_character_data()
+	return "{:,}".format(character_data['gold'])
+
 # Restart the timer and set a new interval
 def RestartDisconnectTimer(interval):
 	global timer_disconnect
@@ -620,7 +631,9 @@ def handle_event(t, data):
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
 def handle_joymax(opcode, data):
-	global party_data
+	# globals ...
+	global party_data,hasStall
+
 	if opcode == 0x2002 and checking_disconnect:
 		# Set 15s as the maximum time to be disconnected
 		RestartDisconnectTimer(15.0)
@@ -771,6 +784,17 @@ def handle_joymax(opcode, data):
 					party_data[joinID]['level'] = newLevel
 					if oldLevel < newLevel:
 						Notify(channel_id,"|`"+character_data['name']+"`| `"+party_data[joinID]['name']+"` level up!\n"+getPartyTextList(party_data))
+	# Stall stuffs
+	elif opcode == 0xB0B1 and data[0] == 1:
+		hasStall = True
+	elif opcode == 0xB0B2 and data[0] == 1:
+		hasStall = False
+	elif opcode == 0x30B7 and data[0] == 3 and hasStall:
+		channel_id = QtBind.text(gui_,cmbxEvtMessage_item_sold)
+		if channel_id:
+			playerNameLength = struct.unpack_from('<H', data, 2)[0]
+			playerName = struct.unpack_from('<' + str(playerNameLength) + 's', data, 4)[0].decode('cp1252')
+			Notify(channel_id,"|`"+character_data['name']+"`| `"+playerName+"` bought an item from your stall\n```Your gold now: "+getGoldText()+"```")
 	return True
 
 # All picked up items are sent to this function (only vSRO working at the moment) 
