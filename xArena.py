@@ -1,8 +1,9 @@
 from phBot import *
+import random
 import struct
 
 pName = 'xArena'
-pVersion = '0.1.4'
+pVersion = '0.1.5'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xArena.py'
 
 InBattleArena = False
