@@ -1,9 +1,10 @@
 from phBot import *
+from threading import Timer
 import random
 import struct
 
 pName = 'xArena'
-pVersion = '0.1.5'
+pVersion = '0.1.6'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xArena.py'
 
 InBattleArena = False
@@ -161,11 +162,16 @@ def capturetheflag(arguments):
 	return 0
 
 # Move to a random position from the actual position using a maximum radius
-def randomMovement(radiusMax=10):
-	# Generating a random new point
-	pX = random.uniform(-radiusMax,radiusMax)
-	pY = random.uniform(-radiusMax,radiusMax)
-	# Mixing with the actual position
+def InjectRandomMovement(radiusMax=10):
+	# define values
+	pX = 0
+	pY = 0
+	# Secure a movement
+	while pX == 0 and pY == 0:
+		# Generating a random new point
+		pX = random.uniform(-radiusMax,radiusMax)
+		pY = random.uniform(-radiusMax,radiusMax)
+	# Merge with the actual position
 	p = get_position()
 	pX = pX + p["x"]
 	pY = pY + p["y"]
@@ -176,8 +182,9 @@ def randomMovement(radiusMax=10):
 # Anti AFK system by random movement
 def AntiAFK():
 	if InBattleArena or InCTF:
-		#inject_joymax(0x3091,b'\x01', False)
-		randomMovement(2)
-		Timer(5.0, AntiAFK).start()
+		InjectRandomMovement(1)
+		# Randomized the time between movements
+		Timer(random.uniform(2.5,5), AntiAFK).start()
 
+# Plugin load success
 log('Plugin: '+pName+' v'+pVersion+' succesfully loaded')
