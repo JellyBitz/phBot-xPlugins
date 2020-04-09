@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'xAcademy'
-pVersion = '0.2.3'
+pVersion = '0.2.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # Ex.: CUSTOM_NAME = "Jelly"
@@ -189,7 +189,10 @@ def handle_joymax(opcode,data):
 						index+= charLength # name
 						
 						if locale == 18:
+							unkUShort01 = struct.unpack_from('<H',data,index)[0]
 							index+=2
+							if unkUShort01 == 3: # Dumb fix
+								index+=3
 						elif locale == 54: # Probably different
 							unkUShort01 = struct.unpack_from('<H',data,index)[0]
 							index+=2
