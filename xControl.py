@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.4.4'
+pVersion = '0.4.5'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # Avoid issues
@@ -18,11 +18,10 @@ inGame = False
 followActivated = False
 followPlayer = ''
 followDistance = 0
-followDelay = 1.0 # float, seconds
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
-lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA : Set training area using the actual location\n - SETAREA #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
+lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA #PosX? #PosY? #Region? : Set training area.\n - SETRADIUS #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data? : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
 lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
@@ -249,13 +248,14 @@ def handle_chat(t,player,msg):
 				else:
 					msg = msg[6:].split()
 					try:
-						if start_follow(msg[0],float(msg[1])):
-							log("Plugin: Starting to follow to ["+msg[0]+"] using ["+msg[1]+"] as distance")
+						distance = 10.0 if len(msg) == 1 else float(msg[1])
+						if start_follow(msg[0],distance):
+							log("Plugin: Starting to follow to ["+msg[0]+"] using ["+distance+"] as distance")
 					except:
 						log("Plugin: Follow distance incorrect")
 			elif msg == "NOFOLLOW":
-				stop_follow()
-				log("Plugin: Following stopped")
+				if stop_follow():
+					log("Plugin: Following stopped")
 			elif msg.startswith("PROFILE"):
 				if msg == "PROFILE":
 					if set_profile('Default'):
@@ -305,7 +305,7 @@ def inject_teleport(source,destination):
 # Example 1: "inject,Opcode,ItsEncrypted?,Data?,Data?,Data?,..."
 # Example 2: "inject,3091,False,0" or "inject,3091,0" (means greet action)
 def inject(args):
-	if len(args) >= 3:
+	if len(args) >= 2:
 		opcode = int(args[1],16)
 		encrypted = False
 		dataPos = 2
@@ -370,14 +370,12 @@ def randomMovement(radiusMax=10):
 	log("Plugin: Random movement to (X:%.1f,Y:%.1f)"%(pX,pY))
 
 # Follow a player using distance. Return success
-def start_follow(player,distance=10):
+def start_follow(player,distance):
 	if party_player(player):
 		global followActivated,followPlayer,followDistance
 		followPlayer = player
 		followDistance = distance
-		if not followActivated:
-			followActivated = True
-			Timer(0.1, start_follow_loop).start()
+		followActivated = True
 		return True
 	return False
 
@@ -399,28 +397,30 @@ def near_party_player(player):
 				return players[p]
 	return None
 
-# Timer loop (1s) to keep following the player
-def start_follow_loop():
+#Called every 500ms.
+def event_loop():
 	if inGame and followActivated:
-		Timer(followDelay, start_follow_loop).start()
 		player = near_party_player(followPlayer)
-		if player:
-			if followDistance > 0:
-				p = get_position()
-				playerDistance = round(GetDistance(p['x'],p['y'],player['x'],player['y']),2)
-				# check if has to move
-				if followDistance < playerDistance:
-					# generate vector unit
-					x_unit = (player['x'] - p['x']) / playerDistance
-					y_unit = (player['y'] - p['y']) / playerDistance
-					# distance to move
-					movementDistance = playerDistance-followDistance
-					log("Following "+followPlayer+"...")
-					move_to(movementDistance * x_unit + p['x'],movementDistance * y_unit + p['y'],0)
-			else:
-				# Avoid negative numbers
+		# check if is near
+		if not player:
+			return
+		# check distance to the player
+		if followDistance > 0:
+			p = get_position()
+			playerDistance = round(GetDistance(p['x'],p['y'],player['x'],player['y']),2)
+			# check if has to move
+			if followDistance < playerDistance:
+				# generate vector unit
+				x_unit = (player['x'] - p['x']) / playerDistance
+				y_unit = (player['y'] - p['y']) / playerDistance
+				# distance to move
+				movementDistance = playerDistance-followDistance
 				log("Following "+followPlayer+"...")
-				move_to(player['x'],player['y'],0)
+				move_to(movementDistance * x_unit + p['x'],movementDistance * y_unit + p['y'],0)
+		else:
+			# Avoid negative numbers
+			log("Following "+followPlayer+"...")
+			move_to(player['x'],player['y'],0)
 
 # Calc the distance from point A to B
 def GetDistance(ax,ay,bx,by):
@@ -429,10 +429,12 @@ def GetDistance(ax,ay,bx,by):
 # Stop follow player
 def stop_follow():
 	global followActivated,followPlayer,followDistance
+	result = followActivated
+	# stop
 	followActivated = False
 	followPlayer = ""
 	followDistance = 0
-	return True
+	return result
 
 # Plugin loaded success
 log("Plugin: "+pName+" v"+pVersion+" successfully loaded")
