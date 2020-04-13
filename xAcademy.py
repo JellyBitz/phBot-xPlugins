@@ -5,20 +5,26 @@ import struct
 import random
 import json
 import os
+import phBotChat
+import time
 
 pName = 'xAcademy'
-pVersion = '0.2.4'
+pVersion = '0.3.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
-# Ex.: CUSTOM_NAME = "Jelly"
-# will try to create "Jelly100","Jelly101",..
-# Custom Nickname will be random if you leave it empty
-# Custom Race will be as default CH
-SEQUENCE_DEFAULT_NUMBER = 100
+# User settings
+SEQUENCE_DEFAULT_NUMBER = 100 # If Custom Nickname is set like "Jelly", it will try to create "Jelly100","Jelly101", ...
+QUESTION_PASSWORD = "" # Set password to lock part match join requests
 
 # Globals
 isCreatingCharacter = False
 CreatingNickname = ""
+
+questionMessage = "Hi, can you tell me the password? Please, quickly!"
+questionTime = None
+questionCharName = ""
+questionJID = 0
+questionRID = 0
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
@@ -41,8 +47,7 @@ cmbxRace = QtBind.createCombobox(gui,79,72,123,19)
 QtBind.append(gui,cmbxRace,"CH")
 QtBind.append(gui,cmbxRace,"EU")
 
-
-lblFullCharacters = QtBind.createLabel(gui,"The next action(s) will be executed if the account cannot create more characters :",6,100)
+lblFullCharacters = QtBind.createLabel(gui,"The next action(s) will be executed if not possible create more characters :",6,100)
 lblCMD = QtBind.createLabel(gui,"Run system command (CMD) :",15,120)
 tbxCMD = QtBind.createLineEdit(gui,"",163,117,235,19)
 cbxExit = QtBind.createCheckBox(gui,'cbxDoNothing','Close bot',15,140)
@@ -88,7 +93,7 @@ def loadConfigs(fileName=""):
 			QtBind.setText(gui,tbxSequence,data["Sequence"])
 		if "Race" in data:
 			QtBind.setText(gui,cmbxRace,data["Race"])
-		
+
 		if "CMD" in data:
 			QtBind.setText(gui,tbxCMD,data["CMD"])
 		if "Exit" in data and data['Exit']:
@@ -104,14 +109,12 @@ def saveConfigs(fileName=""):
 	data["Enabled"] = QtBind.isChecked(gui,cbxEnabled)
 
 	data["Nickname"] = QtBind.text(gui,tbxNickname)
-
 	sequence = QtBind.text(gui,tbxSequence)
 	if sequence.isnumeric():
 		data["Sequence"] = sequence
 	else:
 		data["Sequence"] = str(SEQUENCE_DEFAULT_NUMBER)
 		QtBind.setText(gui,tbxSequence,data["Sequence"])
-
 	data["Race"] = QtBind.text(gui,cmbxRace)
 
 	data["CMD"] = QtBind.text(gui,tbxCMD)
@@ -145,8 +148,11 @@ def btnLoadConfig_clicked():
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
 def handle_joymax(opcode,data):
+	# Plugin not activated, just abort
+	if not QtBind.isChecked(gui,cbxEnabled):
+		return
 	# SERVER_CHARACTER_SELECTION_RESPONSE
-	if opcode == 0xB007 and QtBind.isChecked(gui,cbxEnabled):
+	if opcode == 0xB007:
 		# Filter packet parsing
 		locale = get_locale()
 		try:
@@ -305,7 +311,67 @@ def handle_joymax(opcode,data):
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
 			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"] Locale ["+str(locale)+"]")
+	# SERVER_PARTY_MATCH_JOIN_REQUEST
+	elif opcode == 0x706D and QUESTION_PASSWORD:
+		# Tested on vSRO only
+		try:
+			# init cursor
+			index=0
+			requestID = struct.unpack_from('<I',data,index)[0]
+			index+=4
+			joinID = struct.unpack_from('<I',data,index)[0]
+			index+=22
+
+			charLength = struct.unpack_from('<H',data,index)[0]
+			index+=2
+			charName = struct.unpack_from('<' + str(charLength) + 's',data,index)[0].decode('cp1252')
+			#index+=charLength
+
+			# Save all data for this request
+			questionTime = time.time()
+			questionCharName = charName
+			questionJID = joinID
+			questionRID = requestID
+
+			# Send message asking about the password
+			phBotChat.Private(charName,questionMessage)
+
+		except Exception as e:
+			log("Plugin: Oops! Parsing error.. Password doesn't work at this server!")
+			log("If you want support, send me all this via private message:")
+			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"] Locale ["+str(get_locale())+"]")
 	return True
+
+# All chat messages received are sent to this function
+def handle_chat(t,charName,message):
+	# Check enabled plugin
+	if not QtBind.isChecked(gui,cbxEnabled):
+		return
+
+	# Check private messages only
+	if t != 2:
+		return
+	# Analyze only if the password has been set
+	if not QUESTION_PASSWORD:
+		return
+
+	# Check questions
+	if message == questionMessage:
+		# Create answer
+		phBotChat.Private(charName,QUESTION_PASSWORD)
+	# Check answers
+	elif charName == questionCharName:
+		# Check party match request cancel delay 
+		now = time.time()
+		if now - questionTime > 5:
+			return
+		# Check a correct answer
+		if message == QUESTION_PASSWORD:
+			log("Plugin: "+charName+" joined to party by password")
+			Inject_PartyMatchJoinResponse(questionRID,questionJID,1)
+		else:
+			log("Plugin: "+charName+" canceled by wrong password")
+			Inject_PartyMatchJoinResponse(questionRID,questionJID,0)
 
 def create_character():
 	# select class
@@ -360,6 +426,13 @@ def Inject_CheckName(charName):
 	p += struct.pack('H', len(charName))
 	p += charName.encode('ascii')
 	inject_joymax(0x7007,p, False)
+
+# Inject Packet
+def Inject_PartyMatchJoinResponse(requestID,joinID,resp):
+	p = struct.pack('I', requestID)
+	p += struct.pack('I', joinID)
+	p += struct.pack('B',resp)
+	inject_joymax(0x306E,p,False)
 
 # Generate a random (male) game of thrones name!
 def getRandomNick():
