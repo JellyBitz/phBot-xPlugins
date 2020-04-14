@@ -4,7 +4,7 @@ import struct
 import time
 
 pName = 'xPartyMatchLocker'
-pVersion = '0.0.1'
+pVersion = '0.0.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPartyMatchLocker.py'
 
 # User settings
@@ -49,6 +49,7 @@ def handle_joymax(opcode,data):
 			log("Plugin: Oops! Parsing error.. Password doesn't work at this server!")
 			log("If you want support, send me all this via private message:")
 			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"] Locale ["+str(get_locale())+"]")
+	return True
 
 # All chat messages received are sent to this function
 def handle_chat(t,charName,message):
@@ -72,16 +73,16 @@ def handle_chat(t,charName,message):
 		# Check a correct answer
 		if message == QUESTION_PASSWORD:
 			log("Plugin: "+charName+" joined to party by password")
-			Inject_PartyMatchJoinResponse(questionRID,questionJID,1)
+			Inject_PartyMatchJoinResponse(questionRID,questionJID,True)
 		else:
 			log("Plugin: "+charName+" canceled by wrong password")
-			Inject_PartyMatchJoinResponse(questionRID,questionJID,0)
+			Inject_PartyMatchJoinResponse(questionRID,questionJID,False)
 
 # Inject Packet
-def Inject_PartyMatchJoinResponse(requestID,joinID,resp):
+def Inject_PartyMatchJoinResponse(requestID,joinID,response):
 	p = struct.pack('I', requestID)
 	p += struct.pack('I', joinID)
-	p += struct.pack('B',resp)
+	p += struct.pack('B',1 if response else 0)
 	inject_joymax(0x306E,p,False)
 
 # Plugin load success
