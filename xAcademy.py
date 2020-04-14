@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'xAcademy'
-pVersion = '0.3.2'
+pVersion = '0.3.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -139,11 +139,8 @@ def btnLoadConfig_clicked():
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
 def handle_joymax(opcode,data):
-	# Plugin not activated, just abort
-	if not QtBind.isChecked(gui,cbxEnabled):
-		return
 	# SERVER_CHARACTER_SELECTION_RESPONSE
-	if opcode == 0xB007:
+	if opcode == 0xB007 and QtBind.isChecked(gui,cbxEnabled):
 		# Filter packet parsing
 		locale = get_locale()
 		try:
@@ -185,16 +182,11 @@ def handle_joymax(opcode,data):
 						charName = struct.unpack_from('<' + str(charLength) + 's',data,index)[0].decode('cp1252')
 						index+= charLength # name
 						
-						if locale == 18:
+						if locale == 18 or locale == 54:
 							nickLength = struct.unpack_from('<H',data,index)[0]
 							index+=2 # nick length
 							nickName = struct.unpack_from('<' + str(nickLength) + 's',data,index)[0].decode('cp1252')
 							index+= nickLength # nickname
-						elif locale == 54: # Probably different
-							unkUShort01 = struct.unpack_from('<H',data,index)[0]
-							index+=2
-							if unkUShort01:
-								index+=5
 						
 						index+=1 # scale
 						charLevel = data[index]
