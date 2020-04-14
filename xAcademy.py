@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'xAcademy'
-pVersion = '0.3.1'
+pVersion = '0.3.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -186,10 +186,10 @@ def handle_joymax(opcode,data):
 						index+= charLength # name
 						
 						if locale == 18:
-							unkUShort01 = struct.unpack_from('<H',data,index)[0]
-							index+=2
-							if unkUShort01 == 3: # Dumb fix
-								index+=3
+							nickLength = struct.unpack_from('<H',data,index)[0]
+							index+=2 # nick length
+							nickName = struct.unpack_from('<' + str(nickLength) + 's',data,index)[0].decode('cp1252')
+							index+= nickLength # nickname
 						elif locale == 54: # Probably different
 							unkUShort01 = struct.unpack_from('<H',data,index)[0]
 							index+=2
