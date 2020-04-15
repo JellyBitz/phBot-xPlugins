@@ -9,21 +9,25 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '0.5.0'
+pVersion = '1.0.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
+
+# ______________________________ Initializing ______________________________ #
+
+DISCONNECT_DELAY_MAX = 15000 # ms
 
 # Globals
 character_data = None
 party_data = None
 checking_disconnect = False
-timer_disconnect = None
+checking_disconnect_counter = 0
 hasStall = False
 
 # Default data
 JELLYDIX_KEY="JellyDix"
 JELLYDIX_URL="https://jellydix.jellybitz.repl.co"
 
-# Initializing gui_
+# Graphic user interface
 gui = QtBind.init(__name__,pName)
 
 lblChannels = QtBind.createLabel(gui,"Discord Channel",6,10)
@@ -45,7 +49,6 @@ cbxAddTimeStamp = QtBind.createCheckBox(gui,'cbxDoNothing',"Attach timestamps",5
 lblTriggers = QtBind.createLabel(gui,"Select the Discord channel to send the notification ( Filters are using regex )",175,35)
 
 ## Adding triggers options
-
 # Login
 lblEvtChar_joined = QtBind.createLabel(gui,'Joined to the game',310,58)
 cmbxEvtChar_joined = QtBind.createCombobox(gui,175,55,131,19)
@@ -94,7 +97,7 @@ cmbxEvtMessage_battlearena = QtBind.createCombobox(gui,450,185,131,19)
 lblEvtMessage_fortress = QtBind.createLabel(gui,'Fortress War',585,208)
 cmbxEvtMessage_fortress = QtBind.createCombobox(gui,450,205,131,19)
 
-# Initializing GUI(+)
+# Graphic user interface (+)
 gui_ = QtBind.init(__name__,pName+"(+)")
 
 # warnings
@@ -145,6 +148,8 @@ cmbxEvtMessage_item_sold = QtBind.createCombobox(gui_,281,152,131,19)
 # wrap to iterate
 cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtChar_disconnected":cmbxEvtChar_disconnected,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
 cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy,"cmbxEvtMessage_item_sold":cmbxEvtMessage_item_sold}
+
+# ______________________________ Methods ______________________________ #
 
 # Return folder path
 def getPath():
@@ -234,8 +239,9 @@ def loadConfigs():
 	if isJoined():
 
 		# Start checking the ping
-		global checking_disconnect
+		global checking_disconnect,checking_disconnect_counter
 		checking_disconnect = True
+		checking_disconnect_counter = 0
 
 		# Check config exists to load
 		if os.path.exists(getConfig()):
@@ -531,23 +537,7 @@ def getGoldText():
 	character_data = get_character_data()
 	return "{:,}".format(character_data['gold'])
 
-# Restart the timer and set a new interval
-def RestartDisconnectTimer(interval):
-	global timer_disconnect
-	# Stop if is running
-	if timer_disconnect:
-		timer_disconnect.cancel()
-	# Start it again
-	timer_disconnect = Timer(interval,on_disconnect)
-	timer_disconnect.start()
-
-# Stop the timer and dispose it
-def StopDisconnectTimer():
-	global timer_disconnect
-	# Stop if is running
-	if timer_disconnect:
-		timer_disconnect.cancel()
-		timer_disconnect = None
+# ______________________________ Events ______________________________ #
 
 # Scripting support to send notifications like "JellyDix,Channel ID,Message"
 # Usage example "JellyDix,010010000110100100100001,This is a script notification"
@@ -555,8 +545,6 @@ def JellyDix(args):
 	if len(args) >= 3:
 		Notify(args[1],"|`"+character_data['name']+"`| - "+args[2])
 	return 0
-
-"""______________________________ Handling events ______________________________"""
 
 # Called when the bot successfully connects to the game server
 def connected():
@@ -628,15 +616,18 @@ def handle_event(t, data):
 	elif t == 8:
 		Notify(QtBind.text(gui_,cmbxEvtBot_alchemy),"|`"+character_data['name']+"`| - **Auto alchemy** has been completed")
 
-# All packets received from Silkroad will be passed to this function
-# Returning True will keep the packet and False will not forward it to the game server
+# All packets received from game server will be passed to this function
+# Returning True will keep the packet and False will not forward it to the game client
 def handle_joymax(opcode, data):
-	# globals ...
+	# globals used in more than one IF statement
 	global party_data,hasStall
 
+	# GLOBAL_PING
 	if opcode == 0x2002 and checking_disconnect:
-		# Set 15s as the maximum time to be disconnected
-		RestartDisconnectTimer(15.0)
+		# Reset disconnect delay counter
+		global checking_disconnect_counter
+		checking_disconnect_counter = 0
+	# SERVER_NOTICE_UPDATE
 	elif opcode == 0x300C:
 		updateType = data[0]
 		if updateType == 5:
@@ -671,6 +662,7 @@ def handle_joymax(opcode, data):
 							log("Plugin: Error at regex ["+str(ex)+"]")
 				else:
 					Notify(channel_id,"**"+uniqueName+"** killed by `"+killerName+"`")
+	# SERVER_BA_NOTICE
 	elif opcode == 0x34D2:
 		channel_id = QtBind.text(gui,cmbxEvtMessage_battlearena)
 		if channel_id:
@@ -687,6 +679,7 @@ def handle_joymax(opcode, data):
 				Notify(channel_id,"[**Battle Arena**] started")
 			elif updateType == 5:
 				Notify(channel_id,"[**Battle Arena**] has ended")
+	# SERVER_CTF_NOTICE
 	elif opcode == 0x34B1:
 		channel_id = QtBind.text(gui,cmbxEvtMessage_ctf)
 		if channel_id:
@@ -701,6 +694,7 @@ def handle_joymax(opcode, data):
 				Notify(channel_id,"[**Capture the Flag**] started")
 			elif updateType == 9:
 				Notify(channel_id,"[**Capture the Flag**] has ended")
+	# SERVER_QUEST_UPDATE
 	elif opcode == 0x30D5:
 		channel_id = QtBind.text(gui_,cmbxEvtMessage_quest)
 		if channel_id:
@@ -709,6 +703,7 @@ def handle_joymax(opcode, data):
 				questID = struct.unpack_from("<I",data,1)[0]
 				quest = get_quests()[questID]
 				Notify(channel_id,"|`"+character_data['name']+"`| - **Quest** has been completed ***"+quest['name']+"***")
+	# SERVER_INVENTORY_ITEM_MOVEMENT
 	elif opcode == 0xB034:
 		# vSRO filter
 		locale = get_locale()
@@ -725,6 +720,7 @@ def handle_joymax(opcode, data):
 					slotInventory = data[6]
 					if slotInventory != 254:
 						notify_pickup(channel_id,struct.unpack_from("<I",data,11)[0])
+	# SERVER_FW_NOTICE
 	elif opcode == 0x385F:
 		channel_id = QtBind.text(gui,cmbxEvtMessage_fortress)
 		if channel_id:
@@ -748,11 +744,13 @@ def handle_joymax(opcode, data):
 				Notify(channel_id,"[**Fortress War**] has 1 minute before the end")
 			elif updateType == 6:
 				Notify(channel_id,"[**Fortress War**] has ended")
+	# SERVER_PARTY_DATA
 	elif opcode == 0x3065:
 		party_data = get_party()
 		channel_id = QtBind.text(gui_,cmbxEvtParty_joined)
 		if channel_id:
 			Notify(channel_id,"|`"+character_data['name']+"`| You has been joined to the party\n"+getPartyTextList(party_data))
+	# SERVER_PARTY_UPDATE
 	elif opcode == 0x3864:
 		updateType = data[0]
 		if updateType == 1:
@@ -784,11 +782,13 @@ def handle_joymax(opcode, data):
 					party_data[joinID]['level'] = newLevel
 					if oldLevel < newLevel:
 						Notify(channel_id,"|`"+character_data['name']+"`| `"+party_data[joinID]['name']+"` level up!\n"+getPartyTextList(party_data))
-	# Stall stuffs
+	# SERVER_STALL_CREATE_RESPONSE
 	elif opcode == 0xB0B1 and data[0] == 1:
 		hasStall = True
+	# SERVER_STALL_DESTROY_RESPONSE
 	elif opcode == 0xB0B2 and data[0] == 1:
 		hasStall = False
+	# SERVER_STALL_ENTITY_ACTION
 	elif opcode == 0x30B7 and data[0] == 3 and hasStall:
 		channel_id = QtBind.text(gui_,cmbxEvtMessage_item_sold)
 		if channel_id:
@@ -828,13 +828,22 @@ def notify_pickup(channel_id,itemID):
 	# Filtered through both if checked
 	Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+"***")
 
+# Called every 500ms
+def event_loop():
+	if checking_disconnect:
+		global checking_disconnect_counter
+		checking_disconnect_counter += 500
+		# Check if delay is longer to trigger disconnect event
+		if checking_disconnect_counter >= DISCONNECT_DELAY_MAX:
+			on_disconnect()
+
 # Called when the character has not received the ping for a long time which means is disconnected
 def on_disconnect():
 	channel_id = QtBind.text(gui_,cmbxEvtChar_disconnected)
 	if channel_id:
 		Notify(channel_id,"|`"+character_data['name']+"`| You has been disconnected")
 
-# Plugin load success
+# Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
 
 # Creating configs folder
