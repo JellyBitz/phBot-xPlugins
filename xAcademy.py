@@ -7,17 +7,19 @@ import json
 import os
 
 pName = 'xAcademy'
-pVersion = '0.3.3'
+pVersion = '1.0.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
 SEQUENCE_DEFAULT_NUMBER = 100 # If Custom Nickname is set like "Jelly", it will try to create "Jelly100","Jelly101", ...
 
+# ______________________________ Initializing ______________________________ #
+
 # Globals
 isCreatingCharacter = False
 CreatingNickname = ""
 
-# Initializing GUI
+# Graphic user interface
 gui = QtBind.init(__name__,pName)
 cbxEnabled = QtBind.createCheckBox(gui,'cbxDoNothing','Enabled',6,10)
 
@@ -42,6 +44,8 @@ lblFullCharacters = QtBind.createLabel(gui,"The next action(s) will be executed 
 lblCMD = QtBind.createLabel(gui,"Run system command (CMD) :",15,120)
 tbxCMD = QtBind.createLineEdit(gui,"",163,117,235,19)
 cbxExit = QtBind.createCheckBox(gui,'cbxDoNothing','Close bot',15,140)
+
+# ______________________________ Methods ______________________________ #
 
 # Return folder path
 def getPath():
@@ -136,8 +140,120 @@ def btnLoadConfig_clicked():
 	elif strConfigName:
 		log("Plugin: Profile ["+strConfigName+"] not found")
 
-# All packets received from Silkroad will be passed to this function
-# Returning True will keep the packet and False will not forward it to the game server
+# Create the character by injecting
+def create_character():
+	# select class
+	race = QtBind.text(gui,cmbxRace)
+	if race != 'EU':
+		race = 'CH'
+
+		model = get_monster_string('CHAR_CH_MAN_ADVENTURER')['model']
+		chest = get_item_string('ITEM_CH_M_HEAVY_01_BA_A_DEF')['model']
+		legs = get_item_string('ITEM_CH_M_HEAVY_01_LA_A_DEF')['model']
+		shoes = get_item_string('ITEM_CH_M_HEAVY_01_FA_A_DEF')['model']
+		weapon = get_item_string('ITEM_CH_SWORD_01_A_DEF')['model']
+	else:
+		race = 'EU'
+
+		model = get_monster_string('CHAR_EU_MAN_NOBLE')['model']
+		chest = get_item_string('ITEM_EU_M_HEAVY_01_BA_A_DEF')['model']
+		legs = get_item_string('ITEM_EU_M_HEAVY_01_LA_A_DEF')['model']
+		shoes = get_item_string('ITEM_EU_M_HEAVY_01_FA_A_DEF')['model']
+		weapon = get_item_string('ITEM_EU_DAGGER_01_A_DEF')['model']
+
+	if model == 0 or chest == 0 or legs == 0 or shoes == 0 or weapon == 0:
+		log('Plugin: Error, the CodeName has changed on this server')
+		return
+
+	global isCreatingCharacter
+	isCreatingCharacter = True
+	log('Plugin: Creating character ['+CreatingNickname+'] ('+race+')')
+	p = b'\x01'
+	p += struct.pack('H', len(CreatingNickname))
+	p += CreatingNickname.encode('ascii')
+	p += struct.pack('I', model)
+	p += struct.pack('B', 0)
+	p += struct.pack('I', chest)
+	p += struct.pack('I', legs)
+	p += struct.pack('I', shoes)
+	p += struct.pack('I', weapon)
+	# Try to create character
+	inject_joymax(0x7007,p, False)
+	# Wait 3s to request character list
+	Timer(3.0,inject_joymax,(0x7007, b'\x02', False)).start()
+
+# Inject Packet
+def Inject_DeleteCharacter(charName):
+	p = b'\x03'
+	p += struct.pack('H', len(charName))
+	p += charName.encode('ascii')
+	inject_joymax(0x7007,p, False)
+
+# Inject Packet
+def Inject_CheckName(charName):
+	p = b'\x04'
+	p += struct.pack('H', len(charName))
+	p += charName.encode('ascii')
+	inject_joymax(0x7007,p, False)
+
+# Generate a random (male) game of thrones name!
+def getRandomNick():
+	# Adding names with max. 12 letters
+	names = ["Aegon","Aerys","Aemon","Aeron","Alliser","Areo","Bran","Bronn","Benjen","Brynden","Beric","Balon","Bowen","Craster","Davos","Daario","Doran","Darrik","Dyron","Eddard","Edric","Euron","Edmure","Gendry","Gilly","Gregor","GreyWorm","Hoster","Jon","Jaime","Jorah","Joffrey","Jeor","Jaqen","Jojen","Janos","Kevan","Khal","Lancel","Loras","Maekar","Mace","Mance","Nestor","Oberyn","Petyr","Podrick","Quentyn","Robert","Robb","Ramsay","Roose","Rickon","Rickard","Rhaegar","Renly","Rodrik","Randyll","Samwell","Sandor","Stannis","Stefon","Tywin","Tyrion","Theon","Tormund","Trystane","Tommen","Val","Varys","Viserys","Victarion","Vimar","Walder","Wyman","Yoren","Yohn","Zane"]
+	name = names[random.randint(0,len(names)-1)]
+	# Fill with discord style
+	if len(name) < 12:
+		maxWidth = 12-len(name)
+		if maxWidth > 4 :
+			maxWidth = 4
+		numbers = pow(10,maxWidth)-1
+		name = str(name)+(str(random.randint(0,numbers))).zfill(maxWidth)
+	return name
+
+# Get the sequence previously saved or start a new one if not
+def getSequence():	
+	sequence = QtBind.text(gui,tbxSequence)
+	# Check valid value
+	if sequence.isnumeric():
+		sequence = int(sequence)
+	else:
+		sequence = SEQUENCE_DEFAULT_NUMBER
+
+	QtBind.setText(gui,tbxSequence,str(sequence+1))
+	saveConfigs(QtBind.text(gui,tbxProfileName))
+	
+	return sequence
+
+# Check the name length and sequence and return it
+def getNickSequence(nickname):
+	seq = str(getSequence())
+	nick = nickname+seq
+	nickLength = len(nick)
+	if nickLength > 12: # as max. character restriction
+		nickLength -= 12
+		nick = nickname[:-nickLength]+seq
+	return nick
+
+# Check nickname if is available
+def create_nickname():
+	global CreatingNickname
+	customName = QtBind.text(gui,tbxNickname) 
+	if customName:
+		CreatingNickname = getNickSequence(customName)
+	else:
+		CreatingNickname = getRandomNick()
+	log("Plugin: Checking nickname ["+CreatingNickname+"]")
+	Inject_CheckName(CreatingNickname)
+
+# Kill current bot
+def Exit():
+	log("Plugin: Closing bot...")
+	os._exit(0)
+
+# ______________________________ Events ______________________________ #
+
+# All packets received from game server will be passed to this function
+# Returning True will keep the packet and False will not forward it to the game client
 def handle_joymax(opcode,data):
 	# SERVER_CHARACTER_SELECTION_RESPONSE
 	if opcode == 0xB007 and QtBind.isChecked(gui,cbxEnabled):
@@ -296,115 +412,7 @@ def handle_joymax(opcode,data):
 			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"] Locale ["+str(locale)+"]")
 	return True
 
-def create_character():
-	# select class
-	race = QtBind.text(gui,cmbxRace)
-	if race != 'EU':
-		race = 'CH'
-
-		model = get_monster_string('CHAR_CH_MAN_ADVENTURER')['model']
-		chest = get_item_string('ITEM_CH_M_HEAVY_01_BA_A_DEF')['model']
-		legs = get_item_string('ITEM_CH_M_HEAVY_01_LA_A_DEF')['model']
-		shoes = get_item_string('ITEM_CH_M_HEAVY_01_FA_A_DEF')['model']
-		weapon = get_item_string('ITEM_CH_SWORD_01_A_DEF')['model']
-	else:
-		race = 'EU'
-
-		model = get_monster_string('CHAR_EU_MAN_NOBLE')['model']
-		chest = get_item_string('ITEM_EU_M_HEAVY_01_BA_A_DEF')['model']
-		legs = get_item_string('ITEM_EU_M_HEAVY_01_LA_A_DEF')['model']
-		shoes = get_item_string('ITEM_EU_M_HEAVY_01_FA_A_DEF')['model']
-		weapon = get_item_string('ITEM_EU_DAGGER_01_A_DEF')['model']
-
-	if model == 0 or chest == 0 or legs == 0 or shoes == 0 or weapon == 0:
-		log('Plugin: Error, the CodeName has changed on this server')
-		return
-
-	isCreatingCharacter = True
-	log('Plugin: Creating character ['+CreatingNickname+'] ('+race+')')
-	p = b'\x01'
-	p += struct.pack('H', len(CreatingNickname))
-	p += CreatingNickname.encode('ascii')
-	p += struct.pack('I', model)
-	p += struct.pack('B', 0)
-	p += struct.pack('I', chest)
-	p += struct.pack('I', legs)
-	p += struct.pack('I', shoes)
-	p += struct.pack('I', weapon)
-	# Try to create character
-	inject_joymax(0x7007,p, False)
-	# Wait 3s to request character list
-	Timer(3.0,inject_joymax,(0x7007, b'\x02', False)).start()
-
-# Inject Packet
-def Inject_DeleteCharacter(charName):
-	p = b'\x03'
-	p += struct.pack('H', len(charName))
-	p += charName.encode('ascii')
-	inject_joymax(0x7007,p, False)
-
-# Inject Packet
-def Inject_CheckName(charName):
-	p = b'\x04'
-	p += struct.pack('H', len(charName))
-	p += charName.encode('ascii')
-	inject_joymax(0x7007,p, False)
-
-# Generate a random (male) game of thrones name!
-def getRandomNick():
-	# Adding names with max. 12 letters
-	names = ["Aegon","Aerys","Aemon","Aeron","Alliser","Areo","Bran","Bronn","Benjen","Brynden","Beric","Balon","Bowen","Craster","Davos","Daario","Doran","Darrik","Dyron","Eddard","Edric","Euron","Edmure","Gendry","Gilly","Gregor","GreyWorm","Hoster","Jon","Jaime","Jorah","Joffrey","Jeor","Jaqen","Jojen","Janos","Kevan","Khal","Lancel","Loras","Maekar","Mace","Mance","Nestor","Oberyn","Petyr","Podrick","Quentyn","Robert","Robb","Ramsay","Roose","Rickon","Rickard","Rhaegar","Renly","Rodrik","Randyll","Samwell","Sandor","Stannis","Stefon","Tywin","Tyrion","Theon","Tormund","Trystane","Tommen","Val","Varys","Viserys","Victarion","Vimar","Walder","Wyman","Yoren","Yohn","Zane"]
-	name = names[random.randint(0,len(names)-1)]
-	# Fill with discord style
-	if len(name) < 12:
-		maxWidth = 12-len(name)
-		if maxWidth > 4 :
-			maxWidth = 4
-		numbers = pow(10,maxWidth)-1
-		name = str(name)+(str(random.randint(0,numbers))).zfill(maxWidth)
-	return name
-
-# Get the sequence previously saved or start a new one if not
-def getSequence():	
-	sequence = QtBind.text(gui,tbxSequence)
-	# Check valid value
-	if sequence.isnumeric():
-		sequence = int(sequence)
-	else:
-		sequence = SEQUENCE_DEFAULT_NUMBER
-
-	QtBind.setText(gui,tbxSequence,str(sequence+1))
-	saveConfigs(QtBind.text(gui,tbxProfileName))
-	
-	return sequence
-
-# Check the name length and sequence and return it
-def getNickSequence(nickname):
-	seq = str(getSequence())
-	nick = nickname+seq
-	nickLength = len(nick)
-	if nickLength > 12: # as max. character restriction
-		nickLength -= 12
-		nick = nickname[:-nickLength]+seq
-	return nick
-
-# Check nickname if is available
-def create_nickname():
-	global CreatingNickname
-	customName = QtBind.text(gui,tbxNickname) 
-	if customName:
-		CreatingNickname = getNickSequence(customName)
-	else:
-		CreatingNickname = getRandomNick()
-	log("Plugin: Checking nickname ["+CreatingNickname+"]")
-	Inject_CheckName(CreatingNickname)
-
-# Kill current bot
-def Exit():
-	log("Plugin: Closing bot...")
-	os._exit(0)
-
-# Plugin load success
+# Plugin loading ...
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
 
 loadDefaultConfig()
