@@ -4,15 +4,16 @@ from threading import Timer
 import json
 import os
 
-pVersion = '0.6.1'
+pVersion = '1.0.0'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
-# globals
-# check every x seconds for mobs around
-MOB_CHECK_DELAY = 1.0
+# ______________________________ Initializing ______________________________ #
 
-# Initializing GUI
+# Globals
+DEFAULT_CHECK_DELAY = 1.0 # seconds
+
+# Graphic user interface
 gui = QtBind.init(__name__,pName)
 
 lblMobs = QtBind.createLabel(gui,'#   Add monster names to ignore    #\n#          from Monster Counter         #',31,3)
@@ -32,90 +33,103 @@ lstOnlyCount = []
 lblGeneral = QtBind.createLabel(gui,'General (0)',240,30)
 cbxIgnoreGeneral = QtBind.createCheckBox(gui,'cbxIgnoreGeneral_clicked','Ignore',345,30)
 cbxOnlyCountGeneral = QtBind.createCheckBox(gui,'cbxOnlyCountGeneral_clicked','Only Count',405,30)
-def cbxIgnoreGeneral_clicked(checked):
-	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'0') # 0 = General
-def cbxOnlyCountGeneral_clicked(checked):
-	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'0')
 
 lblChampion = QtBind.createLabel(gui,'Champion (1)',240,49)
 cbxIgnoreChampion = QtBind.createCheckBox(gui,'cbxIgnoreChampion_clicked','Ignore',345,49)
 cbxOnlyCountChampion = QtBind.createCheckBox(gui,'cbxOnlyCountChampion_clicked','Only Count',405,49)
-def cbxIgnoreChampion_clicked(checked):
-	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'1') # 1 = Champion
-def cbxOnlyCountChampion_clicked(checked):
-	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'1')
 
 lblGiant = QtBind.createLabel(gui,'Giant (4)',240,68)
 cbxIgnoreGiant = QtBind.createCheckBox(gui,'cbxIgnoreGiant_clicked','Ignore',345,68)
 cbxOnlyCountGiant = QtBind.createCheckBox(gui,'cbxOnlyCountGiant_clicked','Only Count',405,68)
-def cbxIgnoreGiant_clicked(checked):
-	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'4') # 4 = Giant
-def cbxOnlyCountGiant_clicked(checked):
-	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'4')
 
 lblTitan = QtBind.createLabel(gui,'Titan (5)',240,87)
 cbxIgnoreTitan = QtBind.createCheckBox(gui,'cbxIgnoreTitan_clicked','Ignore',345,87)
 cbxOnlyCountTitan = QtBind.createCheckBox(gui,'cbxOnlyCountTitan_clicked','Only Count',405,87)
-def cbxIgnoreTitan_clicked(checked):
-	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'5') # 5 = Titan
-def cbxOnlyCountTitan_clicked(checked):
-	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'5')
 
 lblStrong = QtBind.createLabel(gui,'Strong (6)',240,106)
 cbxIgnoreStrong = QtBind.createCheckBox(gui,'cbxIgnoreStrong_clicked','Ignore',345,106)
 cbxOnlyCountStrong = QtBind.createCheckBox(gui,'cbxOnlyCountStrong_clicked','Only Count',405,106)
-def cbxIgnoreStrong_clicked(checked):
-	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'6') # 6 = Strong
-def cbxOnlyCountStrong_clicked(checked):
-	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'6')
 
 lblElite = QtBind.createLabel(gui,'Elite (7)',240,125)
 cbxIgnoreElite = QtBind.createCheckBox(gui,'cbxIgnoreElite_clicked','Ignore',345,125)
 cbxOnlyCountElite = QtBind.createCheckBox(gui,'cbxOnlyCountElite_clicked','Only Count',405,125)
-def cbxIgnoreElite_clicked(checked):
-	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'7') # 7 = Elite
-def cbxOnlyCountElite_clicked(checked):
-	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'7')
 
 lblUnique = QtBind.createLabel(gui,'Unique (8)',240,144)
 cbxIgnoreUnique = QtBind.createCheckBox(gui,'cbxIgnoreUnique_clicked','Ignore',345,144)
 cbxOnlyCountUnique = QtBind.createCheckBox(gui,'cbxOnlyCountUnique_clicked','Only Count',405,144)
-def cbxIgnoreUnique_clicked(checked):
-	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'8') # 8 = Unique
-def cbxOnlyCountUnique_clicked(checked):
-	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'8')
 
 lblParty = QtBind.createLabel(gui,'Party (16)',240,163)
 cbxIgnoreParty = QtBind.createCheckBox(gui,'cbxIgnoreParty_clicked','Ignore',345,163)
 cbxOnlyCountParty = QtBind.createCheckBox(gui,'cbxOnlyCountParty_clicked','Only Count',405,163)
-def cbxIgnoreParty_clicked(checked):
-	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'16') # 16 = Party
-def cbxOnlyCountParty_clicked(checked):
-	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'16')
 
 lblChampionParty = QtBind.createLabel(gui,'ChampionParty (17)',240,182)
 cbxIgnoreChampionParty = QtBind.createCheckBox(gui,'cbxIgnoreChampionParty_clicked','Ignore',345,182)
 cbxOnlyCountChampionParty = QtBind.createCheckBox(gui,'cbxOnlyCountChampionParty_clicked','Only Count',405,182)
-def cbxIgnoreChampionParty_clicked(checked):
-	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'17') # 17 = ChampionParty
-def cbxOnlyCountChampionParty_clicked(checked):
-	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'17')
 
 lblGiantParty = QtBind.createLabel(gui,'GiantParty (20)',240,201)
 cbxIgnoreGiantParty = QtBind.createCheckBox(gui,'cbxIgnoreGiantParty_clicked','Ignore',345,201)
 cbxOnlyCountGiantParty = QtBind.createCheckBox(gui,'cbxOnlyCountGiantParty_clicked','Only Count',405,201)
+
+# ______________________________ Methods ______________________________ #
+
+def cbxIgnoreGeneral_clicked(checked):
+	Checkbox_Checked(checked,"lstIgnore",'0') # 0 = General
+def cbxOnlyCountGeneral_clicked(checked):
+	Checkbox_Checked(checked,"lstOnlyCount",'0')
+
+def cbxIgnoreChampion_clicked(checked):
+	Checkbox_Checked(checked,"lstIgnore",'1') # 1 = Champion
+def cbxOnlyCountChampion_clicked(checked):
+	Checkbox_Checked(checked,"lstOnlyCount",'1')
+
+def cbxIgnoreGiant_clicked(checked):
+	Checkbox_Checked(checked,"lstIgnore",'4') # 4 = Giant
+def cbxOnlyCountGiant_clicked(checked):
+	Checkbox_Checked(checked,"lstOnlyCount",'4')
+
+def cbxIgnoreTitan_clicked(checked):
+	Checkbox_Checked(checked,"lstIgnore",'5') # 5 = Titan
+def cbxOnlyCountTitan_clicked(checked):
+	Checkbox_Checked(checked,"lstOnlyCount",'5')
+
+def cbxIgnoreStrong_clicked(checked):
+	Checkbox_Checked(checked,"lstIgnore",'6') # 6 = Strong
+def cbxOnlyCountStrong_clicked(checked):
+	Checkbox_Checked(checked,"lstOnlyCount",'6')
+
+def cbxIgnoreElite_clicked(checked):
+	Checkbox_Checked(checked,"lstIgnore",'7') # 7 = Elite
+def cbxOnlyCountElite_clicked(checked):
+	Checkbox_Checked(checked,"lstOnlyCount",'7')
+
+def cbxIgnoreUnique_clicked(checked):
+	Checkbox_Checked(checked,"lstIgnore",'8') # 8 = Unique
+def cbxOnlyCountUnique_clicked(checked):
+	Checkbox_Checked(checked,"lstOnlyCount",'8')
+
+def cbxIgnoreParty_clicked(checked):
+	Checkbox_Checked(checked,"lstIgnore",'16') # 16 = Party
+def cbxOnlyCountParty_clicked(checked):
+	Checkbox_Checked(checked,"lstOnlyCount",'16')
+
+def cbxIgnoreChampionParty_clicked(checked):
+	Checkbox_Checked(checked,"lstIgnore",'17') # 17 = ChampionParty
+def cbxOnlyCountChampionParty_clicked(checked):
+	Checkbox_Checked(checked,"lstOnlyCount",'17')
+
 def cbxIgnoreGiantParty_clicked(checked):
-	Checkbox_Checked(checked,lstIgnore,"lstIgnore",'20') # 20 = GiantParty
+	Checkbox_Checked(checked,"lstIgnore",'20') # 20 = GiantParty
 def cbxOnlyCountGiantParty_clicked(checked):
-	Checkbox_Checked(checked,lstOnlyCount,"lstOnlyCount",'20')
+	Checkbox_Checked(checked,"lstOnlyCount",'20')
 
 # Generalizing checkbox methods
-def Checkbox_Checked(checked,lst,lstName,mobType):
+def Checkbox_Checked(checked,gListName,mobType):
+	gListReference = globals()[gListName]
 	if checked:
-		lst.append(mobType)
+		gListReference.append(mobType)
 	else:
-		lst.remove(mobType)
-	saveConfig(lstName,lst)
+		gListReference.remove(mobType)
+	saveConfig(gListName,gListReference)
 
 # Return character configs path (JSON)
 def getConfig():
@@ -132,6 +146,7 @@ def loadConfig():
 			for d in data["lstMobs"]:
 				QtBind.append(gui,lstMobs,d)
 		if "lstIgnore" in data:
+			global lstIgnore
 			lstIgnore = data["lstIgnore"]
 			for i in range(len(lstIgnore)):
 				if lstIgnore[i] == '8':
@@ -155,6 +170,7 @@ def loadConfig():
 				elif lstIgnore[i] == '20':
 					QtBind.setChecked(gui,cbxIgnoreGiantParty,True)
 		if "lstOnlyCount" in data:
+			global lstOnlyCount
 			lstOnlyCount = data["lstOnlyCount"]
 			for i in range(len(lstOnlyCount)):
 				if lstOnlyCount[i] == '8':
@@ -217,36 +233,6 @@ def ListContains(text,lst):
 def QtBind_ItemsContains(text,lst):
 	return ListContains(text,QtBind.getItems(gui,lst))
 
-# Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5" or "AttackArea,5,75"
-# Will be checking mobs every 5 seconds at the area as default.
-# Will be using radius maximum (75 approx) as default
-def AttackArea(args):
-	# radius maximum as default
-	radius = None
-	if len(args) >= 2:
-		radius = round(float(args[1]),2)
-	# stop bot and kill mobs through bot
-	if getMobCount(radius) > 0:
-		# stop scripting
-		stop_bot()
-		# set automatically the training area
-		p = get_position()
-		set_training_position(p['region'], p['x'], p['y'])
-		if radius != None:
-			set_training_radius(radius)
-		else:
-			set_training_radius(100.0)
-		# checking mobs delay
-		wait = MOB_CHECK_DELAY
-		if len(args) >= 3 and float(args[2]) > 0:
-			wait = float(args[2])
-		# start to kill mobs on other thread because interpreter lock
-		Timer(0.1,AttackMobs,(wait,False,p['x'],p['y'],p['z'],radius)).start()
-	# otherwise continue normally
-	else:
-		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
-	return 0
-
 # Attacking mobs using all configs from bot
 def AttackMobs(wait,isAttacking,x,y,z,radius):
 	count = getMobCount(radius)
@@ -305,6 +291,39 @@ def getMobCount(radius):
 # Calc the distance from point A to B
 def GetDistance(ax,ay,bx,by):
 	return ((bx-ax)**2 + (by-ay)**2)**(0.5)
+
+# ______________________________ Events ______________________________ #
+
+# Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5" or "AttackArea,5,75"
+# Will be checking mobs every 5 seconds at the area as default.
+# Will be using radius maximum (75 approx) as default
+def AttackArea(args):
+	# radius maximum as default
+	radius = None
+	if len(args) >= 2:
+		radius = round(float(args[1]),2)
+	# stop bot and kill mobs through bot
+	if getMobCount(radius) > 0:
+		# stop scripting
+		stop_bot()
+		# set automatically the training area
+		p = get_position()
+		set_training_position(p['region'], p['x'], p['y'])
+		# set automatically the radius to avoid setting conflict
+		if radius != None:
+			set_training_radius(radius)
+		else:
+			set_training_radius(100.0)
+		# checking mobs delay
+		wait = DEFAULT_CHECK_DELAY
+		if len(args) >= 3 and float(args[2]) > 0:
+			wait = float(args[2])
+		# start to kill mobs on other thread because interpreter lock
+		Timer(0.1,AttackMobs,(wait,False,p['x'],p['y'],p['z'],radius)).start()
+	# otherwise continue normally
+	else:
+		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
+	return 0
 
 # Plugin loading success
 loadConfig()
