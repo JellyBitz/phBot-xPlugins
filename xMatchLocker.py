@@ -4,11 +4,13 @@ import struct
 import time
 
 pName = 'xMatchLocker'
-pVersion = '1.0.0'
+pVersion = '1.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xMatchLocker.py'
 
 # User settings
-QUESTION_PASSWORD = "" # Set password to "lock" party and academy match joining requests
+MATCH_PARTY_MASTER = "" # Set party match owner
+MATCH_ACADEMY_MASTER = "" # Set academy match owner
+QUESTION_PASSWORD = "" # Set password
 QUESTION_MESSAGE = "Hi, can you tell me the magic words? Quickly please!"
 
 # ______________________________ Initializing ______________________________ #
@@ -74,7 +76,7 @@ def handle_joymax(opcode,data):
 		try:
 			# Save all data for this request
 			global questionAcademyTime,questionAcademyRID,questionAcademyJID,questionAcademyCharName
-
+			
 			questionAcademyTime = time.time()
 
 			index=0
@@ -108,8 +110,11 @@ def handle_chat(t,charName,message):
 	# Check questions
 
 	if message == QUESTION_MESSAGE:
-		# Create answer
-		phBotChat.Private(charName,QUESTION_PASSWORD)
+		# Create answer but to Master only
+		if MATCH_PARTY_MASTER == charName or MATCH_ACADEMY_MASTER == charName:
+			phBotChat.Private(charName,QUESTION_PASSWORD)
+		else:
+			phBotChat.Private(charName,"I'm sorry, you're not my master.. ;)")
 		return
 
 	# Check answers
