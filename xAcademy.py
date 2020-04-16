@@ -7,7 +7,7 @@ import json
 import os
 
 pName = 'xAcademy'
-pVersion = '1.0.0'
+pVersion = '1.0.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -53,6 +53,8 @@ def getPath():
 
 # Return character configs path (JSON)
 def getConfig(name):
+	if not name:
+		name = pName;
 	return getPath()+name+".json"
 
 # Load default configs
@@ -70,15 +72,17 @@ def loadDefaultConfig():
 
 # Loads all config previously saved
 def loadConfigs(fileName=""):
+	# Reset config
+	loadDefaultConfig()
 	# Check config exists to load
 	if os.path.exists(getConfig(fileName)):
 		data = {}
 		with open(getConfig(fileName),"r") as f:
 			data = json.load(f)
-		# Reset config
-		loadDefaultConfig()
+
 		# Load all data
 		QtBind.setText(gui,tbxProfileName,fileName)
+
 		if "Enabled" in data and data['Enabled']:
 			QtBind.setChecked(gui,cbxEnabled,True)
 
@@ -415,26 +419,29 @@ def handle_joymax(opcode,data):
 # Plugin loading ...
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
 
-loadDefaultConfig()
 # Check configs folder
 if os.path.exists(getPath()):
 	useDefaultConfig = True 
 	# Try to load config through command line
 	bot_args = get_command_line_args()
 	if bot_args:
-		for i in range(len(bot_args)): 
+		for i in range(len(bot_args)):
 			param = bot_args[i].lower()
 			if param.startswith('-xacademy-config='):
 				# remove command
 				configName = param[17:]
 				# try to load config file
 				if loadConfigs(configName):
-					log("Plugin: Profile ["+strConfigName+"] loaded from commandline")
+					log("Plugin: "+pName+" profile ["+configName+"] loaded from commandline")
 					useDefaultConfig = False
+				else:
+					log("Plugin: "+pName+" profile ["+configName+"] not found")
 				break
 	if useDefaultConfig:
 		loadConfigs()
+
 else:
+	loadDefaultConfig()
 	# Creating configs folder
 	os.makedirs(getPath())
 	log('Plugin: "'+pName+'" folder has been created')
