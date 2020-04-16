@@ -4,13 +4,128 @@ import random
 import struct
 
 pName = 'xArena'
-pVersion = '0.1.6'
+pVersion = '1.0.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xArena.py'
 
+# ______________________________ Initializing ______________________________ #
+
+# Globals
 InBattleArena = False
 InCTF = False
 isPluginRegistering = False
 
+# ______________________________ Methods ______________________________ #
+
+# Gets the NPC unique ID if the specified name is found near
+def GetNPCUniqueID(name):
+	NPCs = get_npcs()
+	if NPCs:
+		name = name.lower()
+		for UniqueID, NPC in NPCs.items():
+			NPCName = NPC['name'].lower()
+			if name in NPCName:
+				return UniqueID
+	return 0
+
+# Move to a random position from the actual position using a maximum radius
+def InjectRandomMovement(radiusMax=10):
+	# define values
+	pX = 0
+	pY = 0
+	# Secure a movement
+	while pX == 0 and pY == 0:
+		# Generating a random new point
+		pX = random.uniform(-radiusMax,radiusMax)
+		pY = random.uniform(-radiusMax,radiusMax)
+	# Merge with the actual position
+	p = get_position()
+	pX = pX + p["x"]
+	pY = pY + p["y"]
+	# Moving to new position
+	move_to(pX,pY,p["z"])
+	log("Plugin: Random movement to (X:%.1f,Y:%.1f)"%(pX,pY))
+
+# Anti AFK system by random movement
+def AntiAFK():
+	if InBattleArena or InCTF:
+		InjectRandomMovement(1)
+		# Randomized the time between movements
+		Timer(random.uniform(2.5,5), AntiAFK).start()
+
+# ______________________________ Events ______________________________ #
+
+# Register to the specified types "arena,type1,type2"
+# Type 1; Random, Party, Guild or Job
+# Type 2; Random, Score or Flag .. Or leave it empty if you are having issues (need test)
+def arena(args):
+	if len(args) < 2:
+		log('Plugin: Missing arena type in the script')
+		return 0
+	
+	NPCID = GetNPCUniqueID('Arena Manager')
+
+	if NPCID == 0:
+		log('Plugin: "Arena Manager" is not near. Be sure to use the script command near to the NPC')
+	else:
+		# read register type
+		t1 = args[1].lower()
+		t2 = ''
+		if len(args) >= 3:
+			t2 = args[2].lower()
+
+		# 1 = register; 2 = cancel
+		p = b'\x01'
+
+		# 0 = Random; 1 = Party; 2 = Guild (Only master can register); 3 = Job;
+		if t1 == 'random':
+			p += struct.pack('B',0)
+		elif t1 == 'party':
+			p += struct.pack('B',1)
+		elif t1 == 'guild':
+			p += struct.pack('B',2)
+		elif t1 == 'job':
+			p += struct.pack('B',3)
+		else:
+			log('Plugin: Wrong Battle Arena type. Please be sure to select one: Random, Party, Guild or Job')
+			return 0
+
+		# 0 = random, 1 = Score; 2 = Flag;
+		if t2 == '':
+			pass
+		elif t2 == 'score':
+			p += struct.pack('B',1)
+		elif t2 == 'flag':
+			p += struct.pack('B',2)
+		else:
+			log('Plugin: Wrong Battle Arena type. Please be sure to select one: Score, or Flag')
+			return 0
+
+		global isPluginRegistering
+		isPluginRegistering = True
+
+		log('Plugin: Trying register to Battle Arena')
+		inject_joymax(0x74D3, p, False)
+		return 500
+	return 0
+
+# Register to the captureflag event "capturetheflag"
+def capturetheflag(args):
+	NPCID = GetNPCUniqueID('So-Ok')
+	if NPCID == 0:
+		log('Plugin: NPC "So-Ok" is not near. Be sure to use the script command near to the NPC')
+	else:
+		p = bytearray()
+
+		global isPluginRegistering
+		isPluginRegistering = True
+
+		log('Plugin: Trying register to Capture the Flag')
+		inject_joymax(0x74B2, p, False)
+		return 500
+	return 0
+
+# All packets received from game server will be passed to this function
+# Returning True will keep the packet and False will not forward it to the game client
 def handle_joymax(opcode, data):
 	global isPluginRegistering
 	if opcode == 0x34D2:
@@ -84,107 +199,5 @@ def handle_joymax(opcode, data):
 					start_bot()
 	return True
 
-# Gets the NPC unique ID if the specified name is found near
-def GetNPCUniqueID(name):
-	NPCs = get_npcs()
-	if NPCs:
-		name = name.lower()
-		for UniqueID, NPC in NPCs.items():
-			NPCName = NPC['name'].lower()
-			if name in NPCName:
-				return UniqueID
-	return 0
-
-# Register to the specified types "arena,type1,type2"
-# Type 1; Random, Party, Guild or Job
-# Type 2; Random, Score or Flag .. Or leave it empty if you are having issues (need test)
-def arena(arguments):
-	if len(arguments) < 2:
-		log('Plugin: Missing arena type in the script')
-		return 0
-	
-	NPCID = GetNPCUniqueID('Arena Manager')
-
-	if NPCID == 0:
-		log('Plugin: "Arena Manager" is not near. Be sure to use the script command near to the NPC')
-	else:
-		# read register type
-		t1 = arguments[1].lower()
-		t2 = ''
-		if len(arguments) >= 3:
-			t2 = arguments[2].lower()
-
-		# 1 = register; 2 = cancel
-		p = b'\x01'
-
-		# 0 = Random; 1 = Party; 2 = Guild (Only master can register); 3 = Job;
-		if t1 == 'random':
-			p += struct.pack('B',0)
-		elif t1 == 'party':
-			p += struct.pack('B',1)
-		elif t1 == 'guild':
-			p += struct.pack('B',2)
-		elif t1 == 'job':
-			p += struct.pack('B',3)
-		else:
-			log('Plugin: Wrong Battle Arena type. Please be sure to select one: Random, Party, Guild or Job')
-			return 0
-
-		# 0 = random, 1 = Score; 2 = Flag;
-		if t2 == '':
-			pass
-		elif t2 == 'score':
-			p += struct.pack('B',1)
-		elif t2 == 'flag':
-			p += struct.pack('B',2)
-		else:
-			log('Plugin: Wrong Battle Arena type. Please be sure to select one: Score, or Flag')
-			return 0
-
-		global isPluginRegistering
-		isPluginRegistering = True
-		inject_joymax(0x74D3, p, False)
-		return 500
-	return 0
-
-# Register to the captureflag event "capturetheflag"
-def capturetheflag(arguments):
-	NPCID = GetNPCUniqueID('So-Ok')
-	if NPCID == 0:
-		log('Plugin: NPC "So-Ok" is not near. Be sure to use the script command near to the NPC')
-	else:
-		p = bytearray()
-
-		global isPluginRegistering
-		isPluginRegistering = True
-		inject_joymax(0x74B2, p, False)
-		return 500
-	return 0
-
-# Move to a random position from the actual position using a maximum radius
-def InjectRandomMovement(radiusMax=10):
-	# define values
-	pX = 0
-	pY = 0
-	# Secure a movement
-	while pX == 0 and pY == 0:
-		# Generating a random new point
-		pX = random.uniform(-radiusMax,radiusMax)
-		pY = random.uniform(-radiusMax,radiusMax)
-	# Merge with the actual position
-	p = get_position()
-	pX = pX + p["x"]
-	pY = pY + p["y"]
-	# Moving to new position
-	move_to(pX,pY,p["z"])
-	log("Plugin: Random movement to (X:%.1f,Y:%.1f)"%(pX,pY))
-
-# Anti AFK system by random movement
-def AntiAFK():
-	if InBattleArena or InCTF:
-		InjectRandomMovement(1)
-		# Randomized the time between movements
-		Timer(random.uniform(2.5,5), AntiAFK).start()
-
-# Plugin load success
+# Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' succesfully loaded')
