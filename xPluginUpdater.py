@@ -5,16 +5,21 @@ import re
 import os
 
 pName = 'xPluginUpdater'
-pVersion = '0.1.2'
+pVersion = '1.0.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPluginUpdater.py'
 
-# Initializing GUI
+# ______________________________ Initializing ______________________________ #
+
+# Graphic user interface
 gui = QtBind.init(__name__,pName)
 lblPlugins = QtBind.createLabel(gui,"Plugins found from your folder",21,11)
 lstPlugins = QtBind.createList(gui,21,30,700,200)
 btnCheck = QtBind.createButton(gui,'btnCheck_clicked',"  Check Updates  ",350,8)
 btnUpdate = QtBind.createButton(gui,'btnUpdate_clicked',"  Update Plugin (Selected)  ",450,8)
 
+# ______________________________ Methods ______________________________ #
+
+# Get the plugins directory
 def GetPluginsFolder():
 	return str(os.path.dirname(os.path.realpath(__file__)))
 
@@ -97,5 +102,5 @@ def btnUpdate_clicked():
 		except:
 			log("Plugin: Error updating your plugin. Try again later..")
 
-# Load success
+# Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' succesfully loaded')
