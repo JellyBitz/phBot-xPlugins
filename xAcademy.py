@@ -5,9 +5,10 @@ import struct
 import random
 import json
 import os
+import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.0.2'
+pVersion = '1.0.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -249,10 +250,11 @@ def create_nickname():
 	log("Plugin: Checking nickname ["+CreatingNickname+"]")
 	Inject_CheckName(CreatingNickname)
 
-# Kill current bot
-def Exit():
+# Close the bot process
+def CloseBot():
 	log("Plugin: Closing bot...")
-	os._exit(0)
+	# Suicide :(
+	os.kill(os.getpid(),9)
 
 # ______________________________ Events ______________________________ #
 
@@ -399,10 +401,11 @@ def handle_joymax(opcode,data):
 							cmd = QtBind.text(gui,tbxCMD)
 							if cmd:
 								log("Plugin: Trying to execute command ["+cmd+"]")
-								os.system(cmd)
+								# Run in subprocess to avoid lock it
+								subprocess.Popen(cmd)
 							if QtBind.isChecked(gui,cbxExit):
-								log("Plugin: Your bot will be closed at 3 seconds..")
-								Timer(3.0,Exit).start()
+								log("Plugin: Your bot will be closed at 5 seconds..")
+								Timer(5.0,CloseBot).start()
 					else:
 						waitSelection = 0.1
 						# Wait at least seconds after trying deleting a character
