@@ -1,15 +1,15 @@
 from phBot import *
-from threading import Timer
 import QtBind
-import struct
 import json
 import os
 
 pName = 'xPackeTool'
-pVersion = '0.1.2'
+pVersion = '1.0.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPackeTool.py'
 
-# Initializing GUI
+# ______________________________ Initializing ______________________________ #
+
+# Graphic user interface
 gui = QtBind.init(__name__,pName)
 lblInject = QtBind.createLabel(gui,'Inject Packets to Client/Server through bot, or just to parse what you need.',21,15)
 
@@ -33,6 +33,8 @@ tbxOpcodes = QtBind.createLineEdit(gui,"",21,129,100,20)
 lstOpcodes = QtBind.createList(gui,21,151,176,109)
 btnAddOpcode = QtBind.createButton(gui,'btnAddOpcode_clicked',"      Add      ",123,129)
 btnRemOpcode = QtBind.createButton(gui,'btnRemOpcode_clicked',"     Remove     ",70,259)
+
+# ______________________________ Methods ______________________________ #
 
 # Checkbox "Show Client Packets" checked
 def cbxSro_clicked(checked):
@@ -174,6 +176,8 @@ def show_packet(opcode):
 		return True
 	return False
 
+# ______________________________ Events ______________________________ #
+
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
 def handle_silkroad(opcode, data):
@@ -190,6 +194,6 @@ def handle_joymax(opcode, data):
 			log("Server: (Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not data else ' '.join('{:02X}'.format(x) for x in data)))
 	return True
 
-# Load success
-loadConfigs()
+# Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' succesfully loaded')
+loadConfigs()
