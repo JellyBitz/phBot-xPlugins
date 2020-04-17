@@ -8,18 +8,18 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '0.4.5'
+pVersion = '1.0.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
-# Avoid issues
-inGame = False
+# ______________________________ Initializing ______________________________ #
 
 # Globals
+inGame = None
 followActivated = False
 followPlayer = ''
 followDistance = 0
 
-# Initializing GUI
+# Graphic user interface
 gui = QtBind.init(__name__,pName)
 lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA #PosX? #PosY? #Region? : Set training area.\n - SETRADIUS #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data? : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
 lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game',345,101)
@@ -29,13 +29,23 @@ lstLeaders = QtBind.createList(gui,511,32,176,48)
 btnAddLeader = QtBind.createButton(gui,'btnAddLeader_clicked',"    Add    ",612,10)
 btnRemLeader = QtBind.createButton(gui,'btnRemLeader_clicked',"     Remove     ",560,79)
 
+# ______________________________ Methods ______________________________ #
+
 # Return xControl folder path
 def getPath():
 	return get_config_dir()+pName+"\\"
 
 # Return character configs path (JSON)
 def getConfig():
-	return getPath()+get_character_data()['server'] + "_" + get_character_data()['name'] + ".json"
+	return getPath()+inGame['server'] + "_" + inGame['name'] + ".json"
+
+# Check if character is ingame
+def isJoined():
+	global inGame
+	inGame = get_character_data()
+	if not (inGame and "name" in inGame and inGame["name"]):
+		inGame = None
+	return inGame
 
 # Load default configs
 def loadDefaultConfig():
@@ -45,14 +55,15 @@ def loadDefaultConfig():
 # Loads all config previously saved
 def loadConfigs():
 	loadDefaultConfig()
-	# Check config exists to load
-	if os.path.exists(getConfig()):
-		data = {}
-		with open(getConfig(),"r") as f:
-			data = json.load(f)
-		if "Leaders" in data:
-			for nickname in data["Leaders"]:
-				QtBind.append(gui,lstLeaders,nickname)
+	if isJoined():
+		# Check config exists to load
+		if os.path.exists(getConfig()):
+			data = {}
+			with open(getConfig(),"r") as f:
+				data = json.load(f)
+			if "Leaders" in data:
+				for nickname in data["Leaders"]:
+					QtBind.append(gui,lstLeaders,nickname)
 
 # Add leader to the list
 def btnAddLeader_clicked():
@@ -105,15 +116,158 @@ def lstLeaders_exist(nickname):
 			return True
 	return False
 
+# Inject Packet (Use return scroll)
+def inject_useReturnScroll():
+	items = get_inventory()['items']
+	for slot, item in enumerate(items):
+		if item:
+			sn = item['servername']
+			# Search some kind return scroll by servername
+			if sn.startswith('ITEM_ETC_SCROLL_RETURN_0') or 'RETURN_SCROLL_HIGH_SPEED' in sn or sn == 'ITEM_ETC_SCROLL_RETURN_NEWBIE_01' or sn == 'ITEM_ETC_LEVEL_SCROLL_RETURN_01' or sn == 'ITEM_ETC_E041225_SANTA_WINGS':
+				packet = struct.pack('B',slot)
+				packet += struct.pack('H',2540)
+				inject_joymax(0x704C,packet,True)
+				log('Plugin: Using "'+item['name']+'"')
+				return
+	log('Plugin: "Return Scroll" not found at your inventory')
+
+# Inject teleport packet, using the source and destination name
+def inject_teleport(source,destination):
+	t = get_teleport_data(source, destination)
+	if t:
+		npcs = get_npcs()
+		for key, npc in npcs.items():
+			if npc['name'] == source or npc['servername'] == source:
+				log("Plugin: Selecting teleporter ["+source+"]")
+				# Teleport found, select it
+				inject_joymax(0x7045, struct.pack('<I', key), False)
+				# Start a timer to teleport in 2.0 seconds
+				Timer(2.0, inject_joymax, (0x705A,struct.pack('<IBI', key, 2, t[1]),False)).start()
+				Timer(2.0, log, ("Plugin: Teleporting to ["+destination+"]")).start()
+				return
+		log('Plugin: NPC not found. Wrong NPC name or servername')
+	else:
+		log('Plugin: Teleport data not found. Wrong teleport name or servername')
+
+# Send message, Ex. "CHAT All Hello World!" or "CHAT private JellyBitz Hi!"
+def sendChatCommand(message):
+	try:
+		# Delete CHAT word
+		message = message[4:].strip()
+		# Parse type
+		t = message.split(' ',1)
+		# Check arguments length and empty message
+		if len(t) == 2 and len(t[1]) > 0:
+			success = False
+			type = t[0].lower()
+			if type == "all":
+				success = phBotChat.All(t[1])
+			elif type == "private":
+				t = t[1].split(' ',1)
+				success = phBotChat.Private(t[0],t[1])
+			elif type == "party":
+				success = phBotChat.Party(t[1])
+			elif type == "guild":
+				success = phBotChat.Guild(t[1])
+			elif type == "union":
+				success = phBotChat.Union(t[1])
+			elif type == "note":
+				t = t[1].split(' ',1)
+				success = phBotChat.Private(t[0],t[1])
+			elif type == "stall":
+				success = phBotChat.Stall(t[1])
+			if success:
+				log("Plugin: Message sent successfully")
+	except:
+		log('Plugin: Incorrect structure to send message')
+
+# Move to a random position from the actual position using a maximum radius
+def randomMovement(radiusMax=10):
+	# Generating a random new point
+	pX = random.uniform(-radiusMax,radiusMax)
+	pY = random.uniform(-radiusMax,radiusMax)
+	# Mixing with the actual position
+	p = get_position()
+	pX = pX + p["x"]
+	pY = pY + p["y"]
+	# Moving to new position
+	move_to(pX,pY,p["z"])
+	log("Plugin: Random movement to (X:%.1f,Y:%.1f)"%(pX,pY))
+
+# Follow a player using distance. Return success
+def start_follow(player,distance):
+	if party_player(player):
+		global followActivated,followPlayer,followDistance
+		followPlayer = player
+		followDistance = distance
+		followActivated = True
+		return True
+	return False
+
+# Return True if the player is in the party
+def party_player(player):
+	players = get_party()
+	if players:
+		for p in players:
+			if players[p]['name'] == player:
+				return True
+	return False
+
+# Return point [X,Y] if player is in the party and near, otherwise return None
+def near_party_player(player):
+	players = get_party()
+	if players:
+		for p in players:
+			if players[p]['name'] == player and players[p]['player_id'] > 0:
+				return players[p]
+	return None
+
+# Calc the distance from point A to B
+def GetDistance(ax,ay,bx,by):
+	return ((bx-ax)**2 + (by-ay)**2)**0.5
+
+# Stop follow player
+def stop_follow():
+	global followActivated,followPlayer,followDistance
+	result = followActivated
+	# stop
+	followActivated = False
+	followPlayer = ""
+	followDistance = 0
+	return result
+
+# ______________________________ Events ______________________________ #
+
+# Inject Packet, even through Script. All his data is separated by comma, encrypted will be false if it's not specified.
+# Example 1: "inject,Opcode,ItsEncrypted?,Data?,Data?,Data?,..."
+# Example 2: "inject,3091,False,0" or "inject,3091,0" (means greet action)
+def inject(args):
+	if len(args) >= 2:
+		opcode = int(args[1],16)
+		encrypted = False
+		dataPos = 2
+		if args[2].lower() == "true" or args[2].lower() == "false":
+			encrypted = True if args[2].lower() == "true" else False
+			dataPos += 1
+		Packet = bytearray()		
+		for i in range(dataPos, len(args)):
+			Packet.append(int(args[i],16))
+		inject_joymax(opcode,Packet,encrypted)
+		# Show only if is scripting
+		if args[0]:
+			log("Plugin: Injecting packet")
+			log("[Opcode:"+args[1]+"][Data:"+' '.join('{:02X}'.format(int(args[x],16)) for x in range(dataPos, len(args)))+"][Encrypted:"+("Yes" if encrypted else "No")+"]")
+	else:
+		log("Plugin: Incorrect structure to inject packet")
+	return 0
+
 # Called when the bot successfully connects to the game server
 def connected():
 	global inGame
-	inGame = False
+	inGame = None
 
 # Called when the character enters the game world
 def joined_game():
-	global inGame
-	inGame = True
 	loadConfigs()
 
 # All chat messages received are sent to this function
@@ -268,136 +422,7 @@ def handle_chat(t,player,msg):
 				log("Plugin: Disconnecting...")
 				disconnect()
 
-# Inject Packet (Use return scroll)
-def inject_useReturnScroll():
-	items = get_inventory()['items']
-	for slot, item in enumerate(items):
-		if item:
-			sn = item['servername']
-			# Search some kind return scroll by servername
-			if sn.startswith('ITEM_ETC_SCROLL_RETURN_0') or 'RETURN_SCROLL_HIGH_SPEED' in sn or sn == 'ITEM_ETC_SCROLL_RETURN_NEWBIE_01' or sn == 'ITEM_ETC_LEVEL_SCROLL_RETURN_01' or sn == 'ITEM_ETC_E041225_SANTA_WINGS':
-				packet = struct.pack('B',slot)
-				packet += struct.pack('H',2540)
-				inject_joymax(0x704C,packet,True)
-				log('Plugin: Using "'+item['name']+'"')
-				return
-	log('Plugin: "Return Scroll" not found at your inventory')
-
-# Inject teleport packet, using the source and destination name
-def inject_teleport(source,destination):
-	t = get_teleport_data(source, destination)
-	if t:
-		npcs = get_npcs()
-		for key, npc in npcs.items():
-			if npc['name'] == source or npc['servername'] == source:
-				log("Plugin: Selecting teleporter ["+source+"]")
-				# Teleport found, select it
-				inject_joymax(0x7045, struct.pack('<I', key), False)
-				# Start a timer to teleport in 2.0 seconds
-				Timer(2.0, inject_joymax, (0x705A,struct.pack('<IBI', key, 2, t[1]),False)).start()
-				Timer(2.0, log, ("Plugin: Teleporting to ["+destination+"]")).start()
-				return
-		log('Plugin: NPC not found. Wrong NPC name or servername')
-	else:
-		log('Plugin: Teleport data not found. Wrong teleport name or servername')
-
-# Inject Packet, even through Script. All his data is separated by comma, encrypted will be false if it's not specified.
-# Example 1: "inject,Opcode,ItsEncrypted?,Data?,Data?,Data?,..."
-# Example 2: "inject,3091,False,0" or "inject,3091,0" (means greet action)
-def inject(args):
-	if len(args) >= 2:
-		opcode = int(args[1],16)
-		encrypted = False
-		dataPos = 2
-		if args[2].lower() == "true" or args[2].lower() == "false":
-			encrypted = True if args[2].lower() == "true" else False
-			dataPos += 1
-		Packet = bytearray()		
-		for i in range(dataPos, len(args)):
-			Packet.append(int(args[i],16))
-		inject_joymax(opcode,Packet,encrypted)
-		# Show only if is scripting
-		if args[0]:
-			log("Plugin: Injecting packet")
-			log("[Opcode:"+args[1]+"][Data:"+' '.join('{:02X}'.format(int(args[x],16)) for x in range(dataPos, len(args)))+"][Encrypted:"+("Yes" if encrypted else "No")+"]")
-	else:
-		log("Plugin: Incorrect structure to inject packet")
-	return 0
-
-# Send message, Ex. "CHAT All Hello World!" or "CHAT private JellyBitz Hi!"
-def sendChatCommand(message):
-	try:
-		# Delete CHAT word
-		message = message[4:].strip()
-		# Parse type
-		t = message.split(' ',1)
-		# Check arguments length and empty message
-		if len(t) == 2 and len(t[1]) > 0:
-			success = False
-			type = t[0].lower()
-			if type == "all":
-				success = phBotChat.All(t[1])
-			elif type == "private":
-				t = t[1].split(' ',1)
-				success = phBotChat.Private(t[0],t[1])
-			elif type == "party":
-				success = phBotChat.Party(t[1])
-			elif type == "guild":
-				success = phBotChat.Guild(t[1])
-			elif type == "union":
-				success = phBotChat.Union(t[1])
-			elif type == "note":
-				t = t[1].split(' ',1)
-				success = phBotChat.Private(t[0],t[1])
-			elif type == "stall":
-				success = phBotChat.Stall(t[1])
-			if success:
-				log("Plugin: Message sent successfully")
-	except:
-		log('Plugin: Incorrect structure to send message')
-
-# Move to a random position from the actual position using a maximum radius
-def randomMovement(radiusMax=10):
-	# Generating a random new point
-	pX = random.uniform(-radiusMax,radiusMax)
-	pY = random.uniform(-radiusMax,radiusMax)
-	# Mixing with the actual position
-	p = get_position()
-	pX = pX + p["x"]
-	pY = pY + p["y"]
-	# Moving to new position
-	move_to(pX,pY,p["z"])
-	log("Plugin: Random movement to (X:%.1f,Y:%.1f)"%(pX,pY))
-
-# Follow a player using distance. Return success
-def start_follow(player,distance):
-	if party_player(player):
-		global followActivated,followPlayer,followDistance
-		followPlayer = player
-		followDistance = distance
-		followActivated = True
-		return True
-	return False
-
-# Return True if the player is in the party
-def party_player(player):
-	players = get_party()
-	if players:
-		for p in players:
-			if players[p]['name'] == player:
-				return True
-	return False
-
-# Return point [X,Y] if player is in the party and near, otherwise return None
-def near_party_player(player):
-	players = get_party()
-	if players:
-		for p in players:
-			if players[p]['name'] == player and players[p]['player_id'] > 0:
-				return players[p]
-	return None
-
-#Called every 500ms.
+# Called every 500ms
 def event_loop():
 	if inGame and followActivated:
 		player = near_party_player(followPlayer)
@@ -422,23 +447,13 @@ def event_loop():
 			log("Following "+followPlayer+"...")
 			move_to(player['x'],player['y'],0)
 
-# Calc the distance from point A to B
-def GetDistance(ax,ay,bx,by):
-	return ((bx-ax)**2 + (by-ay)**2)**0.5
-
-# Stop follow player
-def stop_follow():
-	global followActivated,followPlayer,followDistance
-	result = followActivated
-	# stop
-	followActivated = False
-	followPlayer = ""
-	followDistance = 0
-	return result
-
-# Plugin loaded success
+# Plugin loaded
 log("Plugin: "+pName+" v"+pVersion+" successfully loaded")
-# Creating xControl configs folder
-if not os.path.exists(getPath()):
+
+if os.path.exists(getPath()):
+	# Adding RELOAD plugin support
+	loadConfigs()
+else:
+	# Creating configs folder
 	os.makedirs(getPath())
-	log('Plugin: "'+pName+'" folder has been created')
+	log('Plugin: '+pName+' folder has been created')
