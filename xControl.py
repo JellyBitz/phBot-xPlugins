@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.0.0'
+pVersion = '1.0.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -327,41 +327,41 @@ def handle_chat(t,player,msg):
 						log("Plugin: Training radius incorrect")
 			elif msg == "SIT":
 				log("Plugin: Sit/Stand")
-				inject(["","704F","04"])
+				inject_joymax(0x704F,b'\x04',False)
 			elif msg == "JUMP":
 				log("Plugin: Trying to jump!")
-				inject(["","3091","0C"])
+				inject_joymax(0x3091,b'\x0c',False)
 			elif msg.startswith("CAPE"):
 				if msg == "CAPE":
-					log("Plugin: Using PVP Cape (Yellow)")
-					inject(["","7516","5"])
+					log("Plugin: Using PVP Cape by default (Yellow)")
+					inject_joymax(0x7516,b'\x05')
 				else:
 					type = msg[4:].split()
 					if type:
 						type = type[0].lower()
 						if type == "off":
 							log("Plugin: Removing PVP Cape")
-							inject(["","7516","0"])
+							inject_joymax(0x7516,b'\x00',False)
 						elif type == "red":
 							log("Plugin: Using PVP Cape (Red)")
-							inject(["","7516","1"])
+							inject_joymax(0x7516,b'\x01',False)
 						elif type == "gray":
 							log("Plugin: Using PVP Cape (Gray)")
-							inject(["","7516","2"])
+							inject_joymax(0x7516,b'\x02',False)
 						elif type == "blue":
 							log("Plugin: Using PVP Cape (Blue)")
-							inject(["","7516","3"])
+							inject_joymax(0x7516,b'\x03',False)
 						elif type == "white":
 							log("Plugin: Using PVP Cape (White)")
-							inject(["","7516","4"])
+							inject_joymax(0x7516,b'\x04',False)
 						elif type == "yellow":
 							log("Plugin: Using PVP Cape (Yellow)")
-							inject(["","7516","5"])
+							inject_joymax(0x7516,b'\x05',False)
 						else:
 							log("Plugin: Wrong PVP Cape color")
 			elif msg == "ZERK":
 				log("Plugin: Using Berserker mode")
-				inject(["","70A7","1"])
+				inject_joymax(0x70A7,b'\x01')
 			elif msg == "RETURN":
 				# Trying avoid high CPU usage with many chars at the same time
 				Timer(random.uniform(0.5,2),inject_useReturnScroll).start()
@@ -396,17 +396,23 @@ def handle_chat(t,player,msg):
 					except:
 						log("Plugin: Movement maximum radius incorrect")
 			elif msg.startswith("FOLLOW"):
-				if msg == "FOLLOW":
-					if start_follow(player):
-						log("Plugin: Starting to follow to ["+player+"]")
-				else:
+				# default values
+				charName = player
+				distance = 10
+				if msg != "FOLLOW":
+					# Check params
 					msg = msg[6:].split()
 					try:
-						distance = 10.0 if len(msg) == 1 else float(msg[1])
-						if start_follow(msg[0],distance):
-							log("Plugin: Starting to follow to ["+msg[0]+"] using ["+distance+"] as distance")
+						if len(msg) >= 1:
+							charName = msg[0]
+						if len(msg) >= 2:
+							distance = float(msg[1])
 					except:
 						log("Plugin: Follow distance incorrect")
+						return
+				# Start following
+				if start_follow(charName,distance):
+					log("Plugin: Starting to follow to ["+charName+"] using ["+str(distance)+"] as distance")					
 			elif msg == "NOFOLLOW":
 				if stop_follow():
 					log("Plugin: Following stopped")
