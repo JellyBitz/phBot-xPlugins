@@ -5,7 +5,7 @@ import re
 import os
 
 pName = 'xPluginUpdater'
-pVersion = '1.0.0'
+pVersion = '1.0.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPluginUpdater.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -60,7 +60,7 @@ def getVersion(url):
 		with urllib.request.urlopen(req) as w:
 			pyCode = str(w.read().decode("utf-8"))
 			if re.search("\npVersion = [0-9.'\"]*",pyCode):
-				return re.search("\npVersion = ([0-9a-zA-Z.'\"]*)",pyCode).group(0)[1:-1]
+				return re.search("\npVersion = ([0-9a-zA-Z.'\"]*)",pyCode).group(0)[13:-1]
 	except:
 		pass
 	return None
