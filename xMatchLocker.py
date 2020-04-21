@@ -4,15 +4,15 @@ import struct
 import time
 
 pName = 'xMatchLocker'
-pVersion = '1.1.0'
+pVersion = '1.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xMatchLocker.py'
 
 # User settings
 MATCH_PARTY_MASTER = "" # Set party match owner
 MATCH_ACADEMY_MASTER = "" # Set academy match owner
+MATCH_REPLY_DELAY_MAX = 10 # Seconds
 QUESTION_PASSWORD = "" # Set password
 QUESTION_MESSAGE = "Hi, can you tell me the magic words? Quickly please!"
-
 # ______________________________ Initializing ______________________________ #
 
 # Globals
@@ -122,7 +122,7 @@ def handle_chat(t,charName,message):
 	if charName == questionPartyCharName:
 		# Check party match request cancel delay 
 		now = time.time()
-		if now - questionPartyTime < 5:
+		if now - questionPartyTime < MATCH_REPLY_DELAY_MAX:
 			# Check a correct answer
 			if message == QUESTION_PASSWORD:
 				log("Plugin: "+charName+" joined to party by password")
@@ -135,7 +135,7 @@ def handle_chat(t,charName,message):
 	if charName == questionAcademyCharName:
 		# Check academy match request cancel delay 
 		now = time.time()
-		if now - questionAcademyTime < 5:
+		if now - questionAcademyTime < MATCH_REPLY_DELAY_MAX:
 			# Check a correct answer
 			if message == QUESTION_PASSWORD:
 				log("Plugin: "+charName+" joined to academy by password")
