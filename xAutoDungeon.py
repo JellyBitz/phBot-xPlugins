@@ -4,7 +4,7 @@ from threading import Timer
 import json
 import os
 
-pVersion = '1.0.0'
+pVersion = '1.0.1'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -131,12 +131,16 @@ def Checkbox_Checked(checked,gListName,mobType):
 		gListReference.remove(mobType)
 	saveConfig(gListName,gListReference)
 
+# Return folder path
+def getPath():
+	return get_config_dir()+pName+"\\"
+
 # Return character configs path (JSON)
 def getConfig():
-	return get_config_dir()+pName+".json"
+	return getPath()+pName+".json"
 
 # Load config if exists
-def loadConfig():
+def loadConfigs():
 	if os.path.exists(getConfig()):
 		data = {}
 		with open(getConfig(),"r") as f:
@@ -325,6 +329,17 @@ def AttackArea(args):
 		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
 	return 0
 
-# Plugin loading success
-loadConfig()
+# Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' succesfully loaded')
+
+if os.path.exists(getPath()):
+	# Adding RELOAD plugin support
+	try:
+		loadConfigs()
+	except:
+		# Just in case omg -_-
+		log('Plugin: Error loading '+pName+' config file')
+else:
+	# Creating configs folder
+	os.makedirs(getPath())
+	log('Plugin: '+pName+' folder has been created')
