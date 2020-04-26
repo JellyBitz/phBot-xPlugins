@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.0.2'
+pVersion = '1.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -22,7 +22,7 @@ followDistance = 0
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
 lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA #PosX? #PosY? #Region? : Set training area.\n - SETRADIUS #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data? : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
-lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game',345,101)
+lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game\n - MOUNT #PetType? : Mount horse by default\n - DISMOUNT #PetType? : Dismount horse by default',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
 lstLeaders = QtBind.createList(gui,511,32,176,48)
@@ -236,6 +236,55 @@ def stop_follow():
 	followDistance = 0
 	return result
 
+# Try to summon a vehicle
+def MountHorse():
+	items = get_inventory()['items']
+	for slot, item in enumerate(items):
+		if item:
+			sn = item['servername']
+			# Search some kind vehicle by servername
+			if '_C_' in sn:
+				packet = struct.pack('B',slot)
+				packet += struct.pack('H',4588 + (1 if sn.endswith('_SCROLL') else 0)) # Silk scroll
+				inject_joymax(0x704C,packet,True)
+				return True
+	log('Plugin: Horse not found at your inventory')
+	return False
+
+# Try to mount pet by type, return success
+def MountPet(petType):
+	# just in case
+	if petType == 'pick'
+		return False
+	elif petType == 'horse':
+		return MountHorse()
+	# get all summoned pets
+	pets = get_pets()
+	if pets:
+		for uid,pet in pets.items():
+			if pet['type'] == petType:
+				p = b'\x01' # mount flag
+				p += struct.pack('I',uid)
+				inject_joymax(0x70CB,p, False)
+				return True
+	return False
+
+# Try to dismount pet by type, return success
+def DismountPet(petType):
+	# just in case
+	if petType == 'pick'
+		return False
+	# get all summoned pets
+	pets = get_pets()
+	if pets:
+		for uid,pet in pets.items():
+			if pet['type'] == petType:
+				p = b'\x00'
+				p += struct.pack('I',uid)
+				inject_joymax(0x70CB,p, False)
+				return True
+	return False
+
 # ______________________________ Events ______________________________ #
 
 # Inject Packet, even through Script. All his data is separated by comma, encrypted will be false if it's not specified.
@@ -421,12 +470,32 @@ def handle_chat(t,player,msg):
 					if set_profile('Default'):
 						log("Plugin: Setting Default profile")
 				else:
-					msg = msg[7:].strip()
+					msg = msg[7:]
 					if set_profile(msg):
 						log("Plugin: Setting "+msg+" profile")
 			elif msg == "DC":
 				log("Plugin: Disconnecting...")
 				disconnect()
+			elif msg.startswith("MOUNT"):
+				# default value
+				pet = "horse"
+				if msg != "MOUNT":
+					msg = msg[5:].split()
+					if msg:
+						pet = msg[0]
+				# Try mount pet
+				if MountPet(pet):
+					log("Plugin: Mounting pet ["+pet+"]")
+			elif msg.startswith("DISMOUNT"):
+				# default value
+				pet = "horse"
+				if msg != "DISMOUNT":
+					msg = msg[8:].split()
+					if msg:
+						pet = msg[0]
+				# Try dismount pet
+				if DismountPet(pet):
+					log("Plugin: Dismounting pet ["+pet+"]")
 
 # Called every 500ms
 def event_loop():
