@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.1.0'
+pVersion = '1.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -254,7 +254,7 @@ def MountHorse():
 # Try to mount pet by type, return success
 def MountPet(petType):
 	# just in case
-	if petType == 'pick'
+	if petType == 'pick':
 		return False
 	elif petType == 'horse':
 		return MountHorse()
@@ -272,7 +272,7 @@ def MountPet(petType):
 # Try to dismount pet by type, return success
 def DismountPet(petType):
 	# just in case
-	if petType == 'pick'
+	if petType == 'pick':
 		return False
 	# get all summoned pets
 	pets = get_pets()
