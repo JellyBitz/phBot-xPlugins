@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.1.1'
+pVersion = '1.1.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -21,7 +21,7 @@ followDistance = 0
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
-lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA #PosX? #PosY? #Region? : Set training area.\n - SETRADIUS #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TELEPORT #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data? : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
+lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA #PosX? #PosY? #Region? : Set training area.\n - SETRADIUS #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TP #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data? : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
 lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game\n - MOUNT #PetType? : Mount horse by default\n - DISMOUNT #PetType? : Dismount horse by default',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
@@ -414,7 +414,7 @@ def handle_chat(t,player,msg):
 			elif msg == "RETURN":
 				# Trying avoid high CPU usage with many chars at the same time
 				Timer(random.uniform(0.5,2),inject_useReturnScroll).start()
-			elif msg.startswith("TELEPORT"):
+			elif msg.startswith("TP"):
 				msg = msg[8:]
 				if msg:
 					msg = msg[1:] # remove whatever used as separator
