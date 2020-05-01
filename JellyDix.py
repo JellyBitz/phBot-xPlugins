@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '1.0.0'
+pVersion = '1.0.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -537,6 +537,14 @@ def getGoldText():
 	character_data = get_character_data()
 	return "{:,}".format(character_data['gold'])
 
+# Return the country type of the object, empty if not found
+def getCountryType(servername):
+	if "_CH_" in servername:
+		return "(CH)"
+	if "_EU_" in servername:
+		return "(EU)"
+	return ""
+
 # ______________________________ Events ______________________________ #
 
 # Scripting support to send notifications like "JellyDix,Channel ID,Message"
@@ -612,7 +620,8 @@ def handle_event(t, data):
 		channel_id = QtBind.text(gui_,cmbxEvtPick_equip)
 		if channel_id:
 			item = get_item(int(data))
-			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Equipable)** picked up ***"+item['name']+"***")
+			itemName = item['name']
+			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Equipable)** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
 	elif t == 8:
 		Notify(QtBind.text(gui_,cmbxEvtBot_alchemy),"|`"+character_data['name']+"`| - **Auto alchemy** has been completed")
 
@@ -804,7 +813,7 @@ def notify_pickup(channel_id,itemID):
 	usefilterName = QtBind.isChecked(gui_,cbxEvtPick_name_filter)
 	usefilterServerName = QtBind.isChecked(gui_,cbxEvtPick_servername_filter)
 	if not usefilterName and not usefilterServerName:
-		Notify(channel_id,"|`"+character_data['name']+"`| - **Item** picked up ***"+item['name']+"***")
+		Notify(channel_id,"|`"+character_data['name']+"`| - **Item** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
 		return
 	# check filter name
 	if usefilterName:
@@ -826,7 +835,7 @@ def notify_pickup(channel_id,itemID):
 				log("Plugin: Error at regex (servername) ["+str(ex)+"]")
 
 	# Filtered through both if checked
-	Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+"***")
+	Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
 
 # Called every 500ms
 def event_loop():
@@ -846,10 +855,10 @@ def on_disconnect():
 # Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
 
-# Creating configs folder
-if not os.path.exists(getPath()):
+if os.path.exists(getPath()):
+	# Adding RELOAD plugin support
+	loadConfigs()
+else:
+	# Creating configs folder
 	os.makedirs(getPath())
 	log('Plugin: '+pName+' folder has been created')
-
-# Adding RELOAD plugin support
-loadConfigs()
