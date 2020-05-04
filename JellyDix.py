@@ -9,7 +9,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '1.0.1'
+pVersion = '1.0.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -615,7 +615,7 @@ def handle_event(t, data):
 		channel_id = QtBind.text(gui_,cmbxEvtPick_rare)
 		if channel_id:
 			item = get_item(int(data))
-			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Rare)** picked up ***"+item['name']+"***")
+			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Rare)** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
 	elif t == 6:
 		channel_id = QtBind.text(gui_,cmbxEvtPick_equip)
 		if channel_id:
