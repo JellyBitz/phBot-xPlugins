@@ -5,7 +5,7 @@ import time
 import os
 
 pName = 'xAutoConfig'
-pVersion = '1.0.0'
+pVersion = '1.0.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoConfig.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -48,12 +48,12 @@ def joined_game():
 			if lastModification < 2:
 				log("Plugin: Filter was probably created a few seconds ago")
 				log("Plugin: Filter by default will be loaded in 10 seconds..")
-				Timer(10.0,ReplaceFile(defaultConfig,configFile,"Plugin: Default Filter loaded")).start()
+				Timer(10.0,ReplaceFile,(defaultConfig,configFile,"Plugin: Default Filter loaded")).start()
 	else:
 		defaultConfig = get_config_dir()+DEFAULT_DATABASE_FILENAME
 		if os.path.exists(defaultConfig):
 			log("Plugin: Filter not found. Default will be loaded in 10 seconds..")
-			Timer(10.0,ReplaceFile(defaultConfig,configFile,"Plugin: Default Filter loaded")).start()
+			Timer(10.0,ReplaceFile,(defaultConfig,configFile,"Plugin: Default Filter loaded")).start()
 
 # Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
