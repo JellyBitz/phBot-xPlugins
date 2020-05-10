@@ -5,7 +5,7 @@ import json
 import os
 
 pName = 'xTargetSupport'
-pVersion = '1.0.1'
+pVersion = '1.0.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTargetSupport.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -130,6 +130,10 @@ def Inject_SelectTarget(targetUID):
 	packet = struct.pack('<I',targetUID)
 	inject_joymax(0x7045,packet,False)
 
+# Check if the skill is an attacking skill
+def IsAttack(skill):
+	return skill['duration'] == 0 and skill['mp'] > 0
+
 # ______________________________ Events ______________________________ #
 
 # Called when the character enters the game world
@@ -143,16 +147,15 @@ def handle_joymax(opcode, data):
 	if opcode == 0xB070 and QtBind.isChecked(gui,cbxEnabled):
 		 # Success
 		if data[0] == 1:
-			# Type: Attack = 2
-			if data[1] == 2:
-				AttackerID = struct.unpack_from("<I",data,7)[0]
-				TargetID = struct.unpack_from("<I",data,15)[0]
-				# Ensure is not a Buff
-				if AttackerID != TargetID:
-					# Check the nickname from attacker
-					charName = getCharName(AttackerID)
-					if charName and ListContains(charName,QtBind.getItems(gui,lvwLeaders)):
-						Inject_SelectTarget(TargetID)
+			SkillID = struct.unpack_from("<I",data,3)[0]
+			AttackerID = struct.unpack_from("<I",data,7)[0]
+			TargetID = struct.unpack_from("<I",data,15)[0]
+			# Make sure is not a Buff
+			if AttackerID != TargetID and IsAttack(get_skill(SkillID)):
+				# Check the nickname from attacker
+				charName = getCharName(AttackerID)
+				if charName and ListContains(charName,QtBind.getItems(gui,lvwLeaders)):
+					Inject_SelectTarget(TargetID)
 	return True
 
 # All chat messages received are sent to this function
