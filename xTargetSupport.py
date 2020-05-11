@@ -5,7 +5,7 @@ import json
 import os
 
 pName = 'xTargetSupport'
-pVersion = '1.1.0'
+pVersion = '1.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTargetSupport.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -144,8 +144,12 @@ def handle_joymax(opcode, data):
 		 # Success
 		if data[0] == 1:
 			SkillType = data[1] # 2 = Attack
-			AttackerID = struct.unpack_from("<I",data,7)[0]
-			TargetID = struct.unpack_from("<I",data,15)[0]
+			packetIndex = 7
+			AttackerID = struct.unpack_from("<I",data,packetIndex)[0]
+			packetIndex += 8
+			if get_locale() == 18: # iSRO
+				packetIndex += 4
+			TargetID = struct.unpack_from("<I",data,packetIndex)[0]
 			# Make sure is not a Buff
 			if SkillType == 2 and AttackerID != TargetID:
 				# Check the nickname from attacker
