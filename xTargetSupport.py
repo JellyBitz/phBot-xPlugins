@@ -5,7 +5,7 @@ import json
 import os
 
 pName = 'xTargetSupport'
-pVersion = '1.0.3'
+pVersion = '1.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTargetSupport.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -121,7 +121,7 @@ def getCharName(UniqueID):
 	# Check the UID with all players
 	if players:
 		for key, player in players.items():
-			if key == UniqueID:
+			if player['player_id'] == UniqueID:
 				return player['name']
 	return ""
 
@@ -151,6 +151,7 @@ def handle_joymax(opcode, data):
 				# Check the nickname from attacker
 				charName = getCharName(AttackerID)
 				if charName and ListContains(charName,QtBind.getItems(gui,lvwLeaders)):
+					log("Plugin: Targetting enemy from "+charName)
 					Inject_SelectTarget(TargetID)
 	return True
 
