@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.1.3'
+pVersion = '1.1.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -415,16 +415,18 @@ def handle_chat(t,player,msg):
 				# Trying avoid high CPU usage with many chars at the same time
 				Timer(random.uniform(0.5,2),inject_useReturnScroll).start()
 			elif msg.startswith("TP"):
-				msg = msg[8:]
+				msg = msg[2:] # remove command header
 				if msg:
 					msg = msg[1:] # remove whatever used as separator
 				if msg:
 					split = ""
+					# Select split char
 					if "," in msg:
 						split = ","
 					elif " " in msg:
 						split = " "
-					if split != "":
+					# Extract info
+					if split:
 						source_dest = msg.split(split)
 						if len(source_dest) >= 2:
 							inject_teleport(source_dest[0].strip(),source_dest[1].strip())
