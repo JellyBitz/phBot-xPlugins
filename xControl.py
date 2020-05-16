@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.1.4'
+pVersion = '1.1.5'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -383,7 +383,7 @@ def handle_chat(t,player,msg):
 			elif msg.startswith("CAPE"):
 				if msg == "CAPE":
 					log("Plugin: Using PVP Cape by default (Yellow)")
-					inject_joymax(0x7516,b'\x05')
+					inject_joymax(0x7516,b'\x05',False)
 				else:
 					type = msg[4:].split()
 					if type:
@@ -410,7 +410,7 @@ def handle_chat(t,player,msg):
 							log("Plugin: Wrong PVP Cape color")
 			elif msg == "ZERK":
 				log("Plugin: Using Berserker mode")
-				inject_joymax(0x70A7,b'\x01')
+				inject_joymax(0x70A7,b'\x01',False)
 			elif msg == "RETURN":
 				# Trying avoid high CPU usage with many chars at the same time
 				Timer(random.uniform(0.5,2),inject_useReturnScroll).start()
