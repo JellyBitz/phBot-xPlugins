@@ -5,7 +5,7 @@ import json
 import os
 
 pName = 'xTargetSupport'
-pVersion = '1.1.1'
+pVersion = '1.2.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTargetSupport.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -17,10 +17,12 @@ inGame = None
 gui = QtBind.init(__name__,pName)
 cbxEnabled = QtBind.createCheckBox(gui,'cbxDoNothing','Enabled',6,10)
 
-tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
-lvwLeaders = QtBind.createList(gui,511,32,176,48)
-btnAddLeader = QtBind.createButton(gui,'btnAddLeader_clicked',"    Add    ",612,10)
-btnRemLeader = QtBind.createButton(gui,'btnRemLeader_clicked',"     Remove     ",560,79)
+cbxDefensive = QtBind.createCheckBox(gui,'cbxDoNothing','Defensive Mode',356,30)
+
+tbxLeaders = QtBind.createLineEdit(gui,"",6,11,100,20)
+lvwLeaders = QtBind.createList(gui,6,32,176,48)
+btnAddLeader = QtBind.createButton(gui,'btnAddLeader_clicked',"    Add    ",107,10)
+btnRemLeader = QtBind.createButton(gui,'btnRemLeader_clicked',"     Remove     ",55,79)
 
 # ______________________________ Methods ______________________________ #
 
@@ -43,7 +45,9 @@ def isJoined():
 # Load default configs
 def loadDefaultConfig():
 	# Clear data
+	QtBind.setChecked(gui,cbxEnabled,False)
 	QtBind.clear(gui,lvwLeaders)
+	QtBind.setChecked(gui,cbxDefensive,False)
 
 # Loads all config previously saved
 def loadConfigs():
@@ -57,6 +61,8 @@ def loadConfigs():
 			if "Leaders" in data:
 				for charName in data["Leaders"]:
 					QtBind.append(gui,lvwLeaders,charName)
+			if "Defensive" in data and data['Defensive']:
+				QtBind.setChecked(gui,cbxDefensive,True)
 
 # Return True if text exist at the list
 def ListContains(text,lst):
@@ -150,13 +156,19 @@ def handle_joymax(opcode, data):
 			if get_locale() == 18: # iSRO
 				packetIndex += 4
 			TargetID = struct.unpack_from("<I",data,packetIndex)[0]
-			# Make sure is not a Buff
-			if SkillType == 2 and AttackerID != TargetID:
+			# Check attack types only
+			if SkillType == 2:
 				# Check the nickname from attacker
 				charName = getCharName(AttackerID)
 				if charName and ListContains(charName,QtBind.getItems(gui,lvwLeaders)):
 					log("Plugin: Targetting enemy from "+charName)
 					Inject_SelectTarget(TargetID)
+				elif QtBind.isChecked(gui,cbxDefensive):
+					# Check the nickname from target
+					charName = getCharName(TargetID)
+					if charName and ListContains(charName,QtBind.getItems(gui,lvwLeaders)):
+						log("Plugin: Targetting attacker from "+charName)
+						Inject_SelectTarget(AttackerID)
 	return True
 
 # All chat messages received are sent to this function
