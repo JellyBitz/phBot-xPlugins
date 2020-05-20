@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.1.5'
+pVersion = '1.1.6'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -22,7 +22,7 @@ followDistance = 0
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
 lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA #PosX? #PosY? #Region? : Set training area.\n - SETRADIUS #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TP #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data? : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
-lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game\n - MOUNT #PetType? : Mount horse by default\n - DISMOUNT #PetType? : Dismount horse by default\n - GETOUT : Left party',345,101)
+lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game\n - MOUNT #PetType? : Mount horse by default\n - DISMOUNT #PetType? : Dismount horse by default\n - GETOUT : Left party\n - RECALL #Town : Set recall on city portal',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
 lstLeaders = QtBind.createList(gui,511,32,176,48)
@@ -149,35 +149,39 @@ def inject_teleport(source,destination):
 	else:
 		log('Plugin: Teleport data not found. Wrong teleport name or servername')
 
-# Send message, Ex. "CHAT All Hello World!" or "CHAT private JellyBitz Hi!"
-def sendChatCommand(message):
+# Send message, Ex. "All Hello World!" or "private JellyBitz Hi!"
+def parseChatCommand(msg):
 	try:
-		# Delete CHAT word
-		message = message[4:].strip()
-		# Parse type
-		t = message.split(' ',1)
-		# Check arguments length and empty message
-		if len(t) == 2 and len(t[1]) > 0:
-			success = False
-			type = t[0].lower()
-			if type == "all":
-				success = phBotChat.All(t[1])
-			elif type == "private":
-				t = t[1].split(' ',1)
-				success = phBotChat.Private(t[0],t[1])
-			elif type == "party":
-				success = phBotChat.Party(t[1])
-			elif type == "guild":
-				success = phBotChat.Guild(t[1])
-			elif type == "union":
-				success = phBotChat.Union(t[1])
-			elif type == "note":
-				t = t[1].split(' ',1)
-				success = phBotChat.Private(t[0],t[1])
-			elif type == "stall":
-				success = phBotChat.Stall(t[1])
-			if success:
-				log("Plugin: Message sent successfully")
+		# Remove the command word
+		args = msg.split(' ',1)
+		# Check arguments length and avoid empty message
+		if len(args) == 2 and args[1]:
+			sent = False
+			t = args[0].lower()
+			# Check msg type and send it
+			if t == "all":
+				sent = phBotChat.All(args[1])
+			elif t == "private":
+				args = args[1].split(' ',1)
+				# Check if the format is correct
+				if len(args) == 2 and args[1]:
+					sent = phBotChat.Private(args[0],args[1])
+			elif t == "party":
+				sent = phBotChat.Party(args[1])
+			elif t == "guild":
+				sent = phBotChat.Guild(args[1])
+			elif t == "union":
+				sent = phBotChat.Union(args[1])
+			elif t == "note":
+				t = args[1].split(' ',1)
+				sent = phBotChat.Private(t[0],args[1])
+			elif t == "stall":
+				sent = phBotChat.Stall(args[1])
+			elif t == "global":
+				sent = phBotChat.Global(args[1])
+			# Check if has been sent
+			if sent:
+				log("Plugin: "+t.title()+" message has been sent successfully")
 	except:
 		log('Plugin: Incorrect structure to send message')
 
@@ -271,6 +275,7 @@ def MountPet(petType):
 
 # Try to dismount pet by type, return success
 def DismountPet(petType):
+	petType = petType.lower()
 	# just in case
 	if petType == 'pick':
 		return False
@@ -284,6 +289,17 @@ def DismountPet(petType):
 				inject_joymax(0x70CB,p, False)
 				return True
 	return False
+
+# Gets the NPC unique ID if the specified name is found near
+def GetNPCUniqueID(name):
+	NPCs = get_npcs()
+	if NPCs:
+		name = name.lower()
+		for UniqueID, NPC in NPCs.items():
+			NPCName = NPC['name'].lower()
+			if name == NPCName:
+				return UniqueID
+	return 0
 
 # ______________________________ Events ______________________________ #
 
@@ -433,7 +449,7 @@ def handle_chat(t,player,msg):
 			elif msg.startswith("INJECT"):
 				inject(msg.split())
 			elif msg.startswith("CHAT"):
-				sendChatCommand(msg)
+				parseChatCommand(msg[4:])
 			elif msg.startswith("MOVEON"):
 				if msg == "MOVEON":
 					randomMovement()
@@ -502,7 +518,15 @@ def handle_chat(t,player,msg):
 				# Check if has party
 				if get_party():
 					# Left it
+					log("Plugin: Leaving the party..")
 					inject_joymax(0x7061,b'',False)
+			elif msg.startswith("RECALL "):
+				msg = msg[7:]
+				if msg:
+					npcUID = GetNPCUniqueID(msg)
+					if npcUID > 0:
+						log("Plugin: Designating recall to \""+msg.title()+"\"...")
+						inject_joymax(0x7059, struct.pack('I',npcUID), False)
 
 # Called every 500ms
 def event_loop():
