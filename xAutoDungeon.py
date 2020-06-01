@@ -5,7 +5,7 @@ from time import sleep
 import json
 import os
 
-pVersion = '1.1.0'
+pVersion = '1.1.1'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -254,17 +254,17 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 		log("Plugin: All mobs killed!")
 		# Check pickable drops and max attempts
 		waitAttemptsMax = 10
-		count = len(get_drops())
-		while count:
+		drops = get_drops()
+		while drops:
 			if not waitAttemptsMax:
 				log("Plugin: Waiting for picking up timeout!")
 				break
-			log("Plugin: Waiting for picking up ("+str(count)+") drops...")
+			log("Plugin: Waiting for picking up ("+str(len(drops))+") drops...")
 			# wait 1s
 			sleep(1.0)
 			# check data again
 			waitAttemptsMax -= 1
-			count = len(get_drops())
+			drops = get_drops()
 		# All mobs killed, stop botting
 		stop_bot()
 		# Setting training area far away. The bot should continue where he was at the script
