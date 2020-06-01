@@ -1,10 +1,11 @@
 from phBot import *
 import QtBind
 from threading import Timer
+from time import sleep
 import json
 import os
 
-pVersion = '1.0.1'
+pVersion = '1.1.0'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -243,20 +244,34 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 	if count > 0:
 		# Start to kill mobs using bot
 		if isAttacking:
-			log("Plugin: Killing ("+str(count)+") mobs at this area.")
+			log("Plugin: Killing ("+str(count)+") mobs at this area...")
 		else:
 			start_bot()
 			log("Plugin: Starting to kill ("+str(count)+") mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
 		# Check if there is not mobs to continue script
 		Timer(wait,AttackMobs,(wait,True,x,y,z,radius)).start()
 	else:
+		log("Plugin: All mobs killed!")
+		# Check pickable drops and max attempts
+		waitAttemptsMax = 10
+		count = len(get_drops())
+		while count:
+			if not waitAttemptsMax:
+				log("Plugin: Waiting for picking up timeout!")
+				break
+			log("Plugin: Waiting for picking up ("+str(count)+") drops...")
+			# wait 1s
+			sleep(1.0)
+			# check data again
+			waitAttemptsMax -= 1
+			count = len(get_drops())
 		# All mobs killed, stop botting
 		stop_bot()
 		# Setting training area far away. The bot should continue where he was at the script
 		set_training_position(0,0,0)
 		# Move back to the starting point
 		move_to(x,y,z)
-		log("Plugin: All mobs killed.. Getting back to the script.")
+		log("Plugin: Getting back to the script...")
 		# give it some time to reach the movement
 		Timer(2.5,start_bot).start()
 
