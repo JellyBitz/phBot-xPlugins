@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.2.0'
+pVersion = '1.2.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -151,39 +151,40 @@ def inject_teleport(source,destination):
 
 # Send message, Ex. "All Hello World!" or "private JellyBitz Hi!"
 def handleChatCommand(msg):
-	try:
-		# Remove the command word
-		args = msg.split(' ',1)
-		# Check arguments length and avoid empty message
-		if len(args) == 2 and args[1]:
-			sent = False
-			t = args[0].lower()
-			# Check msg type and send it
-			if t == "all":
-				sent = phBotChat.All(args[1])
-			elif t == "private":
-				args = args[1].split(' ',1)
-				# Check if the format is correct
-				if len(args) == 2 and args[1]:
-					sent = phBotChat.Private(args[0],args[1])
-			elif t == "party":
-				sent = phBotChat.Party(args[1])
-			elif t == "guild":
-				sent = phBotChat.Guild(args[1])
-			elif t == "union":
-				sent = phBotChat.Union(args[1])
-			elif t == "note":
-				t = args[1].split(' ',1)
-				sent = phBotChat.Private(t[0],args[1])
-			elif t == "stall":
-				sent = phBotChat.Stall(args[1])
-			elif t == "global":
-				sent = phBotChat.Global(args[1])
-			# Check if has been sent
-			if sent:
-				log("Plugin: "+t.title()+" message has been sent successfully")
-	except:
-		log('Plugin: Incorrect structure to send message')
+	# Try to split message
+	args = msg.split(' ',1)
+	# Check if the format is correct and is not empty
+	if len(args) != 2 or not args[0] or not args[1]:
+		return
+	# Split correctly the message
+	t = args[0].lower()
+	if t == 'private' or t == 'note':
+		# then check message is not empty
+		argsExtra = args[1].split(' ',1)
+		if len(argsExtra) != 2 or not argsExtra[0] or not argsExtra[1]:
+			return
+		args.pop(1)
+		args += argsExtra
+	# Check message type
+	sent = False
+	if t == "all":
+		sent = phBotChat.All(args[1])
+	elif t == "private":
+		sent = phBotChat.Private(args[1],args[2])
+	elif t == "party":
+		sent = phBotChat.Party(args[1])
+	elif t == "guild":
+		sent = phBotChat.Guild(args[1])
+	elif t == "union":
+		sent = phBotChat.Union(args[1])
+	elif t == "note":
+		sent = phBotChat.Note(args[1],args[2])
+	elif t == "stall":
+		sent = phBotChat.Stall(args[1])
+	elif t == "global":
+		sent = phBotChat.Global(args[1])
+	if sent:
+		log('Plugin: Message "'+t+'" sent successfully!')
 
 # Move to a random position from the actual position using a maximum radius
 def randomMovement(radiusMax=10):
