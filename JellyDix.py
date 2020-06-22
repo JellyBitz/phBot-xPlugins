@@ -1,50 +1,49 @@
 from phBot import *
-from datetime import datetime
 import QtBind
+from datetime import datetime
 import urllib.request
 import urllib.parse
 import struct
 import json
+import time
 import os
 import re
 
 pName = 'JellyDix'
-pVersion = '1.0.3'
+pVersion = '2.0.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
 
-DISCONNECT_DELAY_MAX = 15000 # ms
+CHECK_DISCONNECT_DELAY_MAX = 10000 # ms
+DISCORD_FETCH_DELAY = 5000 # ms
 
 # Globals
 character_data = None
 party_data = None
+hasStall = False
 checking_disconnect = False
 checking_disconnect_counter = 0
-hasStall = False
-
-# Default data
-JELLYDIX_KEY="JellyDix"
-JELLYDIX_URL="https://jellydix.jellybitz.repl.co"
+discord_fetch_counter = 0
+discord_chat_handlers = []
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
 
-lblChannels = QtBind.createLabel(gui,"Discord Channel",6,10)
+lblChannels = QtBind.createLabel(gui,"Discord Channels ID",6,10)
 tbxChannels = QtBind.createLineEdit(gui,"",6,25,80,19)
 lstChannels = QtBind.createList(gui,6,46,156,212)
 btnAddChannel = QtBind.createButton(gui,'btnAddChannel_clicked',"   Add   ",86,25)
 btnRemChannel = QtBind.createButton(gui,'btnRemChannel_clicked',"     Remove     ",45,257)
 QtBind.createLineEdit(gui,"",169,10,1,257) # Separator line
 
-lblKey = QtBind.createLabel(gui,"Key :",175,10)
-tbxKey = QtBind.createLineEdit(gui,JELLYDIX_KEY,205,7,45,19)
+lblToken = QtBind.createLabel(gui,"Token :",175,10)
+tbxToken = QtBind.createLineEdit(gui,"",215,7,155,19)
 
-lblUrl = QtBind.createLabel(gui,"Website :",260,10)
-tbxUrl = QtBind.createLineEdit(gui,JELLYDIX_URL,310,7,155,19)
+lblUrl = QtBind.createLabel(gui,"Website :",390,10)
+tbxWebsite = QtBind.createLineEdit(gui,'',440,7,155,19)
 
-btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"     Save Changes     ",475,7)
-cbxAddTimeStamp = QtBind.createCheckBox(gui,'cbxDoNothing',"Attach timestamps",590,10)
+btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"     Save Changes     ",615,7)
 
 lblTriggers = QtBind.createLabel(gui,"Select the Discord channel to send the notification ( Filters are using regex )",175,35)
 
@@ -68,7 +67,7 @@ lblEvtMessage_union = QtBind.createLabel(gui,'Union',310,183)
 cmbxEvtMessage_union = QtBind.createCombobox(gui,175,180,131,19)
 lblEvtMessage_global = QtBind.createLabel(gui,'Global',310,203)
 cmbxEvtMessage_global = QtBind.createCombobox(gui,175,200,131,19)
-cbxEvtMessage_global_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',175,220)
+cbxEvtMessage_global_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',175,223)
 tbxEvtMessage_global_filter = QtBind.createLineEdit(gui,"",188,220,118,19)
 lblEvtMessage_notice = QtBind.createLabel(gui,'Notice',310,243)
 cmbxEvtMessage_notice = QtBind.createCombobox(gui,175,240,131,19)
@@ -83,11 +82,11 @@ cmbxEvtChar_disconnected = QtBind.createCombobox(gui,450,55,131,19)
 lblEvtMessage_uniqueSpawn = QtBind.createLabel(gui,'Unique spawn',585,83)
 cmbxEvtMessage_uniqueSpawn = QtBind.createCombobox(gui,450,80,131,19)
 cbxEvtMessage_uniqueSpawn_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,103)
-tbxEvtMessage_uniqueSpawn_filter = QtBind.createLineEdit(gui,"",463,103,118,19)
+tbxEvtMessage_uniqueSpawn_filter = QtBind.createLineEdit(gui,"",463,100,118,19)
 lblEvtMessage_uniqueKilled = QtBind.createLabel(gui,'Unique killed',585,123)
 cmbxEvtMessage_uniqueKilled = QtBind.createCombobox(gui,450,120,131,19)
 cbxEvtMessage_uniqueKilled_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,143)
-tbxEvtMessage_uniqueKilled_filter = QtBind.createLineEdit(gui,"",463,143,118,19)
+tbxEvtMessage_uniqueKilled_filter = QtBind.createLineEdit(gui,"",463,140,118,19)
 
 # events
 lblEvtMessage_ctf = QtBind.createLabel(gui,'Capture the Flag',585,168)
@@ -145,6 +144,11 @@ cmbxEvtBot_alchemy = QtBind.createCombobox(gui_,281,132,131,19)
 lblEvtMessage_item_sold = QtBind.createLabel(gui_,'Stall item sold',416,155)
 cmbxEvtMessage_item_sold = QtBind.createCombobox(gui_,281,152,131,19)
 
+cbxAddTimestamp = QtBind.createCheckBox(gui_,'cbxDoNothing','Add Timestamps',565,7)
+cbxDiscord_read_messages = QtBind.createCheckBox(gui_,'cbxDoNothing','Discord bot interactions',565,27)
+tbxDiscord_guild_id = QtBind.createLineEdit(gui_,'',565,47,145,19)
+cbxDiscord_read_all = QtBind.createCheckBox(gui_,'cbxDoNothing','Read all interactions',565,67)
+
 # wrap to iterate
 cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtChar_disconnected":cmbxEvtChar_disconnected,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
 cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy,"cmbxEvtMessage_item_sold":cmbxEvtMessage_item_sold}
@@ -165,10 +169,8 @@ def loadDefaultConfig():
 	QtBind.setText(gui,tbxChannels,"")
 	QtBind.clear(gui,lstChannels)
 
-	QtBind.setText(gui,tbxKey,JELLYDIX_KEY)
-	QtBind.setText(gui,tbxUrl,JELLYDIX_URL)
-
-	QtBind.setChecked(gui,cbxAddTimeStamp,False)
+	QtBind.setText(gui,tbxToken,'')
+	QtBind.setText(gui,tbxWebsite,'https://jellydix.ddns.net')
 	
 	# Reset triggers
 	for name,cmbx in cmbxTriggers.items():
@@ -192,6 +194,11 @@ def loadDefaultConfig():
 	QtBind.setChecked(gui_,cbxEvtPick_servername_filter,False)
 	QtBind.setText(gui_,tbxEvtPick_servername_filter," Filter by servername")
 
+	QtBind.setChecked(gui_,cbxAddTimestamp,False)
+	QtBind.setChecked(gui_,cbxDiscord_read_messages,False)
+	QtBind.setText(gui_,tbxDiscord_guild_id," Discord Server ID...")
+	QtBind.setChecked(gui_,cbxDiscord_read_all,False)
+
 # Save all config
 def saveConfigs():
 	# Save if data has been loaded
@@ -200,10 +207,8 @@ def saveConfigs():
 		data = {}
 		data["Channels"] = QtBind.getItems(gui,lstChannels)
 
-		data["Key"] = QtBind.text(gui,tbxKey)
-		data["Url"] = QtBind.text(gui,tbxUrl)
-
-		data["AddTimeStamp"] = QtBind.isChecked(gui,cbxAddTimeStamp)
+		data["Token"] = QtBind.text(gui,tbxToken)
+		data["Website"] = QtBind.text(gui,tbxWebsite)
 		
 		# Save triggers from tabs
 		triggers = {}
@@ -227,6 +232,11 @@ def saveConfigs():
 		triggers["tbxEvtPick_name_filter"] = QtBind.text(gui_,tbxEvtPick_name_filter)
 		triggers["cbxEvtPick_servername_filter"] = QtBind.isChecked(gui_,cbxEvtPick_servername_filter)
 		triggers["tbxEvtPick_servername_filter"] = QtBind.text(gui_,tbxEvtPick_servername_filter)
+
+		data["AddTimeStamp"] = QtBind.isChecked(gui_,cbxAddTimestamp)
+		data["DiscordInteraction"] = QtBind.isChecked(gui_,cbxDiscord_read_messages)
+		data["DiscordInteractionGuildID"] = QtBind.text(gui_,tbxDiscord_guild_id)
+		data["DiscordInteractionReadAll"] = QtBind.isChecked(gui_,cbxDiscord_read_all)
 
 		# Overrides
 		with open(getConfig(),"w") as f:
@@ -257,13 +267,19 @@ def loadConfigs():
 					for name,cmbx in cmbxTriggers_.items():
 						QtBind.append(gui_,cmbx,channel_id)
 
-			if "Key" in data:
-				QtBind.setText(gui,tbxKey,data["Key"])
-			if "Url" in data:
-				QtBind.setText(gui,tbxUrl,data["Url"])
+			if "Token" in data:
+				QtBind.setText(gui,tbxToken,data["Token"])
+			if "Website" in data:
+				QtBind.setText(gui,tbxWebsite,data["Website"])
 
 			if "AddTimeStamp" in data and data["AddTimeStamp"]:
-				QtBind.setChecked(gui,cbxAddTimeStamp,True)
+				QtBind.setChecked(gui_,cbxAddTimestamp,True)
+			if "DiscordInteraction" in data and data["DiscordInteraction"]:
+				QtBind.setChecked(gui_,cbxDiscord_read_messages,True)
+			if "DiscordInteractionGuildID" in data and data["DiscordInteractionGuildID"]:
+				QtBind.setText(gui_,tbxDiscord_guild_id,data["DiscordInteractionGuildID"])
+			if "DiscordInteractionReadAll" in data and data["DiscordInteractionReadAll"]:
+				QtBind.setChecked(gui_,cbxDiscord_read_all,True)
 
 			# Load triggers
 			if "Triggers" in data:
@@ -449,6 +465,7 @@ def CreateInfo(t,data):
 	info = {}
 	info["type"] = t
 	info["data"] = data
+	info["source"] = 'phBot'
 	return info
 
 # Send a notification to discord channel
@@ -459,31 +476,57 @@ def Notify(channel_id,message,info=None):
 	# Check if there is enough data to create a notification
 	if not channel_id or not message:
 		return
-	key = QtBind.text(gui,tbxKey)
-	url = QtBind.text(gui,tbxUrl)
-	if not key or not url:
+	url = QtBind.text(gui,tbxWebsite)
+	if not url:
 		return
+	token = QtBind.text(gui,tbxToken)
 	# Try to send notification
 	try:
 		# Add timestamp
-		if QtBind.isChecked(gui,cbxAddTimeStamp):
+		if QtBind.isChecked(gui,cbxAddTimestamp):
 			message = "||"+datetime.now().strftime('%H:%M:%S')+"|| "+message
 		# Prepare json to send through POST method
-		jsonData = {"key":key,"channel":channel_id,"message":message}
-		if info:
-			jsonData["info"] = info
-		# Setup
-		params = json.dumps(jsonData).encode('utf8')
+		params = json.dumps({"token":token,"channel":channel_id,"message":message,'info':info}).encode()
 		if not url.endswith("/"):
 			url += "/"
-		req = urllib.request.Request(url+"api",data=params,headers={'content-type': 'application/json'})
+		req = urllib.request.Request(url+"api/notify",data=params,headers={'content-type': 'application/json'})
 		with urllib.request.urlopen(req,timeout=5) as f:
 			try:
-				msg = f.read().decode('utf-8')
-				if msg == 'true' or msg == 'success':
-					log("Plugin: Notification sent to Discord!")
-				else:
-					log("Plugin: Notification failed ["+msg+"]")
+				resp = json.loads(f.read().decode())
+				if resp:
+					if resp['success']:
+						log("Plugin: Notification sent to Discord!")
+					else:
+						log("Plugin: Notification failed ["+resp['message']+"]")
+			except Exception as ex2:
+				log("Plugin: Error reading response from server ["+str(ex2)+"]")
+	except Exception as ex:
+		log("Plugin: Error loading url ["+str(ex)+"]")
+
+# Fetch messages on discord (queue)
+def Fetch(guild_id):
+	# Check if there is enough data to fetch
+	if not guild_id or not guild_id.isnumeric():
+		return
+	url = QtBind.text(gui,tbxWebsite)
+	if not url:
+		return
+	token = QtBind.text(gui,tbxToken)
+	# Try to fetch messages
+	try:
+		# Prepare json to send through POST method
+		params = json.dumps({'guild':guild_id,'token':token,'charname':character_data['name'],'fetch_all':QtBind.isChecked(gui_,cbxDiscord_read_all)}).encode()
+		if not url.endswith("/"):
+			url += "/"
+		req = urllib.request.Request(url+"api/fetch",data=params,headers={'content-type': 'application/json'})
+		with urllib.request.urlopen(req,timeout=5) as f:
+			try:
+				resp = json.loads(f.read().decode())
+				if resp:
+					if resp['success']:
+						on_discord_fetch(resp['data'])
+					else:
+						log("Plugin: Fetch failed ["+resp['message']+"]")
 			except Exception as ex2:
 				log("Plugin: Error reading response from server ["+str(ex2)+"]")
 	except Exception as ex:
@@ -545,6 +588,25 @@ def getCountryType(servername):
 		return "(EU)"
 	return ""
 
+# Loads all plugins handling chat 
+def GetChatHandlers():
+	import importlib
+	handlers = []
+	# scan files around
+	plugin_name = os.path.basename(__file__)
+	plugin_dir = os.path.dirname(__file__)
+	for path in os.scandir(plugin_dir):
+		# check python files except me
+		if path.is_file() and path.name.endswith(".py") and path.name != plugin_name:
+			try:
+				plugin = importlib.import_module(path.name[:-3])
+				# check if has chat handler
+				if hasattr(plugin,'handle_chat'):
+					handlers.append(getattr(plugin,'handle_chat'))
+					log('Plugin: Loaded discord handler from '+path.name)
+			except Exception as ex:
+				log('Plugin: Error loading '+path.name+' plugin. '+str(ex))
+	return handlers
 # ______________________________ Events ______________________________ #
 
 # Scripting support to send notifications like "JellyDix,Channel ID,Message"
@@ -839,18 +901,61 @@ def notify_pickup(channel_id,itemID):
 
 # Called every 500ms
 def event_loop():
-	if checking_disconnect:
-		global checking_disconnect_counter
-		checking_disconnect_counter += 500
-		# Check if delay is longer to trigger disconnect event
-		if checking_disconnect_counter >= DISCONNECT_DELAY_MAX:
-			on_disconnect()
+	# Check if is in game at first
+	if character_data:
+
+		# generate disconnect event
+		global checking_disconnect
+		if checking_disconnect:
+			global checking_disconnect_counter
+			checking_disconnect_counter += 500
+			# Check if delay is longer to trigger disconnect event
+			if checking_disconnect_counter >= CHECK_DISCONNECT_DELAY_MAX:
+				# Execute only once
+				checking_disconnect = False
+				on_disconnect()
+
+		# generate fetch stuff if at least one handler exists
+		if discord_chat_handlers:
+			global discord_fetch_counter
+			discord_fetch_counter += 500
+			# Check if delay is longer to start fetching
+			if discord_fetch_counter >= DISCORD_FETCH_DELAY:
+				discord_fetch_counter = 0
+				if QtBind.isChecked(gui_,cbxDiscord_read_messages):
+					# Fetch messages from guild
+					Fetch(QtBind.text(gui_,tbxDiscord_guild_id))
 
 # Called when the character has not received the ping for a long time which means is disconnected
 def on_disconnect():
 	channel_id = QtBind.text(gui_,cmbxEvtChar_disconnected)
 	if channel_id:
 		Notify(channel_id,"|`"+character_data['name']+"`| You has been disconnected")
+
+# Called everytime discord has been fetch
+def on_discord_fetch(data):
+	if not data:
+		return
+	# fetch messages date
+	fetched_at = time.strptime(str(data['fetched_at']), '%m/%d/%Y, %H:%M:%S')
+	fetched_at = time.mktime(fetched_at)
+	# analyzing messages
+	messages = data['messages']
+	for message in messages:
+		# created message date
+		created_at = time.strptime(str(message['created_at']), '%m/%d/%Y, %H:%M:%S')
+		created_at = time.mktime(created_at)
+		# check if the time is shorter than 10 seconds for handling messages
+		seconds_difference = int(fetched_at-created_at)
+		if seconds_difference <= 10:
+			# sent message through every handler
+			content = message['content']
+			for handler in discord_chat_handlers:
+				try:
+					handler(100,'',content)
+				except Exception as ex:
+					# fail silent
+					pass
 
 # Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
@@ -862,3 +967,6 @@ else:
 	# Creating configs folder
 	os.makedirs(getPath())
 	log('Plugin: '+pName+' folder has been created')
+
+# Load discord handlers
+discord_chat_handlers = GetChatHandlers()
