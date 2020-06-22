@@ -6,7 +6,7 @@ import json
 import os
 
 pName = 'xChat'
-pVersion = '1.0.0'
+pVersion = '1.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xChat.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -192,26 +192,30 @@ def cbxMsg_clicked(checked):
 
 # Send message, even through script. Ex. "chat,All,Hello World!" or "chat,private,JellyBitz,Hi!"
 def chat(args):
-	# check arguments length and empty message
-	if (len(args) >= 3 and len(args[2]) > 0):
-		success = False
-		type = args[1].lower()
-		if type == "all":
-			success = phBotChat.All(args[2])
-		elif type == "private":
-			success = phBotChat.Private(args[2],args[3])
-		elif type == "party":
-			success = phBotChat.Party(args[2])
-		elif type == "guild":
-			success = phBotChat.Guild(args[2])
-		elif type == "union":
-			success = phBotChat.Union(args[2])
-		elif type == "note":
-			success = phBotChat.Note(args[2],args[3])
-		elif type == "stall":
-			success = phBotChat.Stall(args[2])
-		if success:
-			log("Plugin: Message sent successfully ("+pName+")")
+	# Avoid wrong structure and empty stuffs
+	if len(args) < 3 or not args[1] or not args[2]:
+		return
+	# Check message type
+	sent = False
+	t = args[1].lower()
+	if t == "all":
+		sent = phBotChat.All(args[2])
+	elif t == "private":
+		sent = phBotChat.Private(args[2],args[3])
+	elif t == "party":
+		sent = phBotChat.Party(args[2])
+	elif t == "guild":
+		sent = phBotChat.Guild(args[2])
+	elif t == "union":
+		sent = phBotChat.Union(args[2])
+	elif t == "note":
+		sent = phBotChat.Note(args[2],args[3])
+	elif t == "stall":
+		sent = phBotChat.Stall(args[2])
+	elif t == "global":
+		sent = phBotChat.Global(args[2])
+	if sent:
+		log('Plugin: Message "'+t+'" sent successfully!')
 
 # Save message to the log.txt "logline,text"
 def logline(args):
@@ -231,8 +235,13 @@ def joined_game():
 	loadConfig()
 
 # All chat messages received are sent to this function
-def handle_chat(t,player,msg):
-	p = player
+def handle_chat(t,p,msg):
+	# check if is discord message
+	if t == 100:
+		on_discord_command(msg)
+		return
+
+	# Logline stuffs
 	if not p:
 		p = ""
 	# Check message type
@@ -280,6 +289,25 @@ def handle_event(t, data):
 		logline(["","[Drop]:"+t['name']])
 	elif t == 7 and QtBind.isChecked(gui,cbxEvtChar_died):
 		logline(["","[Character][Died]"])
+
+# Called everytime a discord message 
+def on_discord_command(cmd):
+	# Try to split message
+	args = cmd.split(' ',2)
+	# Check if is a CHAT command
+	if args[0].lower().startswith('chat'):
+		# Check if the format is correct and is not empty
+		if len(args) == 3 and args[1] and args[2]:
+			# Split correctly for handle it as script
+			t = args[1].lower()
+			if t == 'private' or t == 'note':
+				# then check message is not empty
+				argsExtra = args[2].split(' ',1)
+				if argsExtra[0] and argsExtra[1]:
+					args.pop(2)
+					chat(args+argsExtra)
+			else:
+				chat(args)
 
 # Called every 500ms
 def event_loop():
