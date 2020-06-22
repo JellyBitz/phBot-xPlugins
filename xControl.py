@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.1.6'
+pVersion = '1.2.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -150,7 +150,7 @@ def inject_teleport(source,destination):
 		log('Plugin: Teleport data not found. Wrong teleport name or servername')
 
 # Send message, Ex. "All Hello World!" or "private JellyBitz Hi!"
-def parseChatCommand(msg):
+def handleChatCommand(msg):
 	try:
 		# Remove the command word
 		args = msg.split(' ',1)
@@ -337,196 +337,195 @@ def joined_game():
 
 # All chat messages received are sent to this function
 def handle_chat(t,player,msg):
-	if player:
-		# Check player at leader list
-		if lstLeaders_exist(player):
-			# Parsing message command
-			if msg == "START":
-				start_bot()
-				log("Plugin: Bot started")
-			elif msg == "STOP":
-				stop_bot()
-				log("Plugin: Bot stopped")
-			elif msg.startswith("TRACE"):
-				if msg == "TRACE":
-					if start_trace(player):
-						log("Plugin: Starting trace to ["+player+"]")
-				else:
-					msg = msg[5:].split()
-					if msg:
-						if start_trace(msg[0]):
-							log("Plugin: Starting trace to ["+msg[0]+"]")
-			elif msg == "NOTRACE":
-				stop_trace()
-				log("Plugin: Trace stopped")
-			elif msg.startswith("SETAREA"):
-				if msg == "SETAREA":
-					p = get_position()
-					set_training_position(p['region'], p['x'], p['y'])
-					log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
-				else:
-					try:
-						p = msg[7:].split()
-						x = float(p[0])
-						y = float(p[1])
-						region = int(p[2]) if len(p) >= 3 else 0
-						set_training_position(region,x,y)
-						log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(x,y))
-					except:
-						log("Plugin: Training area coordinates incorrect")
-			elif msg.startswith("SETRADIUS"):
-				if msg == "SETRADIUS":
-					# default radius
-					radius = 35
+	# Check player at leader list or a Discord message
+	if player and lstLeaders_exist(player) or t == 100:
+		# Parsing message command
+		if msg == "START":
+			start_bot()
+			log("Plugin: Bot started")
+		elif msg == "STOP":
+			stop_bot()
+			log("Plugin: Bot stopped")
+		elif msg.startswith("TRACE"):
+			if msg == "TRACE":
+				if start_trace(player):
+					log("Plugin: Starting trace to ["+player+"]")
+			else:
+				msg = msg[5:].split()
+				if msg:
+					if start_trace(msg[0]):
+						log("Plugin: Starting trace to ["+msg[0]+"]")
+		elif msg == "NOTRACE":
+			stop_trace()
+			log("Plugin: Trace stopped")
+		elif msg.startswith("SETAREA"):
+			if msg == "SETAREA":
+				p = get_position()
+				set_training_position(p['region'], p['x'], p['y'])
+				log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
+			else:
+				try:
+					p = msg[7:].split()
+					x = float(p[0])
+					y = float(p[1])
+					region = int(p[2]) if len(p) >= 3 else 0
+					set_training_position(region,x,y)
+					log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(x,y))
+				except:
+					log("Plugin: Training area coordinates incorrect")
+		elif msg.startswith("SETRADIUS"):
+			if msg == "SETRADIUS":
+				# default radius
+				radius = 35
+				set_training_radius(radius)
+				log("Plugin: Setting training radius ("+str(radius)+")")
+			else:
+				try:
+					# split and parse movement radius
+					radius = int(float(msg[9:].split()[0]))
+					# to absolute
+					radius = (radius if radius > 0 else radius*-1)
 					set_training_radius(radius)
 					log("Plugin: Setting training radius ("+str(radius)+")")
-				else:
-					try:
-						# split and parse movement radius
-						radius = int(float(msg[9:].split()[0]))
-						# to absolute
-						radius = (radius if radius > 0 else radius*-1)
-						set_training_radius(radius)
-						log("Plugin: Setting training radius ("+str(radius)+")")
-					except:
-						log("Plugin: Training radius incorrect")
-			elif msg == "SIT":
-				log("Plugin: Sit/Stand")
-				inject_joymax(0x704F,b'\x04',False)
-			elif msg == "JUMP":
-				log("Plugin: Trying to jump!")
-				inject_joymax(0x3091,b'\x0c',False)
-			elif msg.startswith("CAPE"):
-				if msg == "CAPE":
-					log("Plugin: Using PVP Cape by default (Yellow)")
-					inject_joymax(0x7516,b'\x05',False)
-				else:
-					type = msg[4:].split()
-					if type:
-						type = type[0].lower()
-						if type == "off":
-							log("Plugin: Removing PVP Cape")
-							inject_joymax(0x7516,b'\x00',False)
-						elif type == "red":
-							log("Plugin: Using PVP Cape (Red)")
-							inject_joymax(0x7516,b'\x01',False)
-						elif type == "gray":
-							log("Plugin: Using PVP Cape (Gray)")
-							inject_joymax(0x7516,b'\x02',False)
-						elif type == "blue":
-							log("Plugin: Using PVP Cape (Blue)")
-							inject_joymax(0x7516,b'\x03',False)
-						elif type == "white":
-							log("Plugin: Using PVP Cape (White)")
-							inject_joymax(0x7516,b'\x04',False)
-						elif type == "yellow":
-							log("Plugin: Using PVP Cape (Yellow)")
-							inject_joymax(0x7516,b'\x05',False)
-						else:
-							log("Plugin: Wrong PVP Cape color")
-			elif msg == "ZERK":
-				log("Plugin: Using Berserker mode")
-				inject_joymax(0x70A7,b'\x01',False)
-			elif msg == "RETURN":
-				# Trying avoid high CPU usage with many chars at the same time
-				Timer(random.uniform(0.5,2),inject_useReturnScroll).start()
-			elif msg.startswith("TP"):
-				msg = msg[2:] # remove command header
-				if msg:
-					msg = msg[1:] # remove whatever used as separator
-				if msg:
-					split = ""
-					# Select split char
-					if "," in msg:
-						split = ","
-					elif " " in msg:
-						split = " "
-					# Extract info
-					if split:
-						source_dest = msg.split(split)
-						if len(source_dest) >= 2:
-							inject_teleport(source_dest[0].strip(),source_dest[1].strip())
-			elif msg.startswith("INJECT"):
-				inject(msg.split())
-			elif msg.startswith("CHAT"):
-				parseChatCommand(msg[4:])
-			elif msg.startswith("MOVEON"):
-				if msg == "MOVEON":
-					randomMovement()
-				else:
-					try:
-						# split and parse movement radius
-						radius = int(float(msg[6:].split()[0]))
-						# to positive
-						radius = (radius if radius > 0 else radius*-1)
-						randomMovement(radius)
-					except:
-						log("Plugin: Movement maximum radius incorrect")
-			elif msg.startswith("FOLLOW"):
-				# default values
-				charName = player
-				distance = 10
-				if msg != "FOLLOW":
-					# Check params
-					msg = msg[6:].split()
-					try:
-						if len(msg) >= 1:
-							charName = msg[0]
-						if len(msg) >= 2:
-							distance = float(msg[1])
-					except:
-						log("Plugin: Follow distance incorrect")
-						return
-				# Start following
-				if start_follow(charName,distance):
-					log("Plugin: Starting to follow to ["+charName+"] using ["+str(distance)+"] as distance")					
-			elif msg == "NOFOLLOW":
-				if stop_follow():
-					log("Plugin: Following stopped")
-			elif msg.startswith("PROFILE"):
-				if msg == "PROFILE":
-					if set_profile('Default'):
-						log("Plugin: Setting Default profile")
-				else:
-					msg = msg[7:]
-					if set_profile(msg):
-						log("Plugin: Setting "+msg+" profile")
-			elif msg == "DC":
-				log("Plugin: Disconnecting...")
-				disconnect()
-			elif msg.startswith("MOUNT"):
-				# default value
-				pet = "horse"
-				if msg != "MOUNT":
-					msg = msg[5:].split()
-					if msg:
-						pet = msg[0]
-				# Try mount pet
-				if MountPet(pet):
-					log("Plugin: Mounting pet ["+pet+"]")
-			elif msg.startswith("DISMOUNT"):
-				# default value
-				pet = "horse"
-				if msg != "DISMOUNT":
-					msg = msg[8:].split()
-					if msg:
-						pet = msg[0]
-				# Try dismount pet
-				if DismountPet(pet):
-					log("Plugin: Dismounting pet ["+pet+"]")
-			elif msg == "GETOUT":
-				# Check if has party
-				if get_party():
-					# Left it
-					log("Plugin: Leaving the party..")
-					inject_joymax(0x7061,b'',False)
-			elif msg.startswith("RECALL "):
+				except:
+					log("Plugin: Training radius incorrect")
+		elif msg == "SIT":
+			log("Plugin: Sit/Stand")
+			inject_joymax(0x704F,b'\x04',False)
+		elif msg == "JUMP":
+			log("Plugin: Trying to jump!")
+			inject_joymax(0x3091,b'\x0c',False)
+		elif msg.startswith("CAPE"):
+			if msg == "CAPE":
+				log("Plugin: Using PVP Cape by default (Yellow)")
+				inject_joymax(0x7516,b'\x05',False)
+			else:
+				type = msg[4:].split()
+				if type:
+					type = type[0].lower()
+					if type == "off":
+						log("Plugin: Removing PVP Cape")
+						inject_joymax(0x7516,b'\x00',False)
+					elif type == "red":
+						log("Plugin: Using PVP Cape (Red)")
+						inject_joymax(0x7516,b'\x01',False)
+					elif type == "gray":
+						log("Plugin: Using PVP Cape (Gray)")
+						inject_joymax(0x7516,b'\x02',False)
+					elif type == "blue":
+						log("Plugin: Using PVP Cape (Blue)")
+						inject_joymax(0x7516,b'\x03',False)
+					elif type == "white":
+						log("Plugin: Using PVP Cape (White)")
+						inject_joymax(0x7516,b'\x04',False)
+					elif type == "yellow":
+						log("Plugin: Using PVP Cape (Yellow)")
+						inject_joymax(0x7516,b'\x05',False)
+					else:
+						log("Plugin: Wrong PVP Cape color")
+		elif msg == "ZERK":
+			log("Plugin: Using Berserker mode")
+			inject_joymax(0x70A7,b'\x01',False)
+		elif msg == "RETURN":
+			# Trying avoid high CPU usage with many chars at the same time
+			Timer(random.uniform(0.5,2),inject_useReturnScroll).start()
+		elif msg.startswith("TP"):
+			msg = msg[2:] # remove command header
+			if msg:
+				msg = msg[1:] # remove whatever used as separator
+			if msg:
+				split = ""
+				# Select split char
+				if "," in msg:
+					split = ","
+				elif " " in msg:
+					split = " "
+				# Extract info
+				if split:
+					source_dest = msg.split(split)
+					if len(source_dest) >= 2:
+						inject_teleport(source_dest[0].strip(),source_dest[1].strip())
+		elif msg.startswith("INJECT"):
+			inject(msg.split())
+		elif msg.startswith("CHAT "):
+			handleChatCommand(msg[5:])
+		elif msg.startswith("MOVEON"):
+			if msg == "MOVEON":
+				randomMovement()
+			else:
+				try:
+					# split and parse movement radius
+					radius = int(float(msg[6:].split()[0]))
+					# to positive
+					radius = (radius if radius > 0 else radius*-1)
+					randomMovement(radius)
+				except:
+					log("Plugin: Movement maximum radius incorrect")
+		elif msg.startswith("FOLLOW"):
+			# default values
+			charName = player
+			distance = 10
+			if msg != "FOLLOW":
+				# Check params
+				msg = msg[6:].split()
+				try:
+					if len(msg) >= 1:
+						charName = msg[0]
+					if len(msg) >= 2:
+						distance = float(msg[1])
+				except:
+					log("Plugin: Follow distance incorrect")
+					return
+			# Start following
+			if start_follow(charName,distance):
+				log("Plugin: Starting to follow to ["+charName+"] using ["+str(distance)+"] as distance")					
+		elif msg == "NOFOLLOW":
+			if stop_follow():
+				log("Plugin: Following stopped")
+		elif msg.startswith("PROFILE"):
+			if msg == "PROFILE":
+				if set_profile('Default'):
+					log("Plugin: Setting Default profile")
+			else:
 				msg = msg[7:]
+				if set_profile(msg):
+					log("Plugin: Setting "+msg+" profile")
+		elif msg == "DC":
+			log("Plugin: Disconnecting...")
+			disconnect()
+		elif msg.startswith("MOUNT"):
+			# default value
+			pet = "horse"
+			if msg != "MOUNT":
+				msg = msg[5:].split()
 				if msg:
-					npcUID = GetNPCUniqueID(msg)
-					if npcUID > 0:
-						log("Plugin: Designating recall to \""+msg.title()+"\"...")
-						inject_joymax(0x7059, struct.pack('I',npcUID), False)
+					pet = msg[0]
+			# Try mount pet
+			if MountPet(pet):
+				log("Plugin: Mounting pet ["+pet+"]")
+		elif msg.startswith("DISMOUNT"):
+			# default value
+			pet = "horse"
+			if msg != "DISMOUNT":
+				msg = msg[8:].split()
+				if msg:
+					pet = msg[0]
+			# Try dismount pet
+			if DismountPet(pet):
+				log("Plugin: Dismounting pet ["+pet+"]")
+		elif msg == "GETOUT":
+			# Check if has party
+			if get_party():
+				# Left it
+				log("Plugin: Leaving the party..")
+				inject_joymax(0x7061,b'',False)
+		elif msg.startswith("RECALL "):
+			msg = msg[7:]
+			if msg:
+				npcUID = GetNPCUniqueID(msg)
+				if npcUID > 0:
+					log("Plugin: Designating recall to \""+msg.title()+"\"...")
+					inject_joymax(0x7059, struct.pack('I',npcUID), False)
 
 # Called every 500ms
 def event_loop():
