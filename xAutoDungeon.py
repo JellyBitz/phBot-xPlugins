@@ -5,7 +5,7 @@ from time import sleep
 import json
 import os
 
-pVersion = '1.1.1'
+pVersion = '1.1.2'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -19,12 +19,12 @@ gui = QtBind.init(__name__,pName)
 
 lblMobs = QtBind.createLabel(gui,'#   Add monster names to ignore    #\n#          from Monster Counter         #',31,3)
 tbxMobs = QtBind.createLineEdit(gui,"",31,35,100,20)
-lstMobs = QtBind.createList(gui,31,56,176,206)
+lstMobs = QtBind.createList(gui,31,56,176,205)
 btnAddMob = QtBind.createButton(gui,'btnAddMob_clicked',"    Add    ",132,34)
-btnRemMob = QtBind.createButton(gui,'btnRemMob_clicked',"     Remove     ",80,261)
+btnRemMob = QtBind.createButton(gui,'btnRemMob_clicked',"     Remove     ",80,258)
 
 lblMonsterCounter = QtBind.createLabel(gui,"#                 Monster Counter                 #",520,3)
-lstMonsterCounter = QtBind.createList(gui,520,23,197,239)
+lstMonsterCounter = QtBind.createList(gui,520,23,197,237)
 QtBind.append(gui,lstMonsterCounter,'Name (Type)') # Header
 
 lblPreferences = QtBind.createLabel(gui,"#    Monster Counter preferences (By priority)    #",240,3)
@@ -203,10 +203,17 @@ def loadConfigs():
 def saveConfig(key,value):
 	if key:
 		data = {}
+		# Load keys
 		if os.path.exists(getConfig()):
-			with open(getConfig(),"r") as f:
-				data = json.load(f)
+			# Avoid empty/wrong data
+			try:
+				with open(getConfig(),"r") as f:
+					data = json.load(f)
+			except:
+				pass
+		# Save key
 		data[key] = value
+		# Overwrite
 		with open(getConfig(),"w") as f:
 			f.write(json.dumps(data, indent=4, sort_keys=True))
 
