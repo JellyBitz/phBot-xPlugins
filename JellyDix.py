@@ -10,7 +10,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.0.0'
+pVersion = '2.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -564,13 +564,37 @@ def getFortressText(fw_id):
 
 # Get the party list as discord formatted text
 def getPartyTextList(party):
+	if not party:
+		return ''
 	txt = '```\n'
-	if party:
-		for joinId,member in party.items():
-			txt += member['name']
-			if member['guild']:
-				txt += ' ['+member['guild']+']'
-			txt += ' (Lvl.'+str(member['level'])+')\n'
+	for joinId, member in party.items():
+		# name + padding
+		txt += member['name'].ljust(13)
+		# lvl. + padding
+		txt += (' (Lvl.'+str(member['level'])+')').ljust(10)
+		# guild name
+		if member['guild']:
+			txt += ' ['+member['guild']+']'
+		txt += '\n'
+	txt += '```'
+	return txt
+
+# Get the guild list as discord formatted text
+def getGuildTextList(guild):
+	if not guild:
+		return ''
+	txt = '```\n'
+	for memberID, member in guild.items():
+		# name + padding
+		txt += member['name'].ljust(13)
+		# lvl. + padding
+		txt += (' (Lvl.'+str(member['level'])+')').ljust(10)
+		# online
+		if member['online']:
+			txt += ' - [On]'
+		else:
+			txt += ' - [Off]'
+		txt += '\n'
 	txt += '```'
 	return txt
 
@@ -956,6 +980,31 @@ def on_discord_fetch(data):
 				except Exception as ex:
 					# fail silent
 					pass
+			# try to check native interaction
+			on_discord_message(content,message['channel_id'])
+
+# Called everytime a discord message is sent to bot
+def on_discord_message(msg,channel_id):
+	channel_id = str(channel_id)
+	msgLower = msg.lower()
+	if msgLower.startswith('get '):
+		# remove first command
+		msgLower = msgLower[4:].rstrip()
+		if msgLower == 'position':
+			p = get_position()
+			Notify(channel_id,'|`'+character_data['name']+'`| - Your actual position is ( X:%.1f, Y:%.1f, Region:%d )'%(p['x'],p['y'],p['region']),CreateInfo('position',p))
+		elif msgLower == 'party':
+			party = get_party()
+			if party:
+				Notify(channel_id,'|`'+character_data['name']+'`| - Your party members are :\n'+getPartyTextList(party))
+			else:
+				Notify(channel_id,'|`'+character_data['name']+'`| - You are not in party!')
+		elif msgLower == 'guild':
+			guild = get_guild()
+			if guild:
+				Notify(channel_id,'|`'+character_data['name']+'`| - Your guild members from `'+character_data['guild']+'` are :\n'+getGuildTextList(guild))
+			else:
+				Notify(channel_id,'|`'+character_data['name']+'`| - You are not in a guild!')
 
 # Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
