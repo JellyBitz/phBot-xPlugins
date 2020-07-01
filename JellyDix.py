@@ -10,7 +10,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.2.0'
+pVersion = '2.2.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -546,7 +546,7 @@ def Notify(channel_id,message,info=None):
 			except Exception as ex2:
 				log("Plugin: Error reading response from server ["+str(ex2)+"]")
 	except Exception as ex:
-		log("Plugin: Error loading url ["+str(ex)+"]")
+		log("Plugin: Error loading url ["+str(ex)+"] to Notify")
 
 # Fetch messages on discord (queue)
 def Fetch(guild_id):
@@ -575,7 +575,7 @@ def Fetch(guild_id):
 			except Exception as ex2:
 				log("Plugin: Error reading response from server ["+str(ex2)+"]")
 	except Exception as ex:
-		log("Plugin: Error loading url ["+str(ex)+"]")
+		log("Plugin: Error loading url ["+str(ex)+"] to Fetch")
 
 # Check if character is ingame
 def isJoined():
