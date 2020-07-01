@@ -10,12 +10,12 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.1.0'
+pVersion = '2.2.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
 
-CHECK_DISCONNECT_DELAY_MAX = 10000 # ms
+CHECK_DISCONNECT_DELAY_MAX = 15000 # ms
 DISCORD_FETCH_DELAY = 5000 # ms
 
 # Globals
@@ -32,10 +32,17 @@ gui = QtBind.init(__name__,pName)
 
 lblChannels = QtBind.createLabel(gui,"Discord Channels ID",6,10)
 tbxChannels = QtBind.createLineEdit(gui,"",6,25,80,19)
-lstChannels = QtBind.createList(gui,6,46,156,212)
+lstChannels = QtBind.createList(gui,6,46,156,90)
 btnAddChannel = QtBind.createButton(gui,'btnAddChannel_clicked',"   Add   ",86,25)
-btnRemChannel = QtBind.createButton(gui,'btnRemChannel_clicked',"     Remove     ",45,257)
-QtBind.createLineEdit(gui,"",169,10,1,257) # Separator line
+btnRemChannel = QtBind.createButton(gui,'btnRemChannel_clicked',"     Remove     ",45,135)
+
+# Discord options
+cbxAddTimestamp = QtBind.createCheckBox(gui,'cbxDoNothing','Add phBot timestamp',6,165)
+cbxDiscord_interactions = QtBind.createCheckBox(gui,'cbxDoNothing','Use Discord interactions',6,185)
+tbxDiscord_guild_id = QtBind.createLineEdit(gui,'',6,205,145,19)
+cbxDiscord_check_all = QtBind.createCheckBox(gui,'cbxDoNothing','Check all interactions',6,225)
+
+QtBind.createLineEdit(gui,"",169,10,1,262) # Separator line
 
 lblToken = QtBind.createLabel(gui,"Token :",175,10)
 tbxToken = QtBind.createLineEdit(gui,"",215,7,155,19)
@@ -45,113 +52,168 @@ tbxWebsite = QtBind.createLineEdit(gui,'',440,7,155,19)
 
 btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"     Save Changes     ",615,7)
 
-lblTriggers = QtBind.createLabel(gui,"Select the Discord channel to send the notification ( Filters are using regex )",175,35)
+# Triggers
+lblTriggers = QtBind.createLabel(gui,"Select the Discord channel to send the notification ( Filters are using regex! )",175,35)
 
-## Adding triggers options
-# Login
-lblEvtChar_joined = QtBind.createLabel(gui,'Joined to the game',310,58)
-cmbxEvtChar_joined = QtBind.createCombobox(gui,175,55,131,19)
+# Creating margins to locate all quickly
+_x = 175
+_y = 55
+_Height = 19
+_cmbxWidth = 131
+_tbxWidth = 118
 
 # messages
-lblEvtMessage_private = QtBind.createLabel(gui,'Private',310,83)
-cmbxEvtMessage_private = QtBind.createCombobox(gui,175,80,131,19)
-lblEvtMessage_stall = QtBind.createLabel(gui,'Stall',310,103)
-cmbxEvtMessage_stall = QtBind.createCombobox(gui,175,100,131,19)
-lblEvtMessage_party = QtBind.createLabel(gui,'Party',310,123)
-cmbxEvtMessage_party = QtBind.createCombobox(gui,175,120,131,19)
-lblEvtMessage_academy = QtBind.createLabel(gui,'Academy',310,143)
-cmbxEvtMessage_academy = QtBind.createCombobox(gui,175,140,131,19)
-lblEvtMessageguild = QtBind.createLabel(gui,'Guild',310,163)
-cmbxEvtMessage_guild = QtBind.createCombobox(gui,175,160,131,19)
-lblEvtMessage_union = QtBind.createLabel(gui,'Union',310,183)
-cmbxEvtMessage_union = QtBind.createCombobox(gui,175,180,131,19)
-lblEvtMessage_global = QtBind.createLabel(gui,'Global',310,203)
-cmbxEvtMessage_global = QtBind.createCombobox(gui,175,200,131,19)
-cbxEvtMessage_global_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',175,223)
-tbxEvtMessage_global_filter = QtBind.createLineEdit(gui,"",188,220,118,19)
-lblEvtMessage_notice = QtBind.createLabel(gui,'Notice',310,243)
-cmbxEvtMessage_notice = QtBind.createCombobox(gui,175,240,131,19)
-lblEvtMessage_gm = QtBind.createLabel(gui,'GM Talk',310,263)
-cmbxEvtMessage_gm = QtBind.createCombobox(gui,175,260,131,19)
+lblEvtMessage_all = QtBind.createLabel(gui,'All',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_all = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessage_private = QtBind.createLabel(gui,'Private',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_private = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessage_stall = QtBind.createLabel(gui,'Stall',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_stall = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessage_party = QtBind.createLabel(gui,'Party',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_party = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessage_academy = QtBind.createLabel(gui,'Academy',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_academy = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessageguild = QtBind.createLabel(gui,'Guild',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_guild = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessage_union = QtBind.createLabel(gui,'Union',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_union = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessage_global = QtBind.createLabel(gui,'Global',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_global = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+cbxEvtMessage_global_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',_x,_y+3)
+tbxEvtMessage_global_filter = QtBind.createLineEdit(gui,"",_x+13,_y,_tbxWidth,_Height)
+_y+=20
+lblEvtMessage_notice = QtBind.createLabel(gui,'Notice',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_notice = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessage_gm = QtBind.createLabel(gui,'GM Talk',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_gm = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
 
-# Login
-lblEvtChar_disconnected = QtBind.createLabel(gui,'Disconnected from the game',585,58)
-cmbxEvtChar_disconnected = QtBind.createCombobox(gui,450,55,131,19)
+# login states
+_x += _cmbxWidth * 2 + 13
+_y = 55
+lblEvtChar_joined = QtBind.createLabel(gui,'Joined to the game',_x+_cmbxWidth+4,_y+3)
+cmbxEvtChar_joined = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtChar_disconnected = QtBind.createLabel(gui,'Disconnected from game',_x+_cmbxWidth+4,_y+3)
+cmbxEvtChar_disconnected = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
 
 # uniques
-lblEvtMessage_uniqueSpawn = QtBind.createLabel(gui,'Unique spawn',585,83)
-cmbxEvtMessage_uniqueSpawn = QtBind.createCombobox(gui,450,80,131,19)
-cbxEvtMessage_uniqueSpawn_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,103)
-tbxEvtMessage_uniqueSpawn_filter = QtBind.createLineEdit(gui,"",463,100,118,19)
-lblEvtMessage_uniqueKilled = QtBind.createLabel(gui,'Unique killed',585,123)
-cmbxEvtMessage_uniqueKilled = QtBind.createCombobox(gui,450,120,131,19)
-cbxEvtMessage_uniqueKilled_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',450,143)
-tbxEvtMessage_uniqueKilled_filter = QtBind.createLineEdit(gui,"",463,140,118,19)
+_y += 5
+lblEvtMessage_uniqueSpawn = QtBind.createLabel(gui,'Unique spawn',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_uniqueSpawn = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+cbxEvtMessage_uniqueSpawn_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',_x,_y+3)
+tbxEvtMessage_uniqueSpawn_filter = QtBind.createLineEdit(gui,"",_x+13,_y,_tbxWidth,_Height)
+_y+=20
+lblEvtMessage_uniqueKilled = QtBind.createLabel(gui,'Unique killed',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_uniqueKilled = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+cbxEvtMessage_uniqueKilled_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',_x,_y+3)
+tbxEvtMessage_uniqueKilled_filter = QtBind.createLineEdit(gui,"",_x+13,_y,_tbxWidth,_Height)
+_y+=20
 
 # events
-lblEvtMessage_ctf = QtBind.createLabel(gui,'Capture the Flag',585,168)
-cmbxEvtMessage_ctf = QtBind.createCombobox(gui,450,165,131,19)
-lblEvtMessage_battlearena = QtBind.createLabel(gui,'Battle Arena',585,188)
-cmbxEvtMessage_battlearena = QtBind.createCombobox(gui,450,185,131,19)
-lblEvtMessage_fortress = QtBind.createLabel(gui,'Fortress War',585,208)
-cmbxEvtMessage_fortress = QtBind.createCombobox(gui,450,205,131,19)
+_y += 5
+lblEvtMessage_ctf = QtBind.createLabel(gui,'Capture the Flag',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_ctf = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessage_battlearena = QtBind.createLabel(gui,'Battle Arena',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_battlearena = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessage_fortress = QtBind.createLabel(gui,'Fortress War',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_fortress = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
 
 # Graphic user interface (+)
 gui_ = QtBind.init(__name__,pName+"(+)")
 
+# Creating margins to locate columns quickly
+_x = 6
+_y = 7
+_cmbxWidth = 131
+_tbxWidth = 118
+
 # warnings
-lblEvtNear_unique = QtBind.createLabel(gui_,'Unique near to you',141,10)
-cmbxEvtNear_unique = QtBind.createCombobox(gui_,6,7,131,19)
-lblEvtNear_hunter = QtBind.createLabel(gui_,'Hunter/Trader near',141,30)
-cmbxEvtNear_hunter = QtBind.createCombobox(gui_,6,27,131,19)
-lblEvtNear_thief = QtBind.createLabel(gui_,'Thief near',141,50)
-cmbxEvtNear_thief = QtBind.createCombobox(gui_,6,47,131,19)
-lblEvtChar_attacked = QtBind.createLabel(gui_,'Character attacked',141,70)
-cmbxEvtChar_attacked = QtBind.createCombobox(gui_,6,67,131,19)
-lblEvtChar_died = QtBind.createLabel(gui_,'Character died',141,90)
-cmbxEvtChar_died = QtBind.createCombobox(gui_,6,87,131,19)
-lblEvtPet_died = QtBind.createLabel(gui_,'Transport/Horse died',141,110)
-cmbxEvtPet_died = QtBind.createCombobox(gui_,6,107,131,19)
+lblEvtNear_gm = QtBind.createLabel(gui_,'GM near to you',_x+_cmbxWidth+4,_y+3)
+cmbxEvtNear_gm = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtNear_unique = QtBind.createLabel(gui_,'Unique near to you',_x+_cmbxWidth+4,_y+3)
+cmbxEvtNear_unique = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtNear_hunter = QtBind.createLabel(gui_,'Hunter/Trader near',_x+_cmbxWidth+4,_y+3)
+cmbxEvtNear_hunter = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtNear_thief = QtBind.createLabel(gui_,'Thief near',_x+_cmbxWidth+4,_y+3)
+cmbxEvtNear_thief = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtChar_attacked = QtBind.createLabel(gui_,'Character attacked',_x+_cmbxWidth+4,_y+3)
+cmbxEvtChar_attacked = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtChar_died = QtBind.createLabel(gui_,'Character died',_x+_cmbxWidth+4,_y+3)
+cmbxEvtChar_died = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtPet_died = QtBind.createLabel(gui_,'Transport/Horse died',_x+_cmbxWidth+4,_y+3)
+cmbxEvtPet_died = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
 
 # party
-lblEvtParty_joined = QtBind.createLabel(gui_,'Party joined',141,135)
-cmbxEvtParty_joined = QtBind.createCombobox(gui_,6,132,131,19)
-lblEvtParty_left = QtBind.createLabel(gui_,'Party left',141,155)
-cmbxEvtParty_left = QtBind.createCombobox(gui_,6,152,131,19)
-lblEvtParty_memberJoin = QtBind.createLabel(gui_,'Party member joined',141,175)
-cmbxEvtParty_memberJoin = QtBind.createCombobox(gui_,6,172,131,19)
-lblEvtParty_memberLeft = QtBind.createLabel(gui_,'Party member left',141,195)
-cmbxEvtParty_memberLeft = QtBind.createCombobox(gui_,6,192,131,19)
-lblEvtParty_memberLvlUp = QtBind.createLabel(gui_,'Party member level up',141,215)
-cmbxEvtParty_memberLvlUp = QtBind.createCombobox(gui_,6,212,131,19)
+_y+=5
+lblEvtParty_joined = QtBind.createLabel(gui_,'Party joined',_x+_cmbxWidth+4,_y+3)
+cmbxEvtParty_joined = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtParty_left = QtBind.createLabel(gui_,'Party left',_x+_cmbxWidth+4,_y+3)
+cmbxEvtParty_left = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtParty_memberJoin = QtBind.createLabel(gui_,'Party member joined',_x+_cmbxWidth+4,_y+3)
+cmbxEvtParty_memberJoin = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtParty_memberLeft = QtBind.createLabel(gui_,'Party member left',_x+_cmbxWidth+4,_y+3)
+cmbxEvtParty_memberLeft = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtParty_memberLvlUp = QtBind.createLabel(gui_,'Party member level up',_x+_cmbxWidth+4,_y+3)
+cmbxEvtParty_memberLvlUp = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 
 # picks
-lblEvtPick_item = QtBind.createLabel(gui_,'Item picked up (vSRO)',416,10)
-cmbxEvtPick_item = QtBind.createCombobox(gui_,281,7,131,19)
-cbxEvtPick_name_filter = QtBind.createCheckBox(gui_,'cbxDoNothing','',281,30)
-tbxEvtPick_name_filter = QtBind.createLineEdit(gui_,"",294,27,118,19)
-cbxEvtPick_servername_filter = QtBind.createCheckBox(gui_,'cbxDoNothing','',281,50)
-tbxEvtPick_servername_filter = QtBind.createLineEdit(gui_,"",294,47,118,19)
-lblEvtPick_rare = QtBind.createLabel(gui_,'Item (Rare) picked up',416,70)
-cmbxEvtPick_rare = QtBind.createCombobox(gui_,281,67,131,19)
-lblEvtPick_equip = QtBind.createLabel(gui_,'Item (Equipable) picked up',416,90)
-cmbxEvtPick_equip = QtBind.createCombobox(gui_,281,87,131,19)
+_x += _cmbxWidth * 2 + 13
+_y = 7
+lblEvtPick_item = QtBind.createLabel(gui_,'Item picked up (vSRO)',_x+_cmbxWidth+4,_y+3)
+cmbxEvtPick_item = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+cbxEvtPick_name_filter = QtBind.createCheckBox(gui_,'cbxDoNothing','',_x,_y+3)
+tbxEvtPick_name_filter = QtBind.createLineEdit(gui_,"",_x+13,_y,_tbxWidth,_Height)
+_y+=20
+cbxEvtPick_servername_filter = QtBind.createCheckBox(gui_,'cbxDoNothing','',_x,_y+3)
+tbxEvtPick_servername_filter = QtBind.createLineEdit(gui_,"",_x+13,_y,_tbxWidth,_Height)
+_y+=20
+lblEvtPick_rare = QtBind.createLabel(gui_,'Item (Rare) picked up',_x+_cmbxWidth+4,_y+3)
+cmbxEvtPick_rare = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtPick_equip = QtBind.createLabel(gui_,'Item (Equipable) picked up',_x+_cmbxWidth+4,_y+3)
+cmbxEvtPick_equip = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
 
-lblEvtMessage_quest = QtBind.createLabel(gui_,'Quest completed',416,115)
-cmbxEvtMessage_quest = QtBind.createCombobox(gui_,281,112,131,19)
-lblEvtBot_alchemy = QtBind.createLabel(gui_,'Alchemy completed',416,135)
-cmbxEvtBot_alchemy = QtBind.createCombobox(gui_,281,132,131,19)
-lblEvtMessage_item_sold = QtBind.createLabel(gui_,'Stall item sold',416,155)
-cmbxEvtMessage_item_sold = QtBind.createCombobox(gui_,281,152,131,19)
-
-cbxAddTimestamp = QtBind.createCheckBox(gui_,'cbxDoNothing','Add Timestamps',565,7)
-cbxDiscord_read_messages = QtBind.createCheckBox(gui_,'cbxDoNothing','Discord bot interactions',565,27)
-tbxDiscord_guild_id = QtBind.createLineEdit(gui_,'',565,47,145,19)
-cbxDiscord_read_all = QtBind.createCheckBox(gui_,'cbxDoNothing','Read all interactions',565,67)
+# Stuffs
+_y+=5
+lblEvtMessage_quest = QtBind.createLabel(gui_,'Quest completed',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_quest = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtBot_alchemy = QtBind.createLabel(gui_,'Alchemy completed',_x+_cmbxWidth+4,_y+3)
+cmbxEvtBot_alchemy = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+lblEvtMessage_item_sold = QtBind.createLabel(gui_,'Stall item sold',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_item_sold = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 
 # wrap to iterate
-cmbxTriggers={"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtChar_disconnected":cmbxEvtChar_disconnected,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
-cmbxTriggers_={"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy,"cmbxEvtMessage_item_sold":cmbxEvtMessage_item_sold}
+cmbxTriggers={"cmbxEvtMessage_all":cmbxEvtMessage_all,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtChar_disconnected":cmbxEvtChar_disconnected,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
+cmbxTriggers_={"cmbxEvtNear_gm":cmbxEvtNear_gm,"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy,"cmbxEvtMessage_item_sold":cmbxEvtMessage_item_sold}
 
 # ______________________________ Methods ______________________________ #
 
@@ -168,6 +230,11 @@ def loadDefaultConfig():
 	# Clear data
 	QtBind.setText(gui,tbxChannels,"")
 	QtBind.clear(gui,lstChannels)
+
+	QtBind.setChecked(gui,cbxAddTimestamp,False)
+	QtBind.setChecked(gui,cbxDiscord_interactions,False)
+	QtBind.setText(gui,tbxDiscord_guild_id," Discord Server ID...")
+	QtBind.setChecked(gui,cbxDiscord_check_all,False)
 
 	QtBind.setText(gui,tbxToken,'')
 	QtBind.setText(gui,tbxWebsite,'https://jellydix.ddns.net')
@@ -194,11 +261,6 @@ def loadDefaultConfig():
 	QtBind.setChecked(gui_,cbxEvtPick_servername_filter,False)
 	QtBind.setText(gui_,tbxEvtPick_servername_filter," Filter by servername")
 
-	QtBind.setChecked(gui_,cbxAddTimestamp,False)
-	QtBind.setChecked(gui_,cbxDiscord_read_messages,False)
-	QtBind.setText(gui_,tbxDiscord_guild_id," Discord Server ID...")
-	QtBind.setChecked(gui_,cbxDiscord_read_all,False)
-
 # Save all config
 def saveConfigs():
 	# Save if data has been loaded
@@ -206,6 +268,11 @@ def saveConfigs():
 		# Save all data
 		data = {}
 		data["Channels"] = QtBind.getItems(gui,lstChannels)
+
+		data["AddTimeStamp"] = QtBind.isChecked(gui,cbxAddTimestamp)
+		data["DiscordInteractions"] = QtBind.isChecked(gui,cbxDiscord_interactions)
+		data["DiscordInteractionGuildID"] = QtBind.text(gui,tbxDiscord_guild_id)
+		data["DiscordInteractionCheckAll"] = QtBind.isChecked(gui,cbxDiscord_check_all)
 
 		data["Token"] = QtBind.text(gui,tbxToken)
 		data["Website"] = QtBind.text(gui,tbxWebsite)
@@ -232,11 +299,6 @@ def saveConfigs():
 		triggers["tbxEvtPick_name_filter"] = QtBind.text(gui_,tbxEvtPick_name_filter)
 		triggers["cbxEvtPick_servername_filter"] = QtBind.isChecked(gui_,cbxEvtPick_servername_filter)
 		triggers["tbxEvtPick_servername_filter"] = QtBind.text(gui_,tbxEvtPick_servername_filter)
-
-		data["AddTimeStamp"] = QtBind.isChecked(gui_,cbxAddTimestamp)
-		data["DiscordInteraction"] = QtBind.isChecked(gui_,cbxDiscord_read_messages)
-		data["DiscordInteractionGuildID"] = QtBind.text(gui_,tbxDiscord_guild_id)
-		data["DiscordInteractionReadAll"] = QtBind.isChecked(gui_,cbxDiscord_read_all)
 
 		# Overrides
 		with open(getConfig(),"w") as f:
@@ -267,27 +329,26 @@ def loadConfigs():
 					for name,cmbx in cmbxTriggers_.items():
 						QtBind.append(gui_,cmbx,channel_id)
 
+			if "AddTimeStamp" in data and data["AddTimeStamp"]:
+				QtBind.setChecked(gui,cbxAddTimestamp,True)
+			if "DiscordInteractions" in data and data["DiscordInteractions"]:
+				QtBind.setChecked(gui,cbxDiscord_interactions,True)
+			if "DiscordInteractionGuildID" in data and data["DiscordInteractionGuildID"]:
+				QtBind.setText(gui,tbxDiscord_guild_id,data["DiscordInteractionGuildID"])
+			if "DiscordInteractionCheckAll" in data and data["DiscordInteractionCheckAll"]:
+				QtBind.setChecked(gui,cbxDiscord_check_all,True)
+
 			if "Token" in data:
 				QtBind.setText(gui,tbxToken,data["Token"])
 			if "Website" in data:
 				QtBind.setText(gui,tbxWebsite,data["Website"])
 
-			if "AddTimeStamp" in data and data["AddTimeStamp"]:
-				QtBind.setChecked(gui_,cbxAddTimestamp,True)
-			if "DiscordInteraction" in data and data["DiscordInteraction"]:
-				QtBind.setChecked(gui_,cbxDiscord_read_messages,True)
-			if "DiscordInteractionGuildID" in data and data["DiscordInteractionGuildID"]:
-				QtBind.setText(gui_,tbxDiscord_guild_id,data["DiscordInteractionGuildID"])
-			if "DiscordInteractionReadAll" in data and data["DiscordInteractionReadAll"]:
-				QtBind.setChecked(gui_,cbxDiscord_read_all,True)
-
 			# Load triggers
 			if "Triggers" in data:
 				triggers = data["Triggers"]
 
-				if "cmbxEvtChar_joined" in triggers:
-					QtBind.setText(gui,cmbxEvtChar_joined,triggers["cmbxEvtChar_joined"])
-
+				if "cmbxEvtMessage_all" in triggers:
+					QtBind.setText(gui,cmbxEvtMessage_all,triggers["cmbxEvtMessage_all"])
 				if "cmbxEvtMessage_private" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_private,triggers["cmbxEvtMessage_private"])
 				if "cmbxEvtMessage_stall" in triggers:
@@ -311,6 +372,8 @@ def loadConfigs():
 				if "cmbxEvtMessage_gm" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_gm,triggers["cmbxEvtMessage_gm"])
 
+				if "cmbxEvtChar_joined" in triggers:
+					QtBind.setText(gui,cmbxEvtChar_joined,triggers["cmbxEvtChar_joined"])
 				if "cmbxEvtChar_disconnected" in triggers:
 					QtBind.setText(gui,cmbxEvtChar_disconnected,triggers["cmbxEvtChar_disconnected"])
 
@@ -334,6 +397,8 @@ def loadConfigs():
 				if "cmbxEvtMessage_fortress" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_fortress,triggers["cmbxEvtMessage_fortress"])
 
+				if "cmbxEvtNear_gm" in triggers:
+					QtBind.setText(gui_,cmbxEvtNear_gm,triggers["cmbxEvtNear_gm"])
 				if "cmbxEvtNear_unique" in triggers:
 					QtBind.setText(gui_,cmbxEvtNear_unique,triggers["cmbxEvtNear_unique"])
 				if "cmbxEvtNear_hunter" in triggers:
@@ -394,43 +459,34 @@ def ListContains(list,text):
 
 # Add discord channel
 def btnAddChannel_clicked():
-	if isJoined():
+	if character_data:
 		channel_id = QtBind.text(gui,tbxChannels)
-		if channel_id and channel_id.isnumeric():
+		if not channel_id:
+			return
+		# Check only for numbers
+		if channel_id.isnumeric():
 			# channel it's not empty and not added
 			if not ListContains(QtBind.getItems(gui,lstChannels),channel_id):
-				# init dict
-				data = {}
-				# Load config
-				if os.path.exists(getConfig()):
-					with open(getConfig(), 'r') as f:
-						data = json.load(f)
-				# Add new channel
-				if not "Channels" in data:
-					data['Channels'] = []
-				data["Channels"].append(channel_id)
-				# Replace configs
-				with open(getConfig(),"w") as f:
-					f.write(json.dumps(data, indent=4, sort_keys=True))
-				
 				# Add new channel on everything
 				QtBind.append(gui,lstChannels,channel_id)
 				for name,cmbx in cmbxTriggers.items():
 					QtBind.append(gui,cmbx,channel_id)
 				for name,cmbx in cmbxTriggers_.items():
 					QtBind.append(gui_,cmbx,channel_id)
-
+				# Clear textbox to indicate success
 				QtBind.setText(gui,tbxChannels,"")
 				log('Plugin: Channel added ['+channel_id+']')
 		else:
-			log('Plugin: Error, The channel must be an identifier number!')
+			log('Plugin: Error, the Discord Channel ID must be a number!')
 
 # Remove discord channel
 def btnRemChannel_clicked():
-	if isJoined():
+	if character_data:
 		channelItem = QtBind.text(gui,lstChannels)
+		# if the list has something selected
 		if channelItem:
-			# Remove channel from all combo's
+			# Remove channel from all comboboxes 
+			# and leave it as default if is necessary
 			for name,cmbx in cmbxTriggers.items():
 				channelReset = False
 				if QtBind.text(gui,cmbx) == channelItem:
@@ -445,18 +501,7 @@ def btnRemChannel_clicked():
 				QtBind.remove(gui_,cmbx,channelItem)
 				if channelReset:
 					QtBind.setText(gui_,cmbx,"")
-			# Update config file
-			if os.path.exists(getConfig()):
-				data = {"Channels":[]}
-				with open(getConfig(), 'r') as f:
-					data = json.load(f)
-				# try to remove channel from config file
-				try:
-					data["Channels"].remove(channelItem)
-					with open(getConfig(),"w") as f:
-						f.write(json.dumps(data, indent=4, sort_keys=True))
-				except:
-					pass
+			# Remove from list
 			QtBind.remove(gui,lstChannels,channelItem)
 			log('Plugin: Channel removed ['+channelItem+']')
 
@@ -469,8 +514,8 @@ def CreateInfo(t,data):
 	return info
 
 # Send a notification to discord channel
-# message : Text shown as discord notification
 # channel_id : ID from channel to be sent
+# message : Text shown as discord notification
 # info : Extra data used at server for some notifications
 def Notify(channel_id,message,info=None):
 	# Check if there is enough data to create a notification
@@ -515,7 +560,7 @@ def Fetch(guild_id):
 	# Try to fetch messages
 	try:
 		# Prepare json to send through POST method
-		params = json.dumps({'guild':guild_id,'token':token,'charname':character_data['name'],'fetch_all':QtBind.isChecked(gui_,cbxDiscord_read_all)}).encode()
+		params = json.dumps({'guild':guild_id,'token':token,'charname':character_data['name'],'fetch_all':QtBind.isChecked(gui,cbxDiscord_check_all)}).encode()
 		if not url.endswith("/"):
 			url += "/"
 		req = urllib.request.Request(url+"api/fetch",data=params,headers={'content-type': 'application/json'})
@@ -536,7 +581,9 @@ def Fetch(guild_id):
 def isJoined():
 	global character_data
 	character_data = get_character_data()
-	return character_data and "name" in character_data and character_data["name"]
+	if not (character_data and "name" in character_data and character_data["name"]):
+		character_data = None
+	return character_data
 
 # Get battle arena text by type
 def getBattleArenaText(t):
@@ -640,11 +687,6 @@ def JellyDix(args):
 		Notify(args[1],"|`"+character_data['name']+"`| - "+args[2])
 	return 0
 
-# Called when the bot successfully connects to the game server
-def connected():
-	global checking_disconnect
-	checking_disconnect = False
-
 # Called when the character enters the game world
 def joined_game():
 	loadConfigs()
@@ -653,7 +695,9 @@ def joined_game():
 # All chat messages received are sent to this function
 def handle_chat(t,player,msg):
 	# Check message type
-	if t == 2:
+	if t == 1:
+		Notify(QtBind.text(gui,cmbxEvtMessage_all),"|`"+character_data['name']+"`| - [**All**] from `"+player+"`: "+msg)
+	elif t == 2:
 		Notify(QtBind.text(gui,cmbxEvtMessage_private),"|`"+character_data['name']+"`| - [**Private**] from `"+player+"`: "+msg)
 	elif t == 9:
 		Notify(QtBind.text(gui,cmbxEvtMessage_stall),"|`"+character_data['name']+"`| - [**Stall**] from `"+player+"`: "+msg)
@@ -684,7 +728,9 @@ def handle_chat(t,player,msg):
 # Called for specific events. data field will always be a string.
 def handle_event(t, data):
 	# Filter events
-	if t == 0:
+	if t == 9:
+		Notify(QtBind.text(gui_,cmbxEvtNear_gm),"|`"+character_data['name']+"`| - GameMaster `"+data+"` is near to you!",CreateInfo("position",get_position()))
+	elif t == 0:
 		Notify(QtBind.text(gui_,cmbxEvtNear_unique),"|`"+character_data['name']+"`| - **"+data+"** unique is near to you!",CreateInfo("position",get_position()))
 	elif t == 1:
 		Notify(QtBind.text(gui_,cmbxEvtNear_hunter),"|`"+character_data['name']+"`| - **Hunter/Trader** `"+data+"` is near to you!",CreateInfo("position",get_position()))
@@ -714,16 +760,16 @@ def handle_event(t, data):
 # All packets received from game server will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game client
 def handle_joymax(opcode, data):
+	# Reset disconnect delay counter on every server packet
+	# You has been disconnected probably if no packets has been received for a long time
+	global checking_disconnect_counter
+	checking_disconnect_counter = 0
+	
 	# globals used in more than one IF statement
 	global party_data,hasStall
 
-	# GLOBAL_PING
-	if opcode == 0x2002 and checking_disconnect:
-		# Reset disconnect delay counter
-		global checking_disconnect_counter
-		checking_disconnect_counter = 0
 	# SERVER_NOTICE_UPDATE
-	elif opcode == 0x300C:
+	if opcode == 0x300C:
 		updateType = data[0]
 		if updateType == 5:
 			channel_id = QtBind.text(gui,cmbxEvtMessage_uniqueSpawn)
@@ -927,7 +973,6 @@ def notify_pickup(channel_id,itemID):
 def event_loop():
 	# Check if is in game at first
 	if character_data:
-
 		# generate disconnect event
 		global checking_disconnect
 		if checking_disconnect:
@@ -939,20 +984,19 @@ def event_loop():
 				checking_disconnect = False
 				on_disconnect()
 
-		# generate fetch stuff if at least one handler exists
-		if discord_chat_handlers:
-			global discord_fetch_counter
-			discord_fetch_counter += 500
-			# Check if delay is longer to start fetching
-			if discord_fetch_counter >= DISCORD_FETCH_DELAY:
-				discord_fetch_counter = 0
-				if QtBind.isChecked(gui_,cbxDiscord_read_messages):
-					# Fetch messages from guild
-					Fetch(QtBind.text(gui_,tbxDiscord_guild_id))
+		# generate fetch stuff
+		global discord_fetch_counter
+		discord_fetch_counter += 500
+		# Check if delay is longer to start fetching
+		if discord_fetch_counter >= DISCORD_FETCH_DELAY:
+			discord_fetch_counter = 0
+			if QtBind.isChecked(gui,cbxDiscord_interactions):
+				# Fetch messages from guild
+				Fetch(QtBind.text(gui,tbxDiscord_guild_id))
 
 # Called when the character has not received the ping for a long time which means is disconnected
 def on_disconnect():
-	channel_id = QtBind.text(gui_,cmbxEvtChar_disconnected)
+	channel_id = QtBind.text(gui,cmbxEvtChar_disconnected)
 	if channel_id:
 		Notify(channel_id,"|`"+character_data['name']+"`| You has been disconnected")
 
