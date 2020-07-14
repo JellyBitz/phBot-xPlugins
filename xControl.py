@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.2.1'
+pVersion = '1.3.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -22,7 +22,7 @@ followDistance = 0
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
 lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA #PosX? #PosY? #Region? : Set training area.\n - SETRADIUS #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TP #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data? : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
-lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game\n - MOUNT #PetType? : Mount horse by default\n - DISMOUNT #PetType? : Dismount horse by default\n - GETOUT : Left party\n - RECALL #Town : Set recall on city portal',345,101)
+lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game\n - MOUNT #PetType? : Mount horse by default\n - DISMOUNT #PetType? : Dismount horse by default\n - GETOUT : Left party\n - RECALL #Town : Set recall on city portal\n - SETSCRIPT #Path : Change script path for training area',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
 lstLeaders = QtBind.createList(gui,511,32,176,48)
@@ -115,21 +115,6 @@ def lstLeaders_exist(nickname):
 		if players[i].lower() == nickname:
 			return True
 	return False
-
-# Inject Packet (Use return scroll)
-def inject_useReturnScroll():
-	items = get_inventory()['items']
-	for slot, item in enumerate(items):
-		if item:
-			sn = item['servername']
-			# Search some kind return scroll by servername
-			if sn.startswith('ITEM_ETC_SCROLL_RETURN_0') or 'RETURN_SCROLL_HIGH_SPEED' in sn or sn == 'ITEM_ETC_SCROLL_RETURN_NEWBIE_01' or sn == 'ITEM_ETC_LEVEL_SCROLL_RETURN_01' or sn == 'ITEM_ETC_E041225_SANTA_WINGS':
-				packet = struct.pack('B',slot)
-				packet += struct.pack('H',2540)
-				inject_joymax(0x704C,packet,True)
-				log('Plugin: Using "'+item['name']+'"')
-				return
-	log('Plugin: "Return Scroll" not found at your inventory')
 
 # Inject teleport packet, using the source and destination name
 def inject_teleport(source,destination):
@@ -348,38 +333,45 @@ def handle_chat(t,player,msg):
 			stop_bot()
 			log("Plugin: Bot stopped")
 		elif msg.startswith("TRACE"):
+			# deletes empty spaces on right
+			msg = msg.rstrip()
 			if msg == "TRACE":
 				if start_trace(player):
 					log("Plugin: Starting trace to ["+player+"]")
 			else:
-				msg = msg[5:].split()
-				if msg:
-					if start_trace(msg[0]):
-						log("Plugin: Starting trace to ["+msg[0]+"]")
+				msg = msg[5:].split()[0]
+				if start_trace(msg[0]):
+					log("Plugin: Starting trace to ["+msg[0]+"]")
 		elif msg == "NOTRACE":
 			stop_trace()
 			log("Plugin: Trace stopped")
 		elif msg.startswith("SETAREA"):
+			# deletes empty spaces on right
+			msg = msg.rstrip()
 			if msg == "SETAREA":
 				p = get_position()
 				set_training_position(p['region'], p['x'], p['y'])
-				log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
+				log("Plugin: Training area set to current position (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
 			else:
 				try:
+					# check arguments
 					p = msg[7:].split()
 					x = float(p[0])
 					y = float(p[1])
+					# auto calculated if is not specified
 					region = int(p[2]) if len(p) >= 3 else 0
 					set_training_position(region,x,y)
-					log("Plugin: Setting training area (X:%.1f,Y:%.1f)"%(x,y))
+					log("Plugin: Training area set to (X:%.1f,Y:%.1f)"%(x,y))
 				except:
-					log("Plugin: Training area coordinates incorrect")
+					log("Plugin: Wrong training area coordinates!")
 		elif msg.startswith("SETRADIUS"):
+			# deletes empty spaces on right
+			msg = msg.rstrip()
 			if msg == "SETRADIUS":
-				# default radius
+				# set default radius
 				radius = 35
 				set_training_radius(radius)
-				log("Plugin: Setting training radius ("+str(radius)+")")
+				log("Plugin: Training radius reseted to "+str(radius)+" m.")
 			else:
 				try:
 					# split and parse movement radius
@@ -387,65 +379,79 @@ def handle_chat(t,player,msg):
 					# to absolute
 					radius = (radius if radius > 0 else radius*-1)
 					set_training_radius(radius)
-					log("Plugin: Setting training radius ("+str(radius)+")")
+					log("Plugin: Training radius set to "+str(radius)+" m.")
 				except:
-					log("Plugin: Training radius incorrect")
+					log("Plugin: Wrong training radius value!")
+		elif msg.startswith('SETSCRIPT'):
+			# deletes empty spaces on right
+			msg = msg.rstrip()
+			if msg == 'SETSCRIPT':
+				# reset script
+				set_training_script('')
+				log('Plugin: Training script path has been reseted')
+			else:
+				# change script to the path specified
+				set_training_script(msg[9:])
+				log('Plugin: Training script path has been changed')
 		elif msg == "SIT":
 			log("Plugin: Sit/Stand")
 			inject_joymax(0x704F,b'\x04',False)
 		elif msg == "JUMP":
-			log("Plugin: Trying to jump!")
+			# Just a funny emote lol
+			log("Plugin: Jumping!")
 			inject_joymax(0x3091,b'\x0c',False)
 		elif msg.startswith("CAPE"):
+			# deletes empty spaces on right
+			msg = msg.rstrip()
 			if msg == "CAPE":
 				log("Plugin: Using PVP Cape by default (Yellow)")
 				inject_joymax(0x7516,b'\x05',False)
 			else:
-				type = msg[4:].split()
-				if type:
-					type = type[0].lower()
-					if type == "off":
-						log("Plugin: Removing PVP Cape")
-						inject_joymax(0x7516,b'\x00',False)
-					elif type == "red":
-						log("Plugin: Using PVP Cape (Red)")
-						inject_joymax(0x7516,b'\x01',False)
-					elif type == "gray":
-						log("Plugin: Using PVP Cape (Gray)")
-						inject_joymax(0x7516,b'\x02',False)
-					elif type == "blue":
-						log("Plugin: Using PVP Cape (Blue)")
-						inject_joymax(0x7516,b'\x03',False)
-					elif type == "white":
-						log("Plugin: Using PVP Cape (White)")
-						inject_joymax(0x7516,b'\x04',False)
-					elif type == "yellow":
-						log("Plugin: Using PVP Cape (Yellow)")
-						inject_joymax(0x7516,b'\x05',False)
-					else:
-						log("Plugin: Wrong PVP Cape color")
+				# get cape type normalized
+				cape = msg[4:].split()[0].lower()
+				if cape == "off":
+					log("Plugin: Removing PVP Cape")
+					inject_joymax(0x7516,b'\x00',False)
+				elif cape == "red":
+					log("Plugin: Using PVP Cape (Red)")
+					inject_joymax(0x7516,b'\x01',False)
+				elif cape == "gray":
+					log("Plugin: Using PVP Cape (Gray)")
+					inject_joymax(0x7516,b'\x02',False)
+				elif cape == "blue":
+					log("Plugin: Using PVP Cape (Blue)")
+					inject_joymax(0x7516,b'\x03',False)
+				elif cape == "white":
+					log("Plugin: Using PVP Cape (White)")
+					inject_joymax(0x7516,b'\x04',False)
+				elif cape == "yellow":
+					log("Plugin: Using PVP Cape (Yellow)")
+					inject_joymax(0x7516,b'\x05',False)
+				else:
+					log("Plugin: Wrong PVP Cape color!")
 		elif msg == "ZERK":
 			log("Plugin: Using Berserker mode")
 			inject_joymax(0x70A7,b'\x01',False)
 		elif msg == "RETURN":
-			# Trying avoid high CPU usage with many chars at the same time
-			Timer(random.uniform(0.5,2),inject_useReturnScroll).start()
+			log('Plugin: Trying to use return scroll...')
+			# Avoid high CPU usage with too many chars at the same time
+			Timer(random.uniform(0.5,2),use_return_scroll).start()
 		elif msg.startswith("TP"):
-			msg = msg[2:] # remove command header
-			if msg:
-				msg = msg[1:] # remove whatever used as separator
-			if msg:
-				split = ""
-				# Select split char
-				if "," in msg:
-					split = ","
-				elif " " in msg:
-					split = " "
-				# Extract info
-				if split:
-					source_dest = msg.split(split)
-					if len(source_dest) >= 2:
-						inject_teleport(source_dest[0].strip(),source_dest[1].strip())
+			# deletes command header
+			msg = msg[2:]
+			if not msg:
+				return
+			# remove whatever used as separator
+			msg = msg[1:]
+			if not msg:
+				return
+			# select split char
+			split = ',' if ',' in msg else ' '
+			# extract arguments
+			source_dest = msg.split(split)
+			# needs to be at least two name points to try teleporting
+			if len(source_dest) >= 2:
+				inject_teleport(source_dest[0].strip(),source_dest[1].strip())
 		elif msg.startswith("INJECT"):
 			inject(msg.split())
 		elif msg.startswith("CHAT "):
