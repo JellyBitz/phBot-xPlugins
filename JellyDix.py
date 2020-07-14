@@ -1,6 +1,7 @@
 from phBot import *
 import QtBind
 from datetime import datetime
+from threading import Timer
 import urllib.request
 import urllib.parse
 import struct
@@ -10,13 +11,14 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.2.1'
+pVersion = '2.3.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
 
 CHECK_DISCONNECT_DELAY_MAX = 15000 # ms
 DISCORD_FETCH_DELAY = 5000 # ms
+URL_REQUEST_TIMEOUT = 15 # sec
 
 # Globals
 character_data = None
@@ -63,7 +65,7 @@ _cmbxWidth = 131
 _tbxWidth = 118
 
 # messages
-lblEvtMessage_all = QtBind.createLabel(gui,'All',_x+_cmbxWidth+4,_y+3)
+lblEvtMessage_all = QtBind.createLabel(gui,'General',_x+_cmbxWidth+4,_y+3)
 cmbxEvtMessage_all = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
 _y+=20
 lblEvtMessage_private = QtBind.createLabel(gui,'Private',_x+_cmbxWidth+4,_y+3)
@@ -518,6 +520,11 @@ def CreateInfo(t,data):
 # message : Text shown as discord notification
 # info : Extra data used at server for some notifications
 def Notify(channel_id,message,info=None):
+	# Run this in another thread to avoid locking the client/bot and wait more time for the response
+	Timer(0.01,_Notify,(channel_id,message,info)).start()
+
+# Send a notification to discord channel
+def _Notify(channel_id,message,info):
 	# Check if there is enough data to create a notification
 	if not channel_id or not message:
 		return
@@ -535,7 +542,7 @@ def Notify(channel_id,message,info=None):
 		if not url.endswith("/"):
 			url += "/"
 		req = urllib.request.Request(url+"api/notify",data=params,headers={'content-type': 'application/json'})
-		with urllib.request.urlopen(req,timeout=5) as f:
+		with urllib.request.urlopen(req,timeout=URL_REQUEST_TIMEOUT) as f:
 			try:
 				resp = json.loads(f.read().decode())
 				if resp:
@@ -548,8 +555,13 @@ def Notify(channel_id,message,info=None):
 	except Exception as ex:
 		log("Plugin: Error loading url ["+str(ex)+"] to Notify")
 
-# Fetch messages on discord (queue)
+# Fetch messages on discord (queue) from the guild server indicated
 def Fetch(guild_id):
+	# Run this in another thread to avoid locking the client/bot and wait more time for the response
+	Timer(0.01,_Fetch,(guild_id,)).start()
+
+# Fetch messages on discord (queue) from the guild server indicated
+def _Fetch(guild_id):
 	# Check if there is enough data to fetch
 	if not guild_id or not guild_id.isnumeric():
 		return
@@ -564,7 +576,7 @@ def Fetch(guild_id):
 		if not url.endswith("/"):
 			url += "/"
 		req = urllib.request.Request(url+"api/fetch",data=params,headers={'content-type': 'application/json'})
-		with urllib.request.urlopen(req,timeout=5) as f:
+		with urllib.request.urlopen(req,timeout=URL_REQUEST_TIMEOUT) as f:
 			try:
 				resp = json.loads(f.read().decode())
 				if resp:
@@ -696,7 +708,7 @@ def joined_game():
 def handle_chat(t,player,msg):
 	# Check message type
 	if t == 1:
-		Notify(QtBind.text(gui,cmbxEvtMessage_all),"|`"+character_data['name']+"`| - [**All**] from `"+player+"`: "+msg)
+		Notify(QtBind.text(gui,cmbxEvtMessage_all),"|`"+character_data['name']+"`| - [**General**] from `"+player+"`: "+msg)
 	elif t == 2:
 		Notify(QtBind.text(gui,cmbxEvtMessage_private),"|`"+character_data['name']+"`| - [**Private**] from `"+player+"`: "+msg)
 	elif t == 9:
@@ -1013,9 +1025,9 @@ def on_discord_fetch(data):
 		# created message date
 		created_at = time.strptime(str(message['created_at']), '%m/%d/%Y, %H:%M:%S')
 		created_at = time.mktime(created_at)
-		# check if the time is shorter than 10 seconds for handling messages
+		# check if the time is shorter than 15 seconds for handling messages
 		seconds_difference = int(fetched_at-created_at)
-		if seconds_difference <= 10:
+		if seconds_difference <= 15:
 			# sent message through every handler
 			content = message['content']
 			for handler in discord_chat_handlers:
