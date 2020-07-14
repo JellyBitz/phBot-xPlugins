@@ -8,7 +8,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.0.3'
+pVersion = '1.0.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -386,7 +386,7 @@ def handle_joymax(opcode,data):
 					# Check for deleting a character
 					if deleteCharacter:
 						log("Plugin: deleting character ["+deleteCharacter+"] (Lv."+str(deleteCharacterLevel)+")")
-						Timer(0.1,Inject_DeleteCharacter(deleteCharacter)).start()
+						Timer(0.1,Inject_DeleteCharacter,(deleteCharacter,)).start()
 					# Select or create character if is required
 					if not selectCharacter:
 						# Check the char limit
@@ -412,7 +412,7 @@ def handle_joymax(opcode,data):
 						if deleteCharacter != "":
 							waitSelection = 5.0
 						log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
-						Timer(waitSelection,select_character(selectCharacter)).start()
+						Timer(waitSelection,select_character,(selectCharacter,)).start()
 		except:
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
