@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.3.0'
+pVersion = '1.3.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -340,8 +340,8 @@ def handle_chat(t,player,msg):
 					log("Plugin: Starting trace to ["+player+"]")
 			else:
 				msg = msg[5:].split()[0]
-				if start_trace(msg[0]):
-					log("Plugin: Starting trace to ["+msg[0]+"]")
+				if start_trace(msg):
+					log("Plugin: Starting trace to ["+msg+"]")
 		elif msg == "NOTRACE":
 			stop_trace()
 			log("Plugin: Trace stopped")
