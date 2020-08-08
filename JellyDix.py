@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.3.0'
+pVersion = '2.4.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -19,6 +19,7 @@ pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyD
 CHECK_DISCONNECT_DELAY_MAX = 15000 # ms
 DISCORD_FETCH_DELAY = 5000 # ms
 URL_REQUEST_TIMEOUT = 15 # sec
+URL_HOST = "https://jellydix.ddns.net" # API server
 
 # Globals
 character_data = None
@@ -39,27 +40,26 @@ btnAddChannel = QtBind.createButton(gui,'btnAddChannel_clicked',"   Add   ",86,2
 btnRemChannel = QtBind.createButton(gui,'btnRemChannel_clicked',"     Remove     ",45,135)
 
 # Discord options
-cbxAddTimestamp = QtBind.createCheckBox(gui,'cbxDoNothing','Add phBot timestamp',6,165)
-cbxDiscord_interactions = QtBind.createCheckBox(gui,'cbxDoNothing','Use Discord interactions',6,185)
-tbxDiscord_guild_id = QtBind.createLineEdit(gui,'',6,205,145,19)
-cbxDiscord_check_all = QtBind.createCheckBox(gui,'cbxDoNothing','Check all interactions',6,225)
+lblToken = QtBind.createLabel(gui,"Token :",6,165)
+tbxToken = QtBind.createLineEdit(gui,"",43,163,119,19)
 
-QtBind.createLineEdit(gui,"",169,10,1,262) # Separator line
+cbxAddTimestamp = QtBind.createCheckBox(gui,'cbxDoNothing','Add phBot timestamp',6,185)
+cbxDiscord_interactions = QtBind.createCheckBox(gui,'cbxDoNothing','Use Discord interactions',6,205)
+tbxDiscord_guild_id = QtBind.createLineEdit(gui,'',6,225,145,19)
+cbxDiscord_check_all = QtBind.createCheckBox(gui,'cbxDoNothing','Check all interactions',6,245)
 
-lblToken = QtBind.createLabel(gui,"Token :",175,10)
-tbxToken = QtBind.createLineEdit(gui,"",215,7,155,19)
+lblUrl = QtBind.createLabel(gui,'* '+URL_HOST,595,268)
 
-lblUrl = QtBind.createLabel(gui,"Website :",390,10)
-tbxWebsite = QtBind.createLineEdit(gui,'',440,7,155,19)
-
-btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"     Save Changes     ",615,7)
+# Separator line
+QtBind.createLineEdit(gui,"",169,10,1,262)
 
 # Triggers
-lblTriggers = QtBind.createLabel(gui,"Select the Discord channel to send the notification ( Filters are using regex! )",175,35)
+lblTriggers = QtBind.createLabel(gui,"Select the Discord channel to send the notification ( Filters are using regex! )",175,10)
+btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"     Save Changes     ",615,4)
 
 # Creating margins to locate all quickly
 _x = 175
-_y = 55
+_y = 30
 _Height = 19
 _cmbxWidth = 131
 _tbxWidth = 118
@@ -95,12 +95,15 @@ _y+=20
 lblEvtMessage_notice = QtBind.createLabel(gui,'Notice',_x+_cmbxWidth+4,_y+3)
 cmbxEvtMessage_notice = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
 _y+=20
+cbxEvtMessage_notice_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',_x,_y+3)
+tbxEvtMessage_notice_filter = QtBind.createLineEdit(gui,"",_x+13,_y,_tbxWidth,_Height)
+_y+=20
 lblEvtMessage_gm = QtBind.createLabel(gui,'GM Talk',_x+_cmbxWidth+4,_y+3)
 cmbxEvtMessage_gm = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
 
 # login states
 _x += _cmbxWidth * 2 + 13
-_y = 55
+_y = 30
 lblEvtChar_joined = QtBind.createLabel(gui,'Joined to the game',_x+_cmbxWidth+4,_y+3)
 cmbxEvtChar_joined = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
 _y+=20
@@ -239,7 +242,6 @@ def loadDefaultConfig():
 	QtBind.setChecked(gui,cbxDiscord_check_all,False)
 
 	QtBind.setText(gui,tbxToken,'')
-	QtBind.setText(gui,tbxWebsite,'https://jellydix.ddns.net')
 	
 	# Reset triggers
 	for name,cmbx in cmbxTriggers.items():
@@ -248,6 +250,8 @@ def loadDefaultConfig():
 
 	QtBind.setChecked(gui,cbxEvtMessage_global_filter,False)
 	QtBind.setText(gui,tbxEvtMessage_global_filter," Filter by message")
+	QtBind.setChecked(gui,cbxEvtMessage_notice_filter,False)
+	QtBind.setText(gui,tbxEvtMessage_notice_filter," Filter by message")
 
 	QtBind.setChecked(gui,cbxEvtMessage_uniqueSpawn_filter,False)
 	QtBind.setText(gui,tbxEvtMessage_uniqueSpawn_filter," Filter by name")
@@ -277,7 +281,6 @@ def saveConfigs():
 		data["DiscordInteractionCheckAll"] = QtBind.isChecked(gui,cbxDiscord_check_all)
 
 		data["Token"] = QtBind.text(gui,tbxToken)
-		data["Website"] = QtBind.text(gui,tbxWebsite)
 		
 		# Save triggers from tabs
 		triggers = {}
@@ -288,6 +291,8 @@ def saveConfigs():
 
 		triggers["cbxEvtMessage_global_filter"] = QtBind.isChecked(gui,cbxEvtMessage_global_filter)
 		triggers["tbxEvtMessage_global_filter"] = QtBind.text(gui,tbxEvtMessage_global_filter)
+		triggers["cbxEvtMessage_notice_filter"] = QtBind.isChecked(gui,cbxEvtMessage_notice_filter)
+		triggers["tbxEvtMessage_notice_filter"] = QtBind.text(gui,tbxEvtMessage_notice_filter)
 
 		triggers["cbxEvtMessage_uniqueSpawn_filter"] = QtBind.isChecked(gui,cbxEvtMessage_uniqueSpawn_filter)
 		triggers["tbxEvtMessage_uniqueSpawn_filter"] = QtBind.text(gui,tbxEvtMessage_uniqueSpawn_filter)
@@ -342,8 +347,6 @@ def loadConfigs():
 
 			if "Token" in data:
 				QtBind.setText(gui,tbxToken,data["Token"])
-			if "Website" in data:
-				QtBind.setText(gui,tbxWebsite,data["Website"])
 
 			# Load triggers
 			if "Triggers" in data:
@@ -371,6 +374,10 @@ def loadConfigs():
 					QtBind.setText(gui,tbxEvtMessage_global_filter,triggers["tbxEvtMessage_global_filter"])
 				if "cmbxEvtMessage_notice" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_notice,triggers["cmbxEvtMessage_notice"])
+				if "cbxEvtMessage_notice_filter" in triggers and triggers["cbxEvtMessage_notice_filter"]:
+					QtBind.setChecked(gui,cbxEvtMessage_notice_filter,True)
+				if "tbxEvtMessage_notice_filter" in triggers and triggers["tbxEvtMessage_notice_filter"]:
+					QtBind.setText(gui,tbxEvtMessage_notice_filter,triggers["tbxEvtMessage_notice_filter"])
 				if "cmbxEvtMessage_gm" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_gm,triggers["cmbxEvtMessage_gm"])
 
@@ -528,7 +535,7 @@ def _Notify(channel_id,message,info):
 	# Check if there is enough data to create a notification
 	if not channel_id or not message:
 		return
-	url = QtBind.text(gui,tbxWebsite)
+	url = URL_HOST
 	if not url:
 		return
 	token = QtBind.text(gui,tbxToken)
@@ -565,7 +572,7 @@ def _Fetch(guild_id):
 	# Check if there is enough data to fetch
 	if not guild_id or not guild_id.isnumeric():
 		return
-	url = QtBind.text(gui,tbxWebsite)
+	url = URL_HOST
 	if not url:
 		return
 	token = QtBind.text(gui,tbxToken)
@@ -733,7 +740,16 @@ def handle_chat(t,player,msg):
 		else:
 			Notify(QtBind.text(gui,cmbxEvtMessage_global),"[**Global**] `"+player+"`: "+msg)
 	elif t == 7:
-		Notify(QtBind.text(gui,cmbxEvtMessage_notice),"[**Notice**] : "+msg)
+		if QtBind.isChecked(gui,cbxEvtMessage_notice_filter):
+			searchMessage = QtBind.text(gui,tbxEvtMessage_notice_filter)
+			if searchMessage:
+				try:
+					if re.search(searchMessage,msg):
+						Notify(QtBind.text(gui,cmbxEvtMessage_notice),"[**Notice**] : "+msg)
+				except Exception as ex:
+					log("Plugin: Error at regex ["+str(ex)+"]")
+		else:
+			Notify(QtBind.text(gui,cmbxEvtMessage_notice),"[**Notice**] : "+msg)
 	elif t == 3:
 		Notify(QtBind.text(gui,cmbxEvtMessage_gm),"[**GameMaster**] `"+player+"`: "+msg)
 
