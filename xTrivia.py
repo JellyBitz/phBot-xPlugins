@@ -6,7 +6,7 @@ import os
 import re
 
 pName = 'xTrivia'
-pVersion = '0.1.0'
+pVersion = '0.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTrivia.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -151,7 +151,7 @@ def AddQuestionAnswer(question,answer):
 		# Update all
 		UpdateTriviaData()
 		# Success message
-		log('Plugin: Trivia has been added ['+trivia_text+'] has been saved!')
+		log('Plugin: Trivia ['+trivia_text+'] has been added')
 
 # Add trivia manually
 def btnAddTrivia_clicked():
@@ -193,7 +193,7 @@ def btnRemTrivia_clicked():
 			with open(getTriviaPath(),"w") as f:
 				f.write(json.dumps(trivia_data, indent=4, sort_keys=True))
 		# Success message
-		log('Plugin: Trivia ['+trivia['q']+'] has been removed!')
+		log('Plugin: Trivia ['+trivia['q']+'] has been removed')
 
 # Binary search algorithm. Returns the index or -1 if is the element is not found
 def binarySearch(_array, _left, _right, _element): 
