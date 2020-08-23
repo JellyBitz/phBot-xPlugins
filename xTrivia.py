@@ -6,7 +6,7 @@ import os
 import re
 
 pName = 'xTrivia'
-pVersion = '0.0.1'
+pVersion = '0.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTrivia.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -30,8 +30,14 @@ tbxAnswerPattern = QtBind.createLineEdit(gui,"",90,63,358,19)
 lblReplyTo = QtBind.createLabel(gui,"Reply To :",480,55)
 tbxReplyTo = QtBind.createLineEdit(gui,"",530,53,80,19)
 
-btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"     Save     ",630,4)
+btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"     Save     ",645,4)
 
+
+lblQuestion = QtBind.createLabel(gui,"Question :",6,105)
+tbxQuestion = QtBind.createLineEdit(gui,"",59,103,180,19)
+lblAnswer = QtBind.createLabel(gui,"Answer :",59+180+6,105)
+tbxAnswer = QtBind.createLineEdit(gui,"",59+180+6+48,103,90,19)
+btnAddTrivia = QtBind.createButton(gui,'btnAddTrivia_clicked',"     Add     ",59+180+6+48+90+6,105-4)
 btnRemTrivia = QtBind.createButton(gui,'btnRemTrivia_clicked',"     Remove     ",720-75-6,105-4)
 lstTriviaData = QtBind.createList(gui,6,125,720-12,18*8-3)
 
@@ -146,6 +152,23 @@ def AddQuestionAnswer(question,answer):
 		UpdateTriviaData()
 		# Success message
 		log('Plugin: Trivia has been added ['+trivia_text+'] has been saved!')
+
+# Add trivia manually
+def btnAddTrivia_clicked():
+	# avoid empty data
+	question = QtBind.text(gui,tbxQuestion)
+	if not question:
+		return
+	answer = QtBind.text(gui,tbxAnswer)
+	if not answer:
+		return
+	# update it at first
+	UpdateTriviaData()
+	# try to add it
+	AddQuestionAnswer(question,answer)
+	# reset data
+	QtBind.setText(gui,tbxQuestion,'')
+	QtBind.setText(gui,tbxAnswer,'')
 
 # Remove trivia manually
 def btnRemTrivia_clicked():
