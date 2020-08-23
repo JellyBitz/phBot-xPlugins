@@ -6,7 +6,7 @@ import os
 import re
 
 pName = 'xTrivia'
-pVersion = '0.1.1'
+pVersion = '0.1.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTrivia.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -238,7 +238,7 @@ def ReplyQuestion(Question):
 	answer = FindAnswer(Question)
 	# Check answer
 	if answer == None:
-		log('Plugin: Trivia answer not found!')
+		log('Plugin: Trivia answer not found! ['+Question+']')
 		# Keep in memory the last question made and not answered
 		trivia_last_question = Question
 	else:
