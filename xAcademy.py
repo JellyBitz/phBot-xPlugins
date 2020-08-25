@@ -8,11 +8,12 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.0.5'
+pVersion = '1.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
 SEQUENCE_DEFAULT_NUMBER = 100 # If Custom Nickname is set like "Jelly", it will try to create "Jelly100","Jelly101", ...
+NOTIFICATION_SOUND_PATH = 'c:\\Windows\\Media\\chimes.wav'
 
 # ______________________________ Initializing ______________________________ #
 
@@ -27,8 +28,8 @@ cbxEnabled = QtBind.createCheckBox(gui,'cbxDoNothing','Enabled',6,10)
 lblProfileName = QtBind.createLabel(gui,"Config profile name :",345,10)
 tbxProfileName = QtBind.createLineEdit(gui,"",450,7,110,19)
 
-btnSaveConfig = QtBind.createButton(gui,'btnSaveConfig_clicked',"  Save  ",580,7)
-btnLoadConfig = QtBind.createButton(gui,'btnLoadConfig_clicked',"  Load  ",630,7)
+btnSaveConfig = QtBind.createButton(gui,'btnSaveConfig_clicked',"  Save  ",570,3)
+btnLoadConfig = QtBind.createButton(gui,'btnLoadConfig_clicked',"  Load  ",645,3)
 
 lblNickname = QtBind.createLabel(gui,"Custom Nickname :",6,35)
 tbxNickname = QtBind.createLineEdit(gui,"",100,32,102,19)
@@ -45,6 +46,10 @@ lblFullCharacters = QtBind.createLabel(gui,"The next action(s) will be executed 
 lblCMD = QtBind.createLabel(gui,"Run system command (CMD) :",15,120)
 tbxCMD = QtBind.createLineEdit(gui,"",163,117,235,19)
 cbxExit = QtBind.createCheckBox(gui,'cbxDoNothing','Close bot',15,140)
+cbxNotification_Full = QtBind.createCheckBox(gui,'cbxDoNothing','Show phBot Notification',15,160)
+cbxSound_Full = QtBind.createCheckBox(gui,'cbxDoNothing','Play sound.  Path : ',15,180)
+tbxSound_Full = QtBind.createLineEdit(gui,'',128,179,270,19)
+cbxLog_Full = QtBind.createCheckBox(gui,'cbxDoNothing','Log into a file',15,200)
 
 # ______________________________ Methods ______________________________ #
 
@@ -69,6 +74,11 @@ def loadDefaultConfig():
 	QtBind.setText(gui,cmbxRace,"CH")
 
 	QtBind.setText(gui,tbxCMD,"")
+	QtBind.setChecked(gui,cbxNotification_Full,False)
+	QtBind.setChecked(gui,cbxSound_Full,False)
+	QtBind.setText(gui,tbxSound_Full,NOTIFICATION_SOUND_PATH)
+	QtBind.setChecked(gui,cbxLog_Full,False)
+
 	QtBind.setChecked(gui,cbxExit,False)
 
 # Loads all config previously saved
@@ -96,6 +106,15 @@ def loadConfigs(fileName=""):
 
 		if "CMD" in data:
 			QtBind.setText(gui,tbxCMD,data["CMD"])
+		if "NotificationFull" in data and data['NotificationFull']:
+			QtBind.setChecked(gui,cbxNotification_Full,True)
+		if "SoundFull" in data and data['SoundFull']:
+			QtBind.setChecked(gui,cbxNotification_Full,True)
+		if "SoundFullPath" in data and data["SoundFullPath"]:
+			QtBind.setText(gui,tbxSound_Full,data["SoundFullPath"])
+		if "LogFull" in data and data['LogFull']:
+			QtBind.setChecked(gui,cbxLog_Full,True)
+
 		if "Exit" in data and data['Exit']:
 			QtBind.setChecked(gui,cbxExit,True)
 		
@@ -118,6 +137,10 @@ def saveConfigs(fileName=""):
 	data["Race"] = QtBind.text(gui,cmbxRace)
 
 	data["CMD"] = QtBind.text(gui,tbxCMD)
+	data["NotificationFull"] = QtBind.isChecked(gui,cbxNotification_Full)
+	data["SoundFull"] = QtBind.isChecked(gui,cbxSound_Full)
+	data["SoundFullPath"] = QtBind.text(gui,tbxSound_Full)
+	data["LogFull"] = QtBind.isChecked(gui,cbxLog_Full)
 	data["Exit"] = QtBind.isChecked(gui,cbxExit)
 	# Overrides
 	with open(getConfig(fileName),"w") as f:
@@ -395,7 +418,8 @@ def handle_joymax(opcode,data):
 							# Wait 10 seconds, then start looking for nicknames
 							Timer(10.0,create_nickname).start()
 						else:
-							log("Plugin: Not enough space to create a new character")
+							errMessage = "Plugin: Not enough space to create a new character!"
+							log(errMessage)
 
 							# Check actions
 							cmd = QtBind.text(gui,tbxCMD)
@@ -403,6 +427,30 @@ def handle_joymax(opcode,data):
 								log("Plugin: Trying to execute command ["+cmd+"]")
 								# Run in subprocess to avoid lock it
 								subprocess.Popen(cmd)
+
+							# Try to show notification
+							if QtBind.isChecked(gui,cbxNotification_Full):
+								show_notification(pName+' v'+pVersion,errMessage)
+
+							# Play sound
+							if QtBind.isChecked(gui,cbxSound_Full):
+								try:
+									# Check if path has been set somehow
+									path = QtBind.text(gui,tbxSound_Full)
+									play_wav(path if path else NOTIFICATION_SOUND_PATH)
+								except:
+									pass
+
+							# Log into the file
+							if QtBind.isChecked(gui,cbxLog_Full):
+								from datetime import datetime
+								logText = datetime.now().strftime('%m/%d/%Y - %H:%M:%S')+': '+errMessage
+								profileName = QtBind.text(gui,tbxProfileName)
+								logText += '\nProfile being used: '+ (profileName if profileName else 'None')
+								with open(getPath()+'_log.txt','a') as f:
+									f.write(logText)
+
+							# Exit from bot
 							if QtBind.isChecked(gui,cbxExit):
 								log("Plugin: Your bot will be closed at 5 seconds..")
 								Timer(5.0,CloseBot).start()
