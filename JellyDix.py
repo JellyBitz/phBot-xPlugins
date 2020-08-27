@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.4.0'
+pVersion = '2.4.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -969,10 +969,11 @@ def handle_joymax(opcode, data):
 # All picked up items are sent to this function (only vSRO working at the moment) 
 def notify_pickup(channel_id,itemID):
 	item = get_item(itemID)
-	# no filters
+	# Check filters
 	usefilterName = QtBind.isChecked(gui_,cbxEvtPick_name_filter)
 	usefilterServerName = QtBind.isChecked(gui_,cbxEvtPick_servername_filter)
 	if not usefilterName and not usefilterServerName:
+		# No filters activated
 		Notify(channel_id,"|`"+character_data['name']+"`| - **Item** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
 		return
 	# check filter name
@@ -980,7 +981,9 @@ def notify_pickup(channel_id,itemID):
 		searchName = QtBind.text(gui_,tbxEvtPick_name_filter)
 		if searchName:
 			try:
-				if not re.search(searchName,item['name']):
+				if re.search(searchName,item['name']):
+					# Filtered by Name
+					Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
 					return
 			except Exception as ex:
 				log("Plugin: Error at regex (name) ["+str(ex)+"]")
@@ -989,13 +992,12 @@ def notify_pickup(channel_id,itemID):
 		searchServername = QtBind.text(gui_,tbxEvtPick_servername_filter)
 		if searchServername:
 			try:
-				if not re.search(searchServername,item['servername']):
+				if re.search(searchServername,item['servername']):
+					# Filtered by server name
+					Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
 					return
 			except Exception as ex:
 				log("Plugin: Error at regex (servername) ["+str(ex)+"]")
-
-	# Filtered through both if checked
-	Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
 
 # Called every 500ms
 def event_loop():
