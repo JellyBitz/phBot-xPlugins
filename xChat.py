@@ -6,7 +6,7 @@ import json
 import os
 
 pName = 'xChat'
-pVersion = '1.1.0'
+pVersion = '1.2.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xChat.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -188,10 +188,23 @@ def cbxMsg_clicked(checked):
 	else:
 		log("Plugin: Stopping spam")
 
+# Fix array comma handled by bot
+def FixEscapeComma(_array):
+	_len = len(_array)
+	i = 0
+	while i < _len-1:
+		# Check if any argument ends with '\'
+		if _array[i].endswith('\\'):
+			_array[i] = _array[i]+','+_array[i+1]
+			del _array[i+1]
+			_len-=1
+		i+=1
+	return _array
 # ______________________________ Events ______________________________ #
 
 # Send message, even through script. Ex. "chat,All,Hello World!" or "chat,private,JellyBitz,Hi!"
 def chat(args):
+	args = FixEscapeComma(args)
 	# Avoid wrong structure and empty stuffs
 	if len(args) < 3 or not args[1] or not args[2]:
 		return
