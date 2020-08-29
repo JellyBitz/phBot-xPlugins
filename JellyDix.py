@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.4.1'
+pVersion = '2.4.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -757,7 +757,7 @@ def handle_chat(t,player,msg):
 def handle_event(t, data):
 	# Filter events
 	if t == 9:
-		Notify(QtBind.text(gui_,cmbxEvtNear_gm),"|`"+character_data['name']+"`| - GameMaster `"+data+"` is near to you!",CreateInfo("position",get_position()))
+		Notify(QtBind.text(gui_,cmbxEvtNear_gm),"|`"+character_data['name']+"`| - **GameMaster** `"+data+"` is near to you!",CreateInfo("position",get_position()))
 	elif t == 0:
 		Notify(QtBind.text(gui_,cmbxEvtNear_unique),"|`"+character_data['name']+"`| - **"+data+"** unique is near to you!",CreateInfo("position",get_position()))
 	elif t == 1:
@@ -770,7 +770,7 @@ def handle_event(t, data):
 		Notify(QtBind.text(gui_,cmbxEvtChar_died),"|`"+character_data['name']+"`| - You died",CreateInfo("position",get_position()))
 	elif t == 3:
 		pet = get_pets()[data]
-		Notify(QtBind.text(gui_,cmbxEvtPet_died),"|`"+character_data['name']+"`| - **"+(pet['type'].title())+"** pet died")
+		Notify(QtBind.text(gui_,cmbxEvtPet_died),"|`"+character_data['name']+"`| - Your pet `"+(pet['type'].title())+"` died")
 	elif t == 5:
 		channel_id = QtBind.text(gui_,cmbxEvtPick_rare)
 		if channel_id:
