@@ -8,7 +8,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.1.0'
+pVersion = '1.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -409,7 +409,7 @@ def handle_joymax(opcode,data):
 					# Check for deleting a character
 					if deleteCharacter:
 						log("Plugin: deleting character ["+deleteCharacter+"] (Lv."+str(deleteCharacterLevel)+")")
-						Timer(1.0,Inject_DeleteCharacter,(deleteCharacter,)).start()
+						Timer(2.5,Inject_DeleteCharacter,(deleteCharacter,)).start()
 					# Select or create character if is required
 					if not selectCharacter:
 						# Check the char limit
@@ -455,7 +455,7 @@ def handle_joymax(opcode,data):
 								log("Plugin: Your bot will be closed at 5 seconds..")
 								Timer(5.0,CloseBot).start()
 					else:
-						waitSelection = 1.0
+						waitSelection = 2.5
 						# Wait at least seconds after trying deleting a character
 						if deleteCharacter != "":
 							waitSelection += 5.0
