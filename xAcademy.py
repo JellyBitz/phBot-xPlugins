@@ -8,7 +8,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.1.1'
+pVersion = '1.2.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -278,6 +278,16 @@ def CloseBot():
 	log("Plugin: Closing bot...")
 	# Suicide :(
 	os.kill(os.getpid(),9)
+
+# This will execute another bot with the same command line arguments as this one
+def RestartBotWithCommandLine():
+	# Get the path and arguments from the current bot
+	cmd = ' '.join(get_command_line_args())
+	# Run on subprocess to avoid lock
+	subprocess.Popen(cmd)
+	# Start a timer to close this one
+	log("Plugin: Your bot will be closed at 5 seconds..")
+	Timer(5.0,CloseBot).start()
 
 # ______________________________ Events ______________________________ #
 
