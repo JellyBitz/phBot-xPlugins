@@ -8,7 +8,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.2.0'
+pVersion = '1.2.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -20,6 +20,7 @@ NOTIFICATION_SOUND_PATH = 'c:\\Windows\\Media\\chimes.wav'
 # Globals
 isCreatingCharacter = False
 CreatingNickname = ""
+isRestarted = False
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
@@ -281,6 +282,11 @@ def CloseBot():
 
 # This will execute another bot with the same command line arguments as this one
 def RestartBotWithCommandLine():
+	# Flag to indicate it can be executed only once
+	global isRestarted
+	if isRestarted:
+		return
+	isRestarted = True
 	# Get the path and arguments from the current bot
 	cmd = ' '.join(get_command_line_args())
 	# Run on subprocess to avoid lock
