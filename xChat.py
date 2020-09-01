@@ -6,7 +6,7 @@ import json
 import os
 
 pName = 'xChat'
-pVersion = '1.2.0'
+pVersion = '1.2.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xChat.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -192,13 +192,14 @@ def cbxMsg_clicked(checked):
 def FixEscapeComma(_array):
 	_len = len(_array)
 	i = 0
-	while i < _len-1:
+	while i < _len:
 		# Check if any argument ends with '\'
-		if _array[i].endswith('\\'):
-			_array[i] = _array[i]+','+_array[i+1]
+		if _array[i].endswith('\\') and i < (_len-1):
+			_array[i] = _array[i][:-1]+','+_array[i+1]
 			del _array[i+1]
 			_len-=1
-		i+=1
+		else:
+			i+=1
 	return _array
 # ______________________________ Events ______________________________ #
 
