@@ -5,7 +5,7 @@ import json
 import os
 
 pName = 'xMobSelector'
-pVersion = '1.0.0'
+pVersion = '1.0.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xMobSelector.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -209,6 +209,7 @@ def handle_joymax(opcode, data):
 			log('Plugin: Selected UID ['+str(selectedUID)+']')
 		else:
 			selectedUID = 0
+	return True
 
 # Called every 500ms.
 def event_loop():
