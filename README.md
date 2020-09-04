@@ -15,6 +15,7 @@
 - [xPluginUpdater](https://forum.projecthax.com/t/plugin-xpluginupdater/2065 "v1.1.0") : Keep your plugins up to date with one click!
 - [xTargetSupport](https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTargetSupport.py "v1.2.0") : Synchronize your team members to attack the same objective
 - [xTrivia](https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTrivia.py "v0.1.2") : Solve your trivia events as quickly as possible
+- [xMobSelector](https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTargetSupport.py "v1.0.0") : Select uniques/titans or whatever you need automatically!
 
 ---
 > **Do you like my plugins ?** 
