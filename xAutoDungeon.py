@@ -5,123 +5,133 @@ from time import sleep
 import json
 import os
 
-pVersion = '1.1.2'
+pVersion = '1.2.0'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
 # ______________________________ Initializing ______________________________ #
 
-# Globals
 DEFAULT_CHECK_DELAY = 1.0 # seconds
+
+# Globals
+character_data = None
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
 
-lblMobs = QtBind.createLabel(gui,'#   Add monster names to ignore    #\n#          from Monster Counter         #',31,3)
+lblMobs = QtBind.createLabel(gui,'#   Add monster names to ignore    #\n#          from Monster Counter         #',31,6)
 tbxMobs = QtBind.createLineEdit(gui,"",31,35,100,20)
-lstMobs = QtBind.createList(gui,31,56,176,205)
+lstMobs = QtBind.createList(gui,31,56,176,203)
+lstMobsData = []
 btnAddMob = QtBind.createButton(gui,'btnAddMob_clicked',"    Add    ",132,34)
 btnRemMob = QtBind.createButton(gui,'btnRemMob_clicked',"     Remove     ",80,258)
 
-lblMonsterCounter = QtBind.createLabel(gui,"#                 Monster Counter                 #",520,3)
+lblMonsterCounter = QtBind.createLabel(gui,"#                 Monster Counter                 #",520,6)
 lstMonsterCounter = QtBind.createList(gui,520,23,197,237)
 QtBind.append(gui,lstMonsterCounter,'Name (Type)') # Header
 
-lblPreferences = QtBind.createLabel(gui,"#    Monster Counter preferences (By priority)    #",240,3)
+lblPreferences = QtBind.createLabel(gui,"#             Monster Counter preferences            #",240,6)
 lstIgnore = []
 lstOnlyCount = []
 
-lblGeneral = QtBind.createLabel(gui,'General (0)',240,30)
-cbxIgnoreGeneral = QtBind.createCheckBox(gui,'cbxIgnoreGeneral_clicked','Ignore',345,30)
-cbxOnlyCountGeneral = QtBind.createCheckBox(gui,'cbxOnlyCountGeneral_clicked','Only Count',405,30)
+_y = 26
+lblGeneral = QtBind.createLabel(gui,'General (0)',240,_y)
+cbxIgnoreGeneral = QtBind.createCheckBox(gui,'cbxIgnoreGeneral_clicked','Ignore',345,_y)
+cbxOnlyCountGeneral = QtBind.createCheckBox(gui,'cbxOnlyCountGeneral_clicked','Only Count',405,_y)
+_y+=20
+lblChampion = QtBind.createLabel(gui,'Champion (1)',240,_y)
+cbxIgnoreChampion = QtBind.createCheckBox(gui,'cbxIgnoreChampion_clicked','Ignore',345,_y)
+cbxOnlyCountChampion = QtBind.createCheckBox(gui,'cbxOnlyCountChampion_clicked','Only Count',405,_y)
+_y+=20
+lblGiant = QtBind.createLabel(gui,'Giant (4)',240,_y)
+cbxIgnoreGiant = QtBind.createCheckBox(gui,'cbxIgnoreGiant_clicked','Ignore',345,_y)
+cbxOnlyCountGiant = QtBind.createCheckBox(gui,'cbxOnlyCountGiant_clicked','Only Count',405,_y)
+_y+=20
+lblTitan = QtBind.createLabel(gui,'Titan (5)',240,_y)
+cbxIgnoreTitan = QtBind.createCheckBox(gui,'cbxIgnoreTitan_clicked','Ignore',345,_y)
+cbxOnlyCountTitan = QtBind.createCheckBox(gui,'cbxOnlyCountTitan_clicked','Only Count',405,_y)
+_y+=20
+lblStrong = QtBind.createLabel(gui,'Strong (6)',240,_y)
+cbxIgnoreStrong = QtBind.createCheckBox(gui,'cbxIgnoreStrong_clicked','Ignore',345,_y)
+cbxOnlyCountStrong = QtBind.createCheckBox(gui,'cbxOnlyCountStrong_clicked','Only Count',405,_y)
+_y+=20
+lblElite = QtBind.createLabel(gui,'Elite (7)',240,_y)
+cbxIgnoreElite = QtBind.createCheckBox(gui,'cbxIgnoreElite_clicked','Ignore',345,_y)
+cbxOnlyCountElite = QtBind.createCheckBox(gui,'cbxOnlyCountElite_clicked','Only Count',405,_y)
+_y+=20
+lblUnique = QtBind.createLabel(gui,'Unique (8)',240,_y)
+cbxIgnoreUnique = QtBind.createCheckBox(gui,'cbxIgnoreUnique_clicked','Ignore',345,_y)
+cbxOnlyCountUnique = QtBind.createCheckBox(gui,'cbxOnlyCountUnique_clicked','Only Count',405,_y)
+_y+=20
+lblParty = QtBind.createLabel(gui,'Party (16)',240,_y)
+cbxIgnoreParty = QtBind.createCheckBox(gui,'cbxIgnoreParty_clicked','Ignore',345,_y)
+cbxOnlyCountParty = QtBind.createCheckBox(gui,'cbxOnlyCountParty_clicked','Only Count',405,_y)
+_y+=20
+lblChampionParty = QtBind.createLabel(gui,'ChampionParty (17)',240,_y)
+cbxIgnoreChampionParty = QtBind.createCheckBox(gui,'cbxIgnoreChampionParty_clicked','Ignore',345,_y)
+cbxOnlyCountChampionParty = QtBind.createCheckBox(gui,'cbxOnlyCountChampionParty_clicked','Only Count',405,_y)
+_y+=20
+lblGiantParty = QtBind.createLabel(gui,'GiantParty (20)',240,_y)
+cbxIgnoreGiantParty = QtBind.createCheckBox(gui,'cbxIgnoreGiantParty_clicked','Ignore',345,_y)
+cbxOnlyCountGiantParty = QtBind.createCheckBox(gui,'cbxOnlyCountGiantParty_clicked','Only Count',405,_y)
 
-lblChampion = QtBind.createLabel(gui,'Champion (1)',240,49)
-cbxIgnoreChampion = QtBind.createCheckBox(gui,'cbxIgnoreChampion_clicked','Ignore',345,49)
-cbxOnlyCountChampion = QtBind.createCheckBox(gui,'cbxOnlyCountChampion_clicked','Only Count',405,49)
-
-lblGiant = QtBind.createLabel(gui,'Giant (4)',240,68)
-cbxIgnoreGiant = QtBind.createCheckBox(gui,'cbxIgnoreGiant_clicked','Ignore',345,68)
-cbxOnlyCountGiant = QtBind.createCheckBox(gui,'cbxOnlyCountGiant_clicked','Only Count',405,68)
-
-lblTitan = QtBind.createLabel(gui,'Titan (5)',240,87)
-cbxIgnoreTitan = QtBind.createCheckBox(gui,'cbxIgnoreTitan_clicked','Ignore',345,87)
-cbxOnlyCountTitan = QtBind.createCheckBox(gui,'cbxOnlyCountTitan_clicked','Only Count',405,87)
-
-lblStrong = QtBind.createLabel(gui,'Strong (6)',240,106)
-cbxIgnoreStrong = QtBind.createCheckBox(gui,'cbxIgnoreStrong_clicked','Ignore',345,106)
-cbxOnlyCountStrong = QtBind.createCheckBox(gui,'cbxOnlyCountStrong_clicked','Only Count',405,106)
-
-lblElite = QtBind.createLabel(gui,'Elite (7)',240,125)
-cbxIgnoreElite = QtBind.createCheckBox(gui,'cbxIgnoreElite_clicked','Ignore',345,125)
-cbxOnlyCountElite = QtBind.createCheckBox(gui,'cbxOnlyCountElite_clicked','Only Count',405,125)
-
-lblUnique = QtBind.createLabel(gui,'Unique (8)',240,144)
-cbxIgnoreUnique = QtBind.createCheckBox(gui,'cbxIgnoreUnique_clicked','Ignore',345,144)
-cbxOnlyCountUnique = QtBind.createCheckBox(gui,'cbxOnlyCountUnique_clicked','Only Count',405,144)
-
-lblParty = QtBind.createLabel(gui,'Party (16)',240,163)
-cbxIgnoreParty = QtBind.createCheckBox(gui,'cbxIgnoreParty_clicked','Ignore',345,163)
-cbxOnlyCountParty = QtBind.createCheckBox(gui,'cbxOnlyCountParty_clicked','Only Count',405,163)
-
-lblChampionParty = QtBind.createLabel(gui,'ChampionParty (17)',240,182)
-cbxIgnoreChampionParty = QtBind.createCheckBox(gui,'cbxIgnoreChampionParty_clicked','Ignore',345,182)
-cbxOnlyCountChampionParty = QtBind.createCheckBox(gui,'cbxOnlyCountChampionParty_clicked','Only Count',405,182)
-
-lblGiantParty = QtBind.createLabel(gui,'GiantParty (20)',240,201)
-cbxIgnoreGiantParty = QtBind.createCheckBox(gui,'cbxIgnoreGiantParty_clicked','Ignore',345,201)
-cbxOnlyCountGiantParty = QtBind.createCheckBox(gui,'cbxOnlyCountGiantParty_clicked','Only Count',405,201)
+_y+=30
+cbxAcceptForgottenWorld = QtBind.createCheckBox(gui,'cbxAcceptForgottenWorld_checked','Accept Forgotten World invitations',240,_y)
 
 # ______________________________ Methods ______________________________ #
 
 def cbxIgnoreGeneral_clicked(checked):
-	Checkbox_Checked(checked,"lstIgnore",'0') # 0 = General
+	Checkbox_Checked(checked,"lstIgnore",0) # 0 = General
 def cbxOnlyCountGeneral_clicked(checked):
-	Checkbox_Checked(checked,"lstOnlyCount",'0')
+	Checkbox_Checked(checked,"lstOnlyCount",0)
 
 def cbxIgnoreChampion_clicked(checked):
-	Checkbox_Checked(checked,"lstIgnore",'1') # 1 = Champion
+	Checkbox_Checked(checked,"lstIgnore",1) # 1 = Champion
 def cbxOnlyCountChampion_clicked(checked):
-	Checkbox_Checked(checked,"lstOnlyCount",'1')
+	Checkbox_Checked(checked,"lstOnlyCount",1)
 
 def cbxIgnoreGiant_clicked(checked):
-	Checkbox_Checked(checked,"lstIgnore",'4') # 4 = Giant
+	Checkbox_Checked(checked,"lstIgnore",4) # 4 = Giant
 def cbxOnlyCountGiant_clicked(checked):
-	Checkbox_Checked(checked,"lstOnlyCount",'4')
+	Checkbox_Checked(checked,"lstOnlyCount",4)
 
 def cbxIgnoreTitan_clicked(checked):
-	Checkbox_Checked(checked,"lstIgnore",'5') # 5 = Titan
+	Checkbox_Checked(checked,"lstIgnore",5) # 5 = Titan
 def cbxOnlyCountTitan_clicked(checked):
-	Checkbox_Checked(checked,"lstOnlyCount",'5')
+	Checkbox_Checked(checked,"lstOnlyCount",5)
 
 def cbxIgnoreStrong_clicked(checked):
-	Checkbox_Checked(checked,"lstIgnore",'6') # 6 = Strong
+	Checkbox_Checked(checked,"lstIgnore",6) # 6 = Strong
 def cbxOnlyCountStrong_clicked(checked):
-	Checkbox_Checked(checked,"lstOnlyCount",'6')
+	Checkbox_Checked(checked,"lstOnlyCount",6)
 
 def cbxIgnoreElite_clicked(checked):
-	Checkbox_Checked(checked,"lstIgnore",'7') # 7 = Elite
+	Checkbox_Checked(checked,"lstIgnore",7) # 7 = Elite
 def cbxOnlyCountElite_clicked(checked):
-	Checkbox_Checked(checked,"lstOnlyCount",'7')
+	Checkbox_Checked(checked,"lstOnlyCount",7)
 
 def cbxIgnoreUnique_clicked(checked):
-	Checkbox_Checked(checked,"lstIgnore",'8') # 8 = Unique
+	Checkbox_Checked(checked,"lstIgnore",8) # 8 = Unique
 def cbxOnlyCountUnique_clicked(checked):
-	Checkbox_Checked(checked,"lstOnlyCount",'8')
+	Checkbox_Checked(checked,"lstOnlyCount",8)
 
 def cbxIgnoreParty_clicked(checked):
-	Checkbox_Checked(checked,"lstIgnore",'16') # 16 = Party
+	Checkbox_Checked(checked,"lstIgnore",16) # 16 = Party
 def cbxOnlyCountParty_clicked(checked):
-	Checkbox_Checked(checked,"lstOnlyCount",'16')
+	Checkbox_Checked(checked,"lstOnlyCount",16)
 
 def cbxIgnoreChampionParty_clicked(checked):
-	Checkbox_Checked(checked,"lstIgnore",'17') # 17 = ChampionParty
+	Checkbox_Checked(checked,"lstIgnore",17) # 17 = ChampionParty
 def cbxOnlyCountChampionParty_clicked(checked):
-	Checkbox_Checked(checked,"lstOnlyCount",'17')
+	Checkbox_Checked(checked,"lstOnlyCount",17)
 
 def cbxIgnoreGiantParty_clicked(checked):
-	Checkbox_Checked(checked,"lstIgnore",'20') # 20 = GiantParty
+	Checkbox_Checked(checked,"lstIgnore",20) # 20 = GiantParty
 def cbxOnlyCountGiantParty_clicked(checked):
-	Checkbox_Checked(checked,"lstOnlyCount",'20')
+	Checkbox_Checked(checked,"lstOnlyCount",20)
+
+def cbxAcceptForgottenWorld_checked(checked):
+	saveConfigs()
 
 # Generalizing checkbox methods
 def Checkbox_Checked(checked,gListName,mobType):
@@ -130,7 +140,7 @@ def Checkbox_Checked(checked,gListName,mobType):
 		gListReference.append(mobType)
 	else:
 		gListReference.remove(mobType)
-	saveConfig(gListName,gListReference)
+	saveConfigs()
 
 # Return folder path
 def getPath():
@@ -138,106 +148,170 @@ def getPath():
 
 # Return character configs path (JSON)
 def getConfig():
-	return getPath()+pName+".json"
+	return getPath()+character_data['server'] + "_" + character_data['name'] + ".json"
+
+# Load default configs
+def loadDefaultConfig():
+	# Clear data
+	global lstMobsData,lstIgnore,lstOnlyCount
+
+	lstMobsData = []
+	QtBind.clear(gui,lstMobs)
+
+	lstIgnore = []
+	QtBind.setChecked(gui,cbxIgnoreGeneral,False)
+	QtBind.setChecked(gui,cbxIgnoreChampion,False)
+	QtBind.setChecked(gui,cbxIgnoreGiant,False)
+	QtBind.setChecked(gui,cbxIgnoreTitan,False)
+	QtBind.setChecked(gui,cbxIgnoreStrong,False)
+	QtBind.setChecked(gui,cbxIgnoreElite,False)
+	QtBind.setChecked(gui,cbxIgnoreUnique,False)
+	QtBind.setChecked(gui,cbxIgnoreParty,False)
+	QtBind.setChecked(gui,cbxIgnoreChampionParty,False)
+	QtBind.setChecked(gui,cbxIgnoreGiantParty,False)
+
+	lstOnlyCount = []
+	QtBind.setChecked(gui,cbxOnlyCountGeneral,False)
+	QtBind.setChecked(gui,cbxOnlyCountChampion,False)
+	QtBind.setChecked(gui,cbxOnlyCountGiant,False)
+	QtBind.setChecked(gui,cbxOnlyCountTitan,False)
+	QtBind.setChecked(gui,cbxOnlyCountStrong,False)
+	QtBind.setChecked(gui,cbxOnlyCountElite,False)
+	QtBind.setChecked(gui,cbxOnlyCountUnique,False)
+	QtBind.setChecked(gui,cbxOnlyCountParty,False)
+	QtBind.setChecked(gui,cbxOnlyCountChampionParty,False)
+	QtBind.setChecked(gui,cbxOnlyCountGiantParty,False)
+
+	QtBind.setChecked(gui,cbxAcceptForgottenWorld,False)
 
 # Load config if exists
 def loadConfigs():
-	if os.path.exists(getConfig()):
+	loadDefaultConfig()
+	if isJoined() and os.path.exists(getConfig()):
 		data = {}
 		with open(getConfig(),"r") as f:
 			data = json.load(f)
 		# Check to load config
-		if "lstMobs" in data:
-			for d in data["lstMobs"]:
-				QtBind.append(gui,lstMobs,d)
-		if "lstIgnore" in data:
+		if "Ignore Names" in data:
+			global lstMobsData
+			lstMobsData = data["Ignore Names"]
+			# Load names visually
+			for name in lstMobsData:
+				QtBind.append(gui,lstMobs,name)
+		
+		if "Ignore Types" in data:
 			global lstIgnore
-			lstIgnore = data["lstIgnore"]
-			for i in range(len(lstIgnore)):
-				if lstIgnore[i] == '8':
+			for t in data["Ignore Types"]:
+				if t == 8:
 					QtBind.setChecked(gui,cbxIgnoreUnique,True)
-				elif lstIgnore[i] == '7':
+				elif t == 7:
 					QtBind.setChecked(gui,cbxIgnoreElite,True)
-				elif lstIgnore[i] == '6':
+				elif t == 6:
 					QtBind.setChecked(gui,cbxIgnoreStrong,True)
-				elif lstIgnore[i] == '5':
+				elif t == 5:
 					QtBind.setChecked(gui,cbxIgnoreTitan,True)
-				elif lstIgnore[i] == '4':
+				elif t == 4:
 					QtBind.setChecked(gui,cbxIgnoreGiant,True)
-				elif lstIgnore[i] == '1':
+				elif t == 1:
 					QtBind.setChecked(gui,cbxIgnoreChampion,True)
-				elif lstIgnore[i] == '0':
+				elif t == 0:
 					QtBind.setChecked(gui,cbxIgnoreGeneral,True)
-				elif lstIgnore[i] == '16':
+				elif t == 16:
 					QtBind.setChecked(gui,cbxIgnoreParty,True)
-				elif lstIgnore[i] == '17':
+				elif t == 17:
 					QtBind.setChecked(gui,cbxIgnoreChampionParty,True)
-				elif lstIgnore[i] == '20':
+				elif t == 20:
 					QtBind.setChecked(gui,cbxIgnoreGiantParty,True)
-		if "lstOnlyCount" in data:
-			global lstOnlyCount
-			lstOnlyCount = data["lstOnlyCount"]
-			for i in range(len(lstOnlyCount)):
-				if lstOnlyCount[i] == '8':
-					QtBind.setChecked(gui,cbxOnlyCountUnique,True)
-				elif lstOnlyCount[i] == '7':
-					QtBind.setChecked(gui,cbxOnlyCountElite,True)
-				elif lstOnlyCount[i] == '6':
-					QtBind.setChecked(gui,cbxOnlyCountStrong,True)
-				elif lstOnlyCount[i] == '5':
-					QtBind.setChecked(gui,cbxOnlyCountTitan,True)
-				elif lstOnlyCount[i] == '4':
-					QtBind.setChecked(gui,cbxOnlyCountGiant,True)
-				elif lstOnlyCount[i] == '1':
-					QtBind.setChecked(gui,cbxOnlyCountChampion,True)
-				elif lstOnlyCount[i] == '0':
-					QtBind.setChecked(gui,cbxOnlyCountGeneral,True)
-				elif lstOnlyCount[i] == '16':
-					QtBind.setChecked(gui,cbxOnlyCountParty,True)
-				elif lstOnlyCount[i] == '17':
-					QtBind.setChecked(gui,cbxOnlyCountChampionParty,True)
-				elif lstOnlyCount[i] == '20':
-					QtBind.setChecked(gui,cbxOnlyCountGiantParty,True)
+				else:
+					# skip it if is not filtered
+					continue
+				lstIgnore.append(t)
 
-# Save specific value at config
-def saveConfig(key,value):
-	if key:
+		if "OnlyCount Types" in data:
+			global lstOnlyCount
+			for t in data["OnlyCount Types"]:
+				if t == 8:
+					QtBind.setChecked(gui,cbxOnlyCountUnique,True)
+				elif t == 7:
+					QtBind.setChecked(gui,cbxOnlyCountElite,True)
+				elif t == 6:
+					QtBind.setChecked(gui,cbxOnlyCountStrong,True)
+				elif t == 5:
+					QtBind.setChecked(gui,cbxOnlyCountTitan,True)
+				elif t == 4:
+					QtBind.setChecked(gui,cbxOnlyCountGiant,True)
+				elif t == 1:
+					QtBind.setChecked(gui,cbxOnlyCountChampion,True)
+				elif t == 0:
+					QtBind.setChecked(gui,cbxOnlyCountGeneral,True)
+				elif t == 16:
+					QtBind.setChecked(gui,cbxOnlyCountParty,True)
+				elif t == 17:
+					QtBind.setChecked(gui,cbxOnlyCountChampionParty,True)
+				elif t == 20:
+					QtBind.setChecked(gui,cbxOnlyCountGiantParty,True)
+				else:
+					# skip it if is not filtered
+					continue
+				lstOnlyCount.append(t)
+
+		if 'Accept ForgottenWorld' in data and data['Accept ForgottenWorld']:
+			QtBind.setChecked(gui,cbxAcceptForgottenWorld,True)
+
+# Save all config
+def saveConfigs():
+	# Save if data has been loaded
+	if isJoined():
+		# Save all data
 		data = {}
-		# Load keys
-		if os.path.exists(getConfig()):
-			# Avoid empty/wrong data
-			try:
-				with open(getConfig(),"r") as f:
-					data = json.load(f)
-			except:
-				pass
-		# Save key
-		data[key] = value
-		# Overwrite
+
+		data['OnlyCount Types'] = lstOnlyCount
+		data['Ignore Types'] = lstIgnore
+		data['Ignore Names'] = lstMobsData
+		data['Accept ForgottenWorld'] = QtBind.isChecked(gui,cbxAcceptForgottenWorld)
+
+		# Overrides
 		with open(getConfig(),"w") as f:
 			f.write(json.dumps(data, indent=4, sort_keys=True))
 
+# Check if character is ingame
+def isJoined():
+	global character_data
+	character_data = get_character_data()
+	if not (character_data and "name" in character_data and character_data["name"]):
+		character_data = None
+	return character_data
+
 # Add mob to the list
 def btnAddMob_clicked():
+	global lstMobsData
+	# Check name
 	text = QtBind.text(gui,tbxMobs)
-	if text and not QtBind_ItemsContains(text,lstMobs):
+	if text and not ListContains(text,lstMobsData):
+		lstMobsData.append(text)
+		# Add visually
 		QtBind.append(gui,lstMobs,text)
 		QtBind.setText(gui,tbxMobs,"")
-		saveConfig("lstMobs",QtBind.getItems(gui,lstMobs))
+		saveConfigs()
 		log('Plugin: Monster added ['+text+']')
 
 # Add mob to the list
 def btnRemMob_clicked():
+	global lstMobsData
+	# Check selected
 	selected = QtBind.text(gui,lstMobs)
-	if selected and QtBind_ItemsContains(selected,lstMobs):
+	if selected:
+		lstMobsData.remove(selected)
+		# Remove visually
 		QtBind.remove(gui,lstMobs,selected)
-		saveConfig("lstMobs",QtBind.getItems(gui,lstMobs))
+		saveConfigs()
 		log('Plugin: Monster removed ['+selected+']')
 
 # Return True if text exist at the list
 def ListContains(text,lst):
+	text = text.lower()
 	for i in range(len(lst)):
-		if lst[i].lower() == text.lower():
+		if lst[i].lower() == text:
 			return True
 	return False
 
@@ -295,15 +369,15 @@ def getMobCount(radius):
 	if monsters:
 		for key, mob in monsters.items():
 			# Ignore if this mob type is found
-			if ListContains(str(mob['type']),lstIgnore):
+			if mob['type'] in lstIgnore:
 				continue
 			# Only count setup
 			if len(lstOnlyCount) > 0:
 				# If is not in only count, skip it
-				if not ListContains(str(mob['type']),lstOnlyCount):
+				if not mob['type'] in lstOnlyCount:
 					continue
 			# Ignore mob names
-			elif QtBind_ItemsContains(mob['name'],lstMobs):
+			elif ListContains(mob['name'],lstMobsData):
 				continue
 			# Checking radius
 			if radius != None:
@@ -350,6 +424,24 @@ def AttackArea(args):
 	else:
 		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
 	return 0
+
+# Called when the character enters the game world
+def joined_game():
+	loadConfigs()
+
+# All packets received from game server will be passed to this function
+# Returning True will keep the packet and False will not forward it to the game client
+def handle_joymax(opcode, data):
+	# SERVER_DIMENSIONAL_INVITATION_REQUEST
+	if opcode == 0x751A:
+		if QtBind.isChecked(gui,cbxAcceptForgottenWorld):
+			# Create packet response
+			packet = data[:4] # Request ID
+			packet += b'\x00\x00\x00\x00' # unknown ID
+			packet += b'\x01' # Accept flag
+			inject_joymax(0x751C,packet,False)
+			log('Plugin: Forgotten World invitation accepted!')
+	return True
 
 # Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' succesfully loaded')
