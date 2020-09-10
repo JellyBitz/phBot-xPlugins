@@ -3,9 +3,10 @@ import QtBind
 from threading import Timer
 from time import sleep
 import json
+import struct
 import os
 
-pVersion = '1.2.0'
+pVersion = '1.3.0'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -15,6 +16,7 @@ DEFAULT_CHECK_DELAY = 1.0 # seconds
 
 # Globals
 character_data = None
+usingDimensionalItem = None
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
@@ -324,13 +326,11 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 	count = getMobCount(radius)
 	if count > 0:
 		# Start to kill mobs using bot
-		if isAttacking:
-			log("Plugin: Killing ("+str(count)+") mobs at this area...")
-		else:
+		if not isAttacking:
 			start_bot()
 			log("Plugin: Starting to kill ("+str(count)+") mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
 		# Check if there is not mobs to continue script
-		Timer(wait,AttackMobs,(wait,True,x,y,z,radius)).start()
+		Timer(wait,AttackMobs,[wait,True,x,y,z,radius]).start()
 	else:
 		log("Plugin: All mobs killed!")
 		# Check pickable drops and max attempts
@@ -350,11 +350,11 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 		stop_bot()
 		# Setting training area far away. The bot should continue where he was at the script
 		set_training_position(0,0,0)
-		# Move back to the starting point
-		move_to(x,y,z)
-		log("Plugin: Getting back to the script...")
+		# Wait for bot to calm down and move back to the starting point
+		Timer(1.5,move_to,[x,y,z]).start()
+		Timer(1.5,log,["Plugin: Getting back to the script..."]).start()
 		# give it some time to reach the movement
-		Timer(2.5,start_bot).start()
+		Timer(4.0,start_bot).start()
 
 # Count all mobs around your character (60 or more it's the max. range I think)
 def getMobCount(radius):
@@ -392,6 +392,64 @@ def getMobCount(radius):
 def GetDistance(ax,ay,bx,by):
 	return ((bx-ax)**2 + (by-ay)**2)**(0.5)
 
+
+# Returns the item information if is found
+def GetDimensionalHole(Name):
+	searchByName = Name != ''
+	# Search the dimensional hole through items
+	items = get_inventory()['items']
+	for slot, item in enumerate(items):
+		if item:
+			# Check if match the current item
+			match = False
+			if searchByName:
+				match = (Name == item['name'])
+			else:
+				itemData = get_item(item['model'])
+				match = (itemData['tid1'] == 3 and itemData['tid2'] == 12 and itemData['tid3'] == 7)
+
+
+			if match:
+				item['slot'] = slot
+				return item
+	return None
+
+# Returns the dimensional talking object if is found near
+def GetDimensionalPillarUID(Name):
+	# Load all talking objects around
+	npcs = get_npcs()
+	if npcs:
+		for uid, npc in npcs.items():
+			# Try to check object model (Casually the dimensional match with the item model) 
+			item = get_item(npc['model'])
+			# Check if data is valid and the exact name
+			if item and item['name'] == Name:
+				return uid
+	return 0
+	
+
+# Select and enter to the dimensional hole specified
+def EnterToDimensional(Name):
+	# Check unique id from dimensional pillar around
+	uid = GetDimensionalPillarUID(Name)
+	if uid:
+		# Select dimensional
+		log('Plugin: Selecting dimensional hole...')
+		packet = struct.pack('I',uid)
+		inject_joymax(0x7045,packet,False)
+		sleep(1.0)
+		# Enter and select the option
+		log('Plugin: Entering to dimensional hole...')
+		inject_joymax(0x704B,packet,False)
+		packet += struct.pack('H',3)
+		inject_joymax(0x705A,packet,False)
+		# Start bot, doesn't matter if is teleporting
+		Timer(5.0,start_bot).start()
+		return
+
+	# Error message
+	log('Plugin: "'+Name+'" cannot be found around you!')
+
 # ______________________________ Events ______________________________ #
 
 # Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5" or "AttackArea,5,75"
@@ -419,10 +477,35 @@ def AttackArea(args):
 		if len(args) >= 3 and float(args[2]) > 0:
 			wait = float(args[2])
 		# start to kill mobs on other thread because interpreter lock
-		Timer(0.1,AttackMobs,(wait,False,p['x'],p['y'],p['z'],radius)).start()
+		Timer(0.01,AttackMobs,[wait,False,p['x'],p['y'],p['z'],radius]).start()
 	# otherwise continue normally
 	else:
 		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
+	return 0
+
+# Use, select and enter to the dimensional forgotten world. 
+# Ex: "GoDimensional" or "GoDimensional,Dimension Hole (Flame Mountain-3 stars)"
+def GoDimensional(args):
+	# Stop bot while doing the whole process
+	stop_bot()
+	# Check if the name has been set
+	name = ''
+	if len(args) > 1:
+		name = args[1]
+	# Check if the item exists
+	item = GetDimensionalHole(name)
+	if item:
+		# Start checking for item usage
+		global usingDimensionalItem
+		usingDimensionalItem = item
+		# Inject item usage
+		log('Plugin: Using "'+item['name']+'"...')
+		p = struct.pack('B',item['slot'])
+		p += struct.pack('H',15980) # Usage type
+		inject_joymax(0x704C,p,True)
+	else:
+		# Error message
+		log('Plugin: '+( '"'+Name+'"' if searchByName else 'Dimensional Hole')+' cannot be found at your inventory')
 	return 0
 
 # Called when the character enters the game world
@@ -441,6 +524,19 @@ def handle_joymax(opcode, data):
 			packet += b'\x01' # Accept flag
 			inject_joymax(0x751C,packet,False)
 			log('Plugin: Forgotten World invitation accepted!')
+	# SERVER_INVENTORY_ITEM_USE
+	elif opcode == 0xB04C:
+		# Check if plugin used recently an item
+		global usingDimensionalItem
+		if usingDimensionalItem:
+			# Success
+			if data[0] == 1:
+				log('Plugin: "'+usingDimensionalItem['name']+'" has been opened')
+				# Avoid locking the proxy thread
+				Timer(0.01,EnterToDimensional,[usingDimensionalItem['name']]).start()
+			else:
+				log('Plugin: "'+usingDimensionalItem['name']+'" cannot be opened')
+			usingDimensionalItem = None
 	return True
 
 # Plugin loaded
