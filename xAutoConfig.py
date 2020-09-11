@@ -3,22 +3,26 @@ from threading import Timer
 import shutil
 import time
 import os
+import re
 
 pName = 'xAutoConfig'
-pVersion = '1.0.1'
+pVersion = '1.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoConfig.py'
 
 # ______________________________ Initializing ______________________________ #
 
-DEFAULT_JSON_FILENAME = "Default.json"
-DEFAULT_DATABASE_FILENAME = "Default.db3"
-
+# Maximum time taken for filter database to be created
+DATABASE_LOADING_TIME = 90.0
 # ______________________________ Methods ______________________________ #
 
-# Return character configs path (JSON)
-def getConfigPath():
+# Return character config filename (JSON)
+def getConfigFilename():
 	data = get_character_data()
-	return get_config_dir()+data['server']+"_"+data['name']+".json"
+	return data['server']+"_"+data['name']
+
+# Returns a list of files existence by using regex
+def FindFiles(pattern,dir=''):
+	return [x for x in os.listdir(dir) if re.search(pattern,x)]
 
 # Copy or replace a file while print an user message
 def ReplaceFile(newPath,oldPath,message):
@@ -29,31 +33,36 @@ def ReplaceFile(newPath,oldPath,message):
 
 # Called when the user successfully selects a character. No character data has been loaded yet.
 def joined_game():
-	# JSON config check
-	configFile = getConfigPath()
-	if not os.path.exists(configFile):
-		# JSON default configs path
-		defaultConfig = get_config_dir()+DEFAULT_JSON_FILENAME
-		if os.path.exists(defaultConfig):
-			ReplaceFile(defaultConfig,configFile,"Plugin: Default JSON loaded")
-	# Db3 config check
-	configFile = getConfigPath().replace(".json",".db3")
-	if os.path.exists(configFile):
-			# db3 default filter path
-		defaultConfig = get_config_dir()+DEFAULT_DATABASE_FILENAME
-		if os.path.exists(defaultConfig):
-			# Check modification time at seconds
-			lastModification = time.time() - os.path.getmtime(configFile)
-			# Replace filter if was created or edited a few seconds ago
-			if lastModification < 2:
-				log("Plugin: Filter was probably created a few seconds ago")
-				log("Plugin: Filter by default will be loaded in 10 seconds..")
-				Timer(10.0,ReplaceFile,(defaultConfig,configFile,"Plugin: Default Filter loaded")).start()
+	# get for basic check
+	configDir = get_config_dir()
+	configFilename = getConfigFilename()
+
+	# Check config (JSON) existence
+	if not os.path.exists(configDir+configFilename+".json"):
+		# Find JSON default configs and profile paths
+		defaultConfigs = FindFiles(r'[Dd]efault\.json|[Dd]efault\.[\s\S]*\.json',configDir)
+		for cfg in defaultConfigs:
+			# Create character config/profile
+			ReplaceFile(configDir+cfg,configDir+configFilename+cfg[7:],'Plugin: "'+str(cfg)+'" loaded')
+
+	# Check Default filter existence
+	defaultFilter = FindFiles(r'[Dd]efault\.db3',configDir)
+	if not defaultFilter:
+		return
+	defaultFilter = configDir+defaultFilter[0]
+	configFilter = configDir+configFilename+".db3"
+
+	# Check Filter (db3) existence
+	if os.path.exists(configFilter):
+		# Check last modification time (seconds)
+		lastModification = time.time() - os.path.getmtime(configFilter)
+		# Replace filter if was created/edited a second ago
+		if lastModification <= 2:
+			log("Plugin: Filter created few seconds ago! Default filter will be loaded in "+str(DATABASE_LOADING_TIME)+" seconds...")
+			Timer(DATABASE_LOADING_TIME,ReplaceFile,[defaultFilter,configFilter,"Plugin: Default filter loaded"]).start()
 	else:
-		defaultConfig = get_config_dir()+DEFAULT_DATABASE_FILENAME
-		if os.path.exists(defaultConfig):
-			log("Plugin: Filter not found. Default will be loaded in 10 seconds..")
-			Timer(10.0,ReplaceFile,(defaultConfig,configFile,"Plugin: Default Filter loaded")).start()
+		log("Plugin: Filter not found. Default filter will be loaded in "+str(DATABASE_LOADING_TIME)+" seconds...")
+		Timer(DATABASE_LOADING_TIME,ReplaceFile,[defaultFilter,configFilter,"Plugin: Default filter loaded"]).start()
 
 # Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
