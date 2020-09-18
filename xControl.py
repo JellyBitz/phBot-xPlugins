@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.3.1'
+pVersion = '1.4.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -286,31 +286,7 @@ def GetNPCUniqueID(name):
 			if name == NPCName:
 				return UniqueID
 	return 0
-
 # ______________________________ Events ______________________________ #
-
-# Inject Packet, even through Script. All his data is separated by comma, encrypted will be false if it's not specified.
-# Example 1: "inject,Opcode,ItsEncrypted?,Data?,Data?,Data?,..."
-# Example 2: "inject,3091,False,0" or "inject,3091,0" (means greet action)
-def inject(args):
-	if len(args) >= 2:
-		opcode = int(args[1],16)
-		encrypted = False
-		dataPos = 2
-		if args[2].lower() == "true" or args[2].lower() == "false":
-			encrypted = True if args[2].lower() == "true" else False
-			dataPos += 1
-		Packet = bytearray()		
-		for i in range(dataPos, len(args)):
-			Packet.append(int(args[i],16))
-		inject_joymax(opcode,Packet,encrypted)
-		# Show only if is scripting
-		if args[0]:
-			log("Plugin: Injecting packet")
-			log("[Opcode:"+args[1]+"][Data:"+' '.join('{:02X}'.format(int(args[x],16)) for x in range(dataPos, len(args)))+"][Encrypted:"+("Yes" if encrypted else "No")+"]")
-	else:
-		log("Plugin: Incorrect structure to inject packet")
-	return 0
 
 # Called when the bot successfully connects to the game server
 def connected():
@@ -452,8 +428,28 @@ def handle_chat(t,player,msg):
 			# needs to be at least two name points to try teleporting
 			if len(source_dest) >= 2:
 				inject_teleport(source_dest[0].strip(),source_dest[1].strip())
-		elif msg.startswith("INJECT"):
-			inject(msg.split())
+		elif msg.startswith("INJECT "):
+			msgPacket = msg[7:].split()
+			msgPacketLen = len(msgPacket)
+			if msgPacketLen == 0:
+				log("Plugin: Incorrect structure to inject packet")
+				return
+			# Check packet structure
+			opcode = int(msgPacket[0],16)
+			data = bytearray()
+			encrypted = False
+			dataIndex = 1
+			if msgPacketLen >= 2:
+				enc = msgPacket[1].lower()
+				if enc == 'true' or enc == 'false':
+					encrypted = enc == "true"
+					dataIndex +=1
+			# Create packet data and inject it
+			for i in range(dataIndex, msgPacketLen):
+				data.append(int(msgPacket[i],16))
+			inject_joymax(opcode,data,encrypted)
+			# Log the info
+			log("Plugin: Injecting packet...\nOpcode: 0x"+'{:02X}'.format(opcode)+" - Encrypted: "+("Yes" if encrypted else "No")+"\nData: "+(' '.join('{:02X}'.format(int(msgPacket[x],16)) for x in range(dataIndex, msgPacketLen)) if len(data) else 'None'))
 		elif msg.startswith("CHAT "):
 			handleChatCommand(msg[5:])
 		elif msg.startswith("MOVEON"):

@@ -4,68 +4,132 @@ import json
 import os
 
 pName = 'xPackeTool'
-pVersion = '1.0.0'
+pVersion = '1.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPackeTool.py'
 
 # ______________________________ Initializing ______________________________ #
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
-lblInject = QtBind.createLabel(gui,'Inject Packets to Client/Server through bot, or just to parse what you need.',21,15)
+lblInject = QtBind.createLabel(gui,'Inject Packets to Client/Server through bot, or analyze the packets you need.',6,10)
 
-cbxSro = QtBind.createCheckBox(gui, 'cbxSro_clicked','Show Client packets [C->S]',395,13)
-cbxSro_checked = False
-cbxJmx = QtBind.createCheckBox(gui, 'cbxJmx_clicked','Show Server packets [S->C]',560,13)
-cbxJmx_checked = False
+# Injection
+_x=6
+_y=50
+lblOpcode = QtBind.createLabel(gui,'Opcode:',_x,_y)
+txtOpcode = QtBind.createLineEdit(gui,"",_x+45,_y-3,32,20)
+lblData = QtBind.createLabel(gui,'Data:',_x+45+32+6,_y)
+txtData = QtBind.createLineEdit(gui,"",_x+45+32+6+32,_y-3,385,20)
+cbxEncrypted = QtBind.createCheckBox(gui, 'cbxEnc_clicked','Encrypted',_x+432,_y-20)
+_y+=25
+btnInjectClient = QtBind.createButton(gui,'btnInjectClient_clicked',"  Inject To Client  ",_x+308,_y)
+btnInjectServer = QtBind.createButton(gui,'btnInjectServer_clicked',"  Inject To Server  ",_x+404,_y)
 
-lblUsing = QtBind.createLabel(gui,'Opcode:\t              Data:',41,47)
-txtOpcode = QtBind.createLineEdit(gui,"",85,45,40,20)
-txtData = QtBind.createLineEdit(gui,"",163,45,450,20)
-cbxEncrypted = QtBind.createCheckBox(gui, 'cbxEnc_clicked','Encrypted',620,47)
-btnInjectPacket = QtBind.createButton(gui,'btnInjectPacket_clicked',"  Inject Packet  ",348,65)
+# Filter
+_x=720-176
+_y=12
+QtBind.createLineEdit(gui,"",_x-26,_y,1,265) # Separator line
 
-cbxDontShow = QtBind.createCheckBox(gui, 'cbxDontShow_clicked',"Don't show",25,90)
-cbxOnlyShow = QtBind.createCheckBox(gui, 'cbxOnlyShow_clicked',"Only Show",120,90)
+cbxSro = QtBind.createCheckBox(gui, 'cbxShowClient_checked','Show Client packets [C->S]',_x+10,_y)
+cbxShowClient = False
+_y+=20
+cbxJmx = QtBind.createCheckBox(gui, 'cbxShowServer_checked','Show Server packets [S->C]',_x+10,_y)
+cbxShowServer = False
+
+_y+=40
+cbxDontShow = QtBind.createCheckBox(gui, 'cbxDontShow_clicked',"Don't show",_x+5,_y)
+cbxOnlyShow = QtBind.createCheckBox(gui, 'cbxOnlyShow_clicked',"Only Show",_x+100,_y)
 QtBind.setChecked(gui,cbxDontShow,True) # using two checkbox like radiobutton
 cbxDontShow_checked = True
-lblOpcodes = QtBind.createLabel(gui,"The following list of opcodes ( Filter )",21,110)
-tbxOpcodes = QtBind.createLineEdit(gui,"",21,129,100,20)
-lstOpcodes = QtBind.createList(gui,21,151,176,109)
-btnAddOpcode = QtBind.createButton(gui,'btnAddOpcode_clicked',"      Add      ",123,129)
-btnRemOpcode = QtBind.createButton(gui,'btnRemOpcode_clicked',"     Remove     ",70,259)
+_y+=20
+lblOpcodes = QtBind.createLabel(gui,"The following list of opcodes ( Filter )",_x,_y)
+_y+=18
+tbxOpcodes = QtBind.createLineEdit(gui,"",_x,_y,100,20)
+btnAddOpcode = QtBind.createButton(gui,'btnAddOpcode_clicked',"      Add      ",_x+100+2,_y-2)
+_y+=20
+lstOpcodes = QtBind.createList(gui,_x,_y,176,120)
+lstOpcodesData = []
+btnRemOpcode = QtBind.createButton(gui,'btnRemOpcode_clicked',"     Remove     ",_x+88-32,_y-1+120)
 
 # ______________________________ Methods ______________________________ #
-
-# Checkbox "Show Client Packets" checked
-def cbxSro_clicked(checked):
-	global cbxSro_checked
-	cbxSro_checked = checked
-
-# Checkbox "Show Server Packets" checked
-def cbxJmx_clicked(checked):
-	global cbxJmx_checked
-	cbxJmx_checked = checked
-
-# Inject packet on button clicked
-def btnInjectPacket_clicked():
-	strOpcode = QtBind.text(gui,txtOpcode)
-	strData = QtBind.text(gui,txtData)
-	# Opcode or Data is not empty
-	if strOpcode and strData:
-		Packet = bytearray()
-		opcode = int(strOpcode,16)
-		data = strData.split()
-		i = 0
-		while i < len(data):
-			Packet.append(int(data[i],16))
-			i += 1
-		encrypted = QtBind.isChecked(gui,cbxEncrypted)
-		log("Plugin: Injecting packet ("+pName+")")
-		inject_joymax(opcode,Packet,encrypted)
 
 # Return plugin configs path (JSON)
 def getConfig():
 	return get_config_dir()+pName+".json"
+
+# Load default configs
+def loadDefaultConfig():
+	# Clear data
+	global lstOpcodesData
+	lstOpcodesData = []
+
+	QtBind.clear(gui,lstOpcodes)
+
+# Load the list of opcodes with the config file
+def loadConfigs():
+	loadDefaultConfig()
+	if os.path.exists(getConfig()):
+		data = {}
+		with open(getConfig(),"r") as f:
+			data = json.load(f)
+		# load the opcodes list
+		if "FilteredOpcodes" in data:
+			global lstOpcodesData
+			lstOpcodesData = data["FilteredOpcodes"]
+			for opcode in lstOpcodesData:
+				QtBind.append(gui,lstOpcodes,'0x{:02X}'.format(opcode))
+		# config radiobutton if is saved
+		if "DontShow" in data:
+			global cbxDontShow_checked
+			cbxDontShow_checked = data["DontShow"]
+			QtBind.setChecked(gui,cbxDontShow,data["DontShow"])
+			QtBind.setChecked(gui,cbxOnlyShow,not data["DontShow"])
+		
+# Save all config
+def saveConfigs():
+	# Save all data
+	data = {}
+	data['DontShow'] = cbxDontShow_checked
+	data['FilteredOpcodes'] = lstOpcodesData
+
+	# Overrides
+	with open(getConfig(),"w") as f:
+		f.write(json.dumps(data, indent=4, sort_keys=True))
+
+# Checkbox "Show Client Packets" checked
+def cbxShowClient_checked(checked):
+	global cbxShowClient
+	cbxShowClient = checked
+
+# Checkbox "Show Server Packets" checked
+def cbxShowServer_checked(checked):
+	global cbxShowServer
+	cbxShowServer = checked
+
+# Inject packet on button clicked
+def btnInjectServer_clicked():
+	btnInjectPacket(inject_joymax)
+
+# Inject packet on button clicked
+def btnInjectClient_clicked():
+	btnInjectPacket(inject_silkroad)
+
+# Inject packet to the direction specified
+def btnInjectPacket(IProxySend):
+	strOpcode = QtBind.text(gui,txtOpcode)
+	strData = QtBind.text(gui,txtData)
+	# Opcode or Data is not empty
+	if strOpcode and strData:
+		packet = bytearray()
+		opcode = int(strOpcode,16)
+		data = strData.split()
+		i = 0
+		while i < len(data):
+			packet.append(int(data[i],16))
+			i += 1
+		encrypted = QtBind.isChecked(gui,cbxEncrypted)
+		log("Plugin: Injecting packet...\n(Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not packet else ' '.join('{:02X}'.format(x) for x in packet)))
+		IProxySend(opcode,packet,encrypted)
 
 # Checkbox "Don't show" checked
 def cbxDontShow_clicked(checked):
@@ -81,95 +145,45 @@ def cbxOnlyShow_clicked(checked):
 def	cbxDontShow_editConfig(checked):
 	global cbxDontShow_checked
 	cbxDontShow_checked = checked
-	# init empty dictionary
-	data = {}
-	# load configs if exists
-	if os.path.exists(getConfig()):
-		with open(getConfig(),"r") as f:
-			data = json.load(f)
-	# Add or edit key for "DontShow" checkbox
-	data["DontShow"] = checked
-	# Replace configs
-	with open(getConfig(),"w") as f:
-		# Pretty-printing json :D
-		f.write(json.dumps(data, indent=4, sort_keys=True))
-
-# Load default configs
-def loadDefaultConfig():
-	# Clear data
-	QtBind.clear(gui,lstOpcodes)
-
-# Load the list of opcodes with the config file
-def loadConfigs():
-	loadDefaultConfig()
-	if os.path.exists(getConfig()):
-		data = {}
-		with open(getConfig(),"r") as f:
-			data = json.load(f)
-		# load the opcodes list
-		if "Opcodes" in data:
-			for opcode in data["Opcodes"]:
-				QtBind.append(gui,lstOpcodes,opcode)
-		# config radiobutton if is saved
-		if "DontShow" in data:
-			global cbxDontShow_checked
-			cbxDontShow_checked = data["DontShow"]
-			QtBind.setChecked(gui,cbxDontShow,data["DontShow"])
-			QtBind.setChecked(gui,cbxOnlyShow,not data["DontShow"])
-		
-# Return True if the opcode exists in the list
-def lstOpcodes_exists(opcode):
-	# parse to string for compare with all
-	strOpcode = '0x{:02X}'.format(opcode)
-	opcodes = QtBind.getItems(gui,lstOpcodes)
-	for i in range(len(opcodes)):
-		if opcodes[i] == strOpcode:
-			return True
-	return False
+	saveConfigs()
 	
 # Button "Add" clicked
 def btnAddOpcode_clicked():
-	# parse to HEX or fail trying
-	opcode = int(QtBind.text(gui,tbxOpcodes),16)
-	if opcode and not lstOpcodes_exists(opcode):
-		data = {}
-		if os.path.exists(getConfig()):
-			with open(getConfig(),"r") as f:
-				data = json.load(f)
-		# Add or Create opcode into the list
-		if "Opcodes" in data:
-			data["Opcodes"].append('0x{:02X}'.format(opcode))
-		else:
-			data["Opcodes"] = ['0x{:02X}'.format(opcode)]
-		with open(getConfig(),"w") as f:
-			f.write(json.dumps(data, indent=4, sort_keys=True))
-		QtBind.append(gui,lstOpcodes,'0x{:02X}'.format(opcode))
+	# Avoid empty data
+	opcode = QtBind.text(gui,tbxOpcodes)
+	if not opcode:
+		return
+	# Try to normalize it
+	try:
+		opcode = int(opcode,16)
+	except Exception as ex:
+		log("Plugin: Error ["+str(ex)+"]")
+		return
+	# Check if is already added
+	global lstOpcodesData
+	if not opcode in lstOpcodesData:
+		lstOpcodesData.append(opcode)
+		strOpcode = '0x{:02X}'.format(opcode)
+		QtBind.append(gui,lstOpcodes,strOpcode)
+		saveConfigs()
 		# saved successfully
 		QtBind.setText(gui, tbxOpcodes,"")
-		log("Plugin: Added opcode [0x"+'{:02X}'.format(opcode)+"]")
+		log("Plugin: Added opcode ["+strOpcode+"]")
 
 # Button "Remove" clicked
 def btnRemOpcode_clicked():
-	selectedItem = QtBind.text(gui,lstOpcodes)
-	if selectedItem:
-		if os.path.exists(getConfig()):
-			data = {}
-			with open(getConfig(), 'r') as f:
-				data = json.load(f)
-			# try remove opcode from file loaded
-			try:
-				data["Opcodes"].remove(selectedItem)
-				# Replace configs if selectedItem exists at least
-				with open(getConfig(),"w") as f:
-					f.write(json.dumps(data, indent=4, sort_keys=True))
-			except:
-				pass # just ignore file if don't exist
-		QtBind.remove(gui,lstOpcodes,selectedItem)
-		log("Plugin: Removed opcode ["+selectedItem+"]")
+	selectedIndex = QtBind.currentIndex(gui,lstOpcodes)
+	if selectedIndex >= 0:
+		strOpcode = '0x{:02X}'.format(lstOpcodesData[selectedIndex])
+		del lstOpcodesData[selectedIndex]
+		QtBind.removeAt(gui,lstOpcodes,selectedIndex)
+		# saved successfully
+		saveConfigs()
+		log("Plugin: Removed opcode ["+strOpcode+"]")
 
 # return True if can log/show the packet
-def show_packet(opcode):
-	if lstOpcodes_exists(opcode):
+def CanShowPacket(opcode):
+	if opcode in lstOpcodesData:
 		if not cbxDontShow_checked:
 			return True
 	elif cbxDontShow_checked:
@@ -178,19 +192,45 @@ def show_packet(opcode):
 
 # ______________________________ Events ______________________________ #
 
-# All packets received from Silkroad will be passed to this function
-# Returning True will keep the packet and False will not forward it to the game server
-def handle_silkroad(opcode, data):
-	if cbxSro_checked:
-		if show_packet(opcode):
-			log("Client: (Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not data else ' '.join('{:02X}'.format(x) for x in data)))
-	return True
+# Inject packet through Script. All his data is separated by comma, encrypted will be false if it's not specified.
+# Example 1: "inject,Opcode,ItsEncrypted?,Data?,Data?,Data?,..."
+# Example 2: "inject,3091,False,0" or "inject,3091,0" (which means greet action)
+def inject(args):
+	argCount = len(args)
+	if argCount < 2:
+		log("Plugin: Incorrect structure to inject packet")
+		return 0
+	# Check packet structure
+	opcode = int(args[1],16)
+	data = bytearray()
+	encrypted = False
+	dataIndex = 2
+	if argCount >= 3:
+		enc = args[2].lower()
+		if enc == 'true' or enc == 'false':
+			encrypted = enc == "true"
+			dataIndex +=1
+	# Create packet data and inject it
+	for i in range(dataIndex, argCount):
+		data.append(int(args[i],16))
+	inject_joymax(opcode,data,encrypted)
+	# Show injection log
+	log("Plugin: Injecting packet "+'{:02X}'.format(opcode)+"...")
+	return 0
 
 # All packets received from Silkroad will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game server
+def handle_silkroad(opcode, data):
+	if cbxShowClient:
+		if CanShowPacket(opcode):
+			log("Client: (Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not data else ' '.join('{:02X}'.format(x) for x in data)))
+	return True
+
+# All packets received from game server will be passed to this function
+# Returning True will keep the packet and False will not forward it to the game client
 def handle_joymax(opcode, data):
-	if cbxJmx_checked:
-		if show_packet(opcode):
+	if cbxShowServer:
+		if CanShowPacket(opcode):
 			log("Server: (Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not data else ' '.join('{:02X}'.format(x) for x in data)))
 	return True
 
