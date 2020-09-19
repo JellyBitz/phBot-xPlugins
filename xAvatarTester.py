@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xAvatarTester'
-pVersion = '1.0.0'
+pVersion = '1.0.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAvatarTester.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -354,7 +354,7 @@ def Inject_Spawn_AvatarModel(hat_id=0,dress_id=0,accesory_id=0,flag_id=0):
 	p += b'\xCD\xCC\x0C\x42\x00\x00\xDC\x42\x00\x00\xC8\x42'
 
 	p += struct.pack('B',0) # buff count
-	charName = "[Plugin] AvatarTest #"+str(avatarTestingUID_MIN-avatarTestingUID+1)
+	charName = "[Plugin] AvatarTest #"+str(avatarTestingUID-avatarTestingUID_MIN+1)
 	p += struct.pack('H', len(charName))
 	p += charName.encode('ascii')
 
