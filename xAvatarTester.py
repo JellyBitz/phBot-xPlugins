@@ -1,6 +1,5 @@
 from phBot import *
 import QtBind
-from threading import Thread
 from threading import Timer
 import struct
 import sqlite3
@@ -8,25 +7,25 @@ import json
 import os
 
 pName = 'xAvatarTester'
-pVersion = '1.0.1'
+pVersion = '1.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAvatarTester.py'
 
 # ______________________________ Initializing ______________________________ #
 
+# Globals
 bot_path = os.getcwd()
 character_data = None
-avatarTestingUID_MIN = 777777777
+AVATAR_TEST_UID_MAX = 0xFFFFFFFE
 avatarTestingUID = 0
-threadSearching = None
+isSearching = False
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
 
-
 # Search
 _y = 12
 _x = 6
-lblSearchItem = QtBind.createLabel(gui,"Item name :",_x,_y)
+QtBind.createLabel(gui,"Item name :",_x,_y)
 tbxSearchItem = QtBind.createLineEdit(gui,"",_x+63,_y-3,568,20)
 btnSearchItem = QtBind.createButton(gui,'btnSearchItem_clicked',"     Search     ",_x+63+568+3,_y-5)
 _y+=22
@@ -38,10 +37,10 @@ btnAddItem = QtBind.createButton(gui,'btnAddItem_clicked',"     Add     ",_x,_y+
 # Builder
 _x+=90
 _y+=10
-lblHatItems = QtBind.createLabel(gui,"* Hat",_x,_y)
-lblDressItems = QtBind.createLabel(gui,"* Dress",_x+152+3,_y)
-lblAccesoryItems = QtBind.createLabel(gui,"* Accesory",_x+152+3+152+3,_y)
-lblFlagItems = QtBind.createLabel(gui,"* Flag",_x+152+3+152+3+152+3,_y)
+QtBind.createLabel(gui,"* Hat",_x,_y)
+QtBind.createLabel(gui,"* Dress",_x+152+3,_y)
+QtBind.createLabel(gui,"* Accesory",_x+152+3+152+3,_y)
+QtBind.createLabel(gui,"* Flag",_x+152+3+152+3+152+3,_y)
 _y+=18
 lvwHatItems = QtBind.createList(gui,_x,_y,152,80)
 lvwHatItemsData = []
@@ -111,21 +110,21 @@ def btnSearchItem_clicked():
 	itemName = QtBind.text(gui,tbxSearchItem)
 	if not itemName:
 		return
-	# Quick check
+	# Check if process is running on background
+	global isSearching
+	if isSearching:
+		return
+	# Quick ingame check
 	if not isJoined():
 		return
 
-	# Create all process on background
-	global threadSearching
-	if threadSearching:
-		return
 	# Clear list
 	QtBind.clear(gui,lvwItems)
 	global lvwItemsData
 	lvwItemsData = []
 
-	threadSearching = Thread(target=SearchItem,args=['%'+itemName+'%'])
-	threadSearching.run()
+	isSearching = True
+	Timer(0.001,SearchItem,[itemName]).start()
 
 # Search an item from silkroad/bot database
 def SearchItem(itemName):
@@ -135,7 +134,7 @@ def SearchItem(itemName):
 		# set cursor
 		c = conn.cursor()
 		# find items with same name
-		c.execute('SELECT id,servername,name,tid3 FROM items WHERE tid1=1 AND tid2=13 AND name LIKE ?',(itemName,))
+		c.execute('SELECT id,servername,name,tid3 FROM items WHERE tid1=1 AND tid2=13 AND name LIKE ?',('%'+itemName+'%',))
 		global lvwItemsData
 		lvwItemsData = c.fetchall()
 		# Fill listview
@@ -146,8 +145,8 @@ def SearchItem(itemName):
 		conn.close()
 
 	# Enable searching
-	global threadSearching
-	threadSearching = None
+	global isSearching
+	isSearching = False
 
 # Create a connection to database
 def GetDatabaseConnection(server):
@@ -265,9 +264,9 @@ def btnBuildModel_clicked():
 # Clear all avatar models created with this plugin
 def btnClearModels_clicked():
 	global avatarTestingUID
-	delay = 0.01
+	delay = 0.001
 	if avatarTestingUID:
-		for i in range(avatarTestingUID_MIN,avatarTestingUID+1):
+		for i in range(avatarTestingUID,AVATAR_TEST_UID_MAX+1):
 			# delete one for one smoothly
 			Timer(delay,Inject_Despawn,[i]).start()
 			delay+=1
@@ -306,11 +305,11 @@ def Inject_Spawn_AvatarModel(hat_id=0,dress_id=0,accesory_id=0,flag_id=0):
 		if a:
 			avatarCount += 1
 	global avatarTestingUID
-	avatarTestingUID = ( (avatarTestingUID+1) if avatarTestingUID else avatarTestingUID_MIN )
+	avatarTestingUID = ( (avatarTestingUID-1) if avatarTestingUID else AVATAR_TEST_UID_MAX )
 
 	# Create packet
 	p = struct.pack('<I',model)
-	p += struct.pack('B',0) # scale
+	p += struct.pack('B',34) # regular scale
 	p += struct.pack('B',0) # zerk lv.
 	p += struct.pack('B',0) # PVP cape
 	p += struct.pack('B',0) # Exp type
@@ -354,12 +353,12 @@ def Inject_Spawn_AvatarModel(hat_id=0,dress_id=0,accesory_id=0,flag_id=0):
 	p += b'\xCD\xCC\x0C\x42\x00\x00\xDC\x42\x00\x00\xC8\x42'
 
 	p += struct.pack('B',0) # buff count
-	charName = "[Plugin] AvatarTest #"+str(avatarTestingUID-avatarTestingUID_MIN+1)
+	charName = "[Plugin] Avatar Test #"+str(AVATAR_TEST_UID_MAX-avatarTestingUID+1)
 	p += struct.pack('H', len(charName))
 	p += charName.encode('ascii')
 
 	# Generic job and other stuffs
-	p += b'\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\x04'
+	p += b'\x00\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\x04'
 
 	# Inject packet to client
 	inject_silkroad(0x3015,p,False)
