@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.4.2'
+pVersion = '2.5.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -670,13 +670,21 @@ def getGoldText():
 	character_data = get_character_data()
 	return "{:,}".format(character_data['gold'])
 
-# Return the country type of the object, empty if not found
-def getCountryType(servername):
-	if "_CH_" in servername:
-		return "(CH)"
-	if "_EU_" in servername:
-		return "(EU)"
-	return ""
+# Return the race type as text, empty if cannot be found
+def getRaceText(servername):
+	if '_CH_' in servername:
+		return '(CH)'
+	if '_EU_' in servername:
+		return '(EU)'
+	return ''
+
+# Return the genre type as text, empty if cannot be found
+def getGenreText(servername):
+	if '_M_' in servername:
+		return '[M]'
+	if '_W_' in servername:
+		return '[F]'
+	return ''
 
 # Loads all plugins handling chat 
 def GetChatHandlers():
@@ -775,13 +783,16 @@ def handle_event(t, data):
 		channel_id = QtBind.text(gui_,cmbxEvtPick_rare)
 		if channel_id:
 			item = get_item(int(data))
-			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Rare)** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
+			race = getRaceText(item['servername'])
+			genre = getGenreText(item['servername'])
+			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Rare)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+"***")
 	elif t == 6:
 		channel_id = QtBind.text(gui_,cmbxEvtPick_equip)
 		if channel_id:
 			item = get_item(int(data))
-			itemName = item['name']
-			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Equipable)** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
+			race = getRaceText(item['servername'])
+			genre = getGenreText(item['servername'])
+			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Equipable)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+"***")
 	elif t == 8:
 		Notify(QtBind.text(gui_,cmbxEvtBot_alchemy),"|`"+character_data['name']+"`| - **Auto alchemy** has been completed")
 
@@ -974,7 +985,9 @@ def notify_pickup(channel_id,itemID):
 	usefilterServerName = QtBind.isChecked(gui_,cbxEvtPick_servername_filter)
 	if not usefilterName and not usefilterServerName:
 		# No filters activated
-		Notify(channel_id,"|`"+character_data['name']+"`| - **Item** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
+		race = getRaceText(item['servername'])
+		genre = getGenreText(item['servername'])
+		Notify(channel_id,"|`"+character_data['name']+"`| - **Item** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+"***")
 		return
 	# check filter name
 	if usefilterName:
@@ -983,7 +996,9 @@ def notify_pickup(channel_id,itemID):
 			try:
 				if re.search(searchName,item['name']):
 					# Filtered by Name
-					Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
+					race = getRaceText(item['servername'])
+					genre = getGenreText(item['servername'])
+					Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+"***")
 					return
 			except Exception as ex:
 				log("Plugin: Error at regex (name) ["+str(ex)+"]")
@@ -994,7 +1009,9 @@ def notify_pickup(channel_id,itemID):
 			try:
 				if re.search(searchServername,item['servername']):
 					# Filtered by server name
-					Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+" "+getCountryType(item['servername'])+"***")
+					race = getRaceText(item['servername'])
+					genre = getGenreText(item['servername'])
+					Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+"***")
 					return
 			except Exception as ex:
 				log("Plugin: Error at regex (servername) ["+str(ex)+"]")
