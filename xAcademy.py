@@ -8,7 +8,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.2.2'
+pVersion = '1.3.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -20,37 +20,61 @@ NOTIFICATION_SOUND_PATH = 'c:\\Windows\\Media\\chimes.wav'
 # Globals
 isCreatingCharacter = False
 CreatingNickname = ""
+tryingDeleteChar = False
 isRestarted = False
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
-cbxEnabled = QtBind.createCheckBox(gui,'cbxDoNothing','Enabled',6,10)
+cbxEnabled = QtBind.createCheckBox(gui,'cbxDoNothing','Enabled',6,9)
 
-lblProfileName = QtBind.createLabel(gui,"Config profile name :",345,10)
-tbxProfileName = QtBind.createLineEdit(gui,"",450,7,110,19)
+# Profiles
+_x = 350
+_y = 10
+lblProfileName = QtBind.createLabel(gui,"Config profile name :",_x,_y)
+tbxProfileName = QtBind.createLineEdit(gui,"",_x+102,_y-3,110,19)
+btnSaveConfig = QtBind.createButton(gui,'btnSaveConfig_clicked',"  Save  ",_x+102+110+3,_y-5)
+btnLoadConfig = QtBind.createButton(gui,'btnLoadConfig_clicked',"  Load  ",_x+102+110+3+75,_y-5)
 
-btnSaveConfig = QtBind.createButton(gui,'btnSaveConfig_clicked',"  Save  ",570,3)
-btnLoadConfig = QtBind.createButton(gui,'btnLoadConfig_clicked',"  Load  ",645,3)
+# Basic config
+_x = 6
+_y = 40
+cbxSelectChar = QtBind.createCheckBox(gui,'cbxDoNothing','Select ( if level < 40 )',_x,_y-1)
+cbxSelectCharNotDeleteable = QtBind.createCheckBox(gui,'cbxDoNothing','Select ( if cannot be deleted )',_x+200,_y-1)
+_y+=20
+cbxCreateChar = QtBind.createCheckBox(gui,'cbxDoNothing','Create ( if level < 40 not found )',_x,_y-1)
+_y+=20
+cbxDeleteChar = QtBind.createCheckBox(gui,'cbxDoNothing','Delete ( if level between 40 and 50 )',_x,_y-1)
 
-lblNickname = QtBind.createLabel(gui,"Custom Nickname :",6,35)
-tbxNickname = QtBind.createLineEdit(gui,"",100,32,102,19)
-
-lblSequence = QtBind.createLabel(gui,"Number sequence :",6,55)
-tbxSequence = QtBind.createLineEdit(gui,"",102,52,100,19)
-
-lblRace = QtBind.createLabel(gui,"Custom Race :",6,75)
-cmbxRace = QtBind.createCombobox(gui,79,72,123,19)
+# Creation config
+_x = 518
+_y = 40
+lblNickname = QtBind.createLabel(gui,"Custom Nickname :",_x,_y)
+tbxNickname = QtBind.createLineEdit(gui,"",_x+94,_y-3,102,19)
+_y+=20
+lblSequence = QtBind.createLabel(gui,"Number sequence :",_x,_y)
+tbxSequence = QtBind.createLineEdit(gui,"",_x+95,_y-3,101,19)
+_y+=20
+lblRace = QtBind.createLabel(gui,"Custom Race :",_x,_y)
+cmbxRace = QtBind.createCombobox(gui,_x+72,_y-3,124,19)
 QtBind.append(gui,cmbxRace,"CH")
 QtBind.append(gui,cmbxRace,"EU")
 
-lblFullCharacters = QtBind.createLabel(gui,"The next action(s) will be executed if not possible create more characters :",6,100)
-lblCMD = QtBind.createLabel(gui,"Run system command (CMD) :",15,120)
-tbxCMD = QtBind.createLineEdit(gui,"",163,117,235,19)
-cbxExit = QtBind.createCheckBox(gui,'cbxDoNothing','Close bot',15,140)
-cbxNotification_Full = QtBind.createCheckBox(gui,'cbxDoNothing','Show phBot Notification',15,160)
-cbxSound_Full = QtBind.createCheckBox(gui,'cbxDoNothing','Play sound.  Path : ',15,180)
-tbxSound_Full = QtBind.createLineEdit(gui,'',128,179,270,19)
-cbxLog_Full = QtBind.createCheckBox(gui,'cbxDoNothing','Log into a file',15,200)
+# Some actions
+_y = 130
+_x = 6
+lblFullCharacters = QtBind.createLabel(gui,"The next action(s) will be executed if not possible create more characters :",_x,_y)
+_y+=20
+lblCMD = QtBind.createLabel(gui,"Run system command (CMD) :",_x+10,_y)
+tbxCMD = QtBind.createLineEdit(gui,"",163,_y-3,205,19)
+_y+=20
+cbxExit = QtBind.createCheckBox(gui,'cbxDoNothing','Close bot',_x+9,_y)
+_y+=20
+cbxNotification_Full = QtBind.createCheckBox(gui,'cbxDoNothing','Show phBot notification',_x+9,_y)
+_y+=20
+cbxSound_Full = QtBind.createCheckBox(gui,'cbxDoNothing','Play sound.  Path : ',_x+9,_y)
+tbxSound_Full = QtBind.createLineEdit(gui,'',128,_y-1,240,19)
+_y+=20
+cbxLog_Full = QtBind.createCheckBox(gui,'cbxDoNothing','Log into a file',_x+9,_y)
 
 # ______________________________ Methods ______________________________ #
 
@@ -69,6 +93,11 @@ def loadDefaultConfig():
 	# Clear data
 	QtBind.setText(gui,tbxProfileName,"")
 	QtBind.setChecked(gui,cbxEnabled,False)
+
+	QtBind.setChecked(gui,cbxSelectChar,True)
+	QtBind.setChecked(gui,cbxCreateChar,True)
+	QtBind.setChecked(gui,cbxDeleteChar,True)
+	QtBind.setChecked(gui,cbxSelectCharNotDeleteable,False)
 
 	QtBind.setText(gui,tbxNickname,"")
 	QtBind.setText(gui,tbxSequence,str(SEQUENCE_DEFAULT_NUMBER))
@@ -97,6 +126,15 @@ def loadConfigs(fileName=""):
 
 		if "Enabled" in data and data['Enabled']:
 			QtBind.setChecked(gui,cbxEnabled,True)
+
+		if "SelectChar" in data and not data['SelectChar']:
+			QtBind.setChecked(gui,cbxSelectChar,False)
+		if "CreateChar" in data and not data['CreateChar']:
+			QtBind.setChecked(gui,cbxCreateChar,False)
+		if "DeleteChar" in data and not data['DeleteChar']:
+			QtBind.setChecked(gui,cbxDeleteChar,False)
+		if "SelectCharNotDeleteable" in data and data['SelectCharNotDeleteable']:
+			QtBind.setChecked(gui,cbxSelectCharNotDeleteable,True)
 
 		if "Nickname" in data:
 			QtBind.setText(gui,tbxNickname,data["Nickname"])
@@ -127,6 +165,11 @@ def saveConfigs(fileName=""):
 	data = {}
 	# Save all data
 	data["Enabled"] = QtBind.isChecked(gui,cbxEnabled)
+
+	data["SelectChar"] = QtBind.isChecked(gui,cbxSelectChar)
+	data["CreateChar"] = QtBind.isChecked(gui,cbxCreateChar)
+	data["DeleteChar"] = QtBind.isChecked(gui,cbxDeleteChar)
+	data["SelectCharNotDeleteable"] = QtBind.isChecked(gui,cbxSelectCharNotDeleteable)
 
 	data["Nickname"] = QtBind.text(gui,tbxNickname)
 	sequence = QtBind.text(gui,tbxSequence)
@@ -208,8 +251,13 @@ def create_character():
 	p += struct.pack('I', weapon)
 	# Try to create character
 	inject_joymax(0x7007,p, False)
-	# Wait 3s to request character list
-	Timer(3.0,inject_joymax,(0x7007, b'\x02', False)).start()
+
+	# Wait 2.5s to request character list
+	Timer(2.5,Inject_RequestCharacterList).start()
+
+# Inject Packet
+def Inject_RequestCharacterList():
+	inject_joymax(0x7007,b'\x02',False)
 
 # Inject Packet
 def Inject_DeleteCharacter(charName):
@@ -305,7 +353,7 @@ def handle_joymax(opcode,data):
 		# Filter packet parsing
 		locale = get_locale()
 		try:
-			global isCreatingCharacter
+			global isCreatingCharacter, tryingDeleteChar
 			index = 0 # cursor
 			action = data[index]
 			index+=1
@@ -318,6 +366,15 @@ def handle_joymax(opcode,data):
 						log("Plugin: Character created successfully!")
 					else:
 						log("Plugin: Character creation failed")
+			elif action == 3:
+				if tryingDeleteChar:
+					if success == 1:
+						tryingDeleteChar = False
+						log("Plugin: Character deleted successfully!")
+					else:
+						log("Plugin: Character deletion failed")
+					# Ask for char list again to avoid phBot lock
+					Inject_RequestCharacterList()
 			elif action == 4:
 				if isCreatingCharacter:
 					if success == 1:
@@ -328,6 +385,11 @@ def handle_joymax(opcode,data):
 						Timer(1.0,create_nickname).start()
 			elif action == 2:
 				if success == 1:
+					if tryingDeleteChar and QtBind.isChecked(gui,cbxSelectCharNotDeleteable):
+						log('Plugin: Selecting character ["'+tryingDeleteChar+'"] (It cannot be deleted)')
+						select_character(tryingDeleteChar)
+						return
+					# Main process
 					selectCharacter = ""
 					deleteCharacter = ""
 					deleteCharacterLevel = 0
@@ -403,7 +465,7 @@ def handle_joymax(opcode,data):
 							if charLevel < 40 and not charIsDeleting:
 								selectCharacter = charName
 						# Condition for deleting only one character
-						if not deleteCharacter:
+						if not deleteCharacter and not tryingDeleteChar:
 							if charLevel >= 40 and charLevel <= 50 and not charIsDeleting:
 								deleteCharacter = charName
 								deleteCharacterLevel = charLevel
@@ -423,17 +485,20 @@ def handle_joymax(opcode,data):
 							log("Plugin: [Warning] Packet partially parsed.")
 
 					# Check for deleting a character
-					if deleteCharacter:
-						#log("Plugin: deleting character ["+deleteCharacter+"] (Lv."+str(deleteCharacterLevel)+")")
-						#Timer(1.0,Inject_DeleteCharacter,(deleteCharacter,)).start()
-						log('Plugin: character cannot deleted due recent phBot character selection changes')
+					if deleteCharacter and QtBind.isChecked(gui,cbxDeleteChar):
+						# Start checking for response
+						tryingDeleteChar = deleteCharacter
+						# Try delete it
+						log("Plugin: Deleting character ["+deleteCharacter+"] (Lv."+str(deleteCharacterLevel)+")")
+						Inject_DeleteCharacter(deleteCharacter)
 					# Select or create character if is required
 					if not selectCharacter:
 						# Check the char limit
 						if nChars < 4:
-							isCreatingCharacter = True
-							# Wait 10 seconds, then start looking for nicknames
-							Timer(10.0,create_nickname).start()
+							if QtBind.isChecked(gui,cbxCreateChar):
+								isCreatingCharacter = True
+								# Wait 10 seconds, then start looking for nicknames
+								Timer(10.0,create_nickname).start()
 						else:
 							errMessage = "Plugin: Not enough space to create a new character!"
 							log(errMessage)
@@ -472,14 +537,13 @@ def handle_joymax(opcode,data):
 								log("Plugin: Your bot will be closed at 5 seconds..")
 								Timer(5.0,CloseBot).start()
 					else:
-						waitSelection = 2.5
-						# Wait at least seconds after trying deleting a character
-						if deleteCharacter != "":
-							waitSelection += 5.0
-
-						# Select the character without timer delay to avoid bot getting stupid
-						log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
-						select_character(selectCharacter)
+						# Do not select any character if we are trying to delete another one
+						if not deleteCharacter:
+							# Check settings
+							if QtBind.isChecked(gui,cbxSelectChar):
+								# Select the character without timer delay to avoid bot getting stupid
+								log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
+								select_character(selectCharacter)
 		except:
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
