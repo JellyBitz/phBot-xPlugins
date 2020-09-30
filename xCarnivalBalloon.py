@@ -3,7 +3,7 @@ from threading import Timer
 import struct
 
 pName = 'xCarnivalBalloon'
-pVersion = '1.0.1'
+pVersion = '1.0.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xCarnivalBalloon.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -54,6 +54,7 @@ def InflateNewBalloon():
 
 # Inflates a balloon to the next level
 def LevelUpBalloon():
+	global inflatingLevel
 	# Check if can claim it
 	if inflatingLevel >= INFLATE_BALLOON_LEVEL_STOP:
 		# Claim balloon
