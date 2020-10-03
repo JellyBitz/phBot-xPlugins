@@ -8,7 +8,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.3.0'
+pVersion = '1.3.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -19,8 +19,8 @@ NOTIFICATION_SOUND_PATH = 'c:\\Windows\\Media\\chimes.wav'
 
 # Globals
 isCreatingCharacter = False
+isDeletingCharacter = False
 CreatingNickname = ""
-tryingDeleteChar = False
 isRestarted = False
 
 # Graphic user interface
@@ -39,11 +39,11 @@ btnLoadConfig = QtBind.createButton(gui,'btnLoadConfig_clicked',"  Load  ",_x+10
 _x = 6
 _y = 40
 cbxSelectChar = QtBind.createCheckBox(gui,'cbxDoNothing','Select ( if level < 40 )',_x,_y-1)
-cbxSelectCharNotDeleteable = QtBind.createCheckBox(gui,'cbxDoNothing','Select ( if cannot be deleted )',_x+200,_y-1)
+cbxSelectCharOnAcademy = QtBind.createCheckBox(gui,'cbxDoNothing','Select ( if level 40~50 and has academy )',_x+200,_y-1)
 _y+=20
-cbxCreateChar = QtBind.createCheckBox(gui,'cbxDoNothing','Create ( if level < 40 not found )',_x,_y-1)
+cbxCreateChar = QtBind.createCheckBox(gui,'cbxDoNothing','Create ( if none has been selected )',_x,_y-1)
 _y+=20
-cbxDeleteChar = QtBind.createCheckBox(gui,'cbxDoNothing','Delete ( if level between 40 and 50 )',_x,_y-1)
+cbxDeleteChar = QtBind.createCheckBox(gui,'cbxDoNothing','Delete ( if level 40~50 )',_x,_y-1)
 
 # Creation config
 _x = 518
@@ -97,7 +97,7 @@ def loadDefaultConfig():
 	QtBind.setChecked(gui,cbxSelectChar,True)
 	QtBind.setChecked(gui,cbxCreateChar,True)
 	QtBind.setChecked(gui,cbxDeleteChar,True)
-	QtBind.setChecked(gui,cbxSelectCharNotDeleteable,False)
+	QtBind.setChecked(gui,cbxSelectCharOnAcademy,False)
 
 	QtBind.setText(gui,tbxNickname,"")
 	QtBind.setText(gui,tbxSequence,str(SEQUENCE_DEFAULT_NUMBER))
@@ -133,8 +133,8 @@ def loadConfigs(fileName=""):
 			QtBind.setChecked(gui,cbxCreateChar,False)
 		if "DeleteChar" in data and not data['DeleteChar']:
 			QtBind.setChecked(gui,cbxDeleteChar,False)
-		if "SelectCharNotDeleteable" in data and data['SelectCharNotDeleteable']:
-			QtBind.setChecked(gui,cbxSelectCharNotDeleteable,True)
+		if "SelectCharOnAcademy" in data and data['SelectCharOnAcademy']:
+			QtBind.setChecked(gui,cbxSelectCharOnAcademy,True)
 
 		if "Nickname" in data:
 			QtBind.setText(gui,tbxNickname,data["Nickname"])
@@ -169,7 +169,7 @@ def saveConfigs(fileName=""):
 	data["SelectChar"] = QtBind.isChecked(gui,cbxSelectChar)
 	data["CreateChar"] = QtBind.isChecked(gui,cbxCreateChar)
 	data["DeleteChar"] = QtBind.isChecked(gui,cbxDeleteChar)
-	data["SelectCharNotDeleteable"] = QtBind.isChecked(gui,cbxSelectCharNotDeleteable)
+	data["SelectCharOnAcademy"] = QtBind.isChecked(gui,cbxSelectCharOnAcademy)
 
 	data["Nickname"] = QtBind.text(gui,tbxNickname)
 	sequence = QtBind.text(gui,tbxSequence)
@@ -213,7 +213,7 @@ def btnLoadConfig_clicked():
 		log("Plugin: Profile ["+strConfigName+"] not found")
 
 # Create the character by injecting
-def create_character():
+def CreateCharacter():
 	# select class
 	race = QtBind.text(gui,cmbxRace)
 	if race != 'EU':
@@ -274,7 +274,7 @@ def Inject_CheckName(charName):
 	inject_joymax(0x7007,p, False)
 
 # Generate a random (male) game of thrones name!
-def getRandomNick():
+def GetRandomNick():
 	# Adding names with max. 12 letters
 	names = ["Aegon","Aerys","Aemon","Aeron","Alliser","Areo","Bran","Bronn","Benjen","Brynden","Beric","Balon","Bowen","Craster","Davos","Daario","Doran","Darrik","Dyron","Eddard","Edric","Euron","Edmure","Gendry","Gilly","Gregor","GreyWorm","Hoster","Jon","Jaime","Jorah","Joffrey","Jeor","Jaqen","Jojen","Janos","Kevan","Khal","Lancel","Loras","Maekar","Mace","Mance","Nestor","Oberyn","Petyr","Podrick","Quentyn","Robert","Robb","Ramsay","Roose","Rickon","Rickard","Rhaegar","Renly","Rodrik","Randyll","Samwell","Sandor","Stannis","Stefon","Tywin","Tyrion","Theon","Tormund","Trystane","Tommen","Val","Varys","Viserys","Victarion","Vimar","Walder","Wyman","Yoren","Yohn","Zane"]
 	name = names[random.randint(0,len(names)-1)]
@@ -288,7 +288,7 @@ def getRandomNick():
 	return name
 
 # Get the sequence previously saved or start a new one if not
-def getSequence():	
+def GetSequence():	
 	sequence = QtBind.text(gui,tbxSequence)
 	# Check valid value
 	if sequence.isnumeric():
@@ -302,8 +302,8 @@ def getSequence():
 	return sequence
 
 # Check the name length and sequence and return it
-def getNickSequence(nickname):
-	seq = str(getSequence())
+def GetNickSequence(nickname):
+	seq = str(GetSequence())
 	nick = nickname+seq
 	nickLength = len(nick)
 	if nickLength > 12: # as max. character restriction
@@ -312,23 +312,23 @@ def getNickSequence(nickname):
 	return nick
 
 # Check nickname if is available
-def create_nickname():
+def createNickname():
 	global CreatingNickname
 	customName = QtBind.text(gui,tbxNickname) 
 	if customName:
-		CreatingNickname = getNickSequence(customName)
+		CreatingNickname = GetNickSequence(customName)
 	else:
-		CreatingNickname = getRandomNick()
+		CreatingNickname = GetRandomNick()
 	log("Plugin: Checking nickname ["+CreatingNickname+"]")
 	Inject_CheckName(CreatingNickname)
 
-# Close the bot process
-def CloseBot():
+# Kill the bot process
+def KillBot():
 	log("Plugin: Closing bot...")
 	# Suicide :(
 	os.kill(os.getpid(),9)
 
-# This will execute another bot with the same command line arguments as this one
+# Execute another bot with the same command line arguments as this one
 def RestartBotWithCommandLine():
 	# Flag to indicate it can be executed only once
 	global isRestarted
@@ -341,7 +341,7 @@ def RestartBotWithCommandLine():
 	subprocess.Popen(cmd)
 	# Start a timer to close this one
 	log("Plugin: Your bot will be closed at 5 seconds..")
-	Timer(5.0,CloseBot).start()
+	Timer(5.0,KillBot).start()
 
 # ______________________________ Events ______________________________ #
 
@@ -353,7 +353,7 @@ def handle_joymax(opcode,data):
 		# Filter packet parsing
 		locale = get_locale()
 		try:
-			global isCreatingCharacter, tryingDeleteChar
+			global isCreatingCharacter, isDeletingCharacter
 			index = 0 # cursor
 			action = data[index]
 			index+=1
@@ -367,32 +367,27 @@ def handle_joymax(opcode,data):
 					else:
 						log("Plugin: Character creation failed")
 			elif action == 3:
-				if tryingDeleteChar:
+				if isDeletingCharacter:
+					isDeletingCharacter = False
 					if success == 1:
-						tryingDeleteChar = False
 						log("Plugin: Character deleted successfully!")
 					else:
 						log("Plugin: Character deletion failed")
-					# Ask for char list again to avoid phBot lock
-					Inject_RequestCharacterList()
 			elif action == 4:
 				if isCreatingCharacter:
 					if success == 1:
 						log("Plugin: Nickname available!")
-						create_character()
+						CreateCharacter()
 					else:
 						log("Plugin: Nickname has been already taken!")
-						Timer(1.0,create_nickname).start()
+						Timer(1.0,createNickname).start()
 			elif action == 2:
 				if success == 1:
-					if tryingDeleteChar and QtBind.isChecked(gui,cbxSelectCharNotDeleteable):
-						log('Plugin: Selecting character ["'+tryingDeleteChar+'"] (It cannot be deleted)')
-						select_character(tryingDeleteChar)
-						return
 					# Main process
+					characterBelow40 = ""
 					selectCharacter = ""
+					selectCharacterAcademyReady = ""
 					deleteCharacter = ""
-					deleteCharacterLevel = 0
 					# Check all characters at selection screen
 					nChars = data[index]
 					index+=1
@@ -445,6 +440,7 @@ def handle_joymax(opcode,data):
 							index+=(2 + strLength)
 						else:
 							index+=1
+						academyMemberClass = data[index]
 						index+=1 # academyMemberClass
 						forCount = data[index]
 						index+=1 # item count
@@ -460,19 +456,25 @@ def handle_joymax(opcode,data):
 						# Show info about previous character
 						log(str(i+1)+") "+charName+" (Lv."+str(charLevel)+")"+(" [*]" if charIsDeleting else ""))
 
-						# Conditions for auto select the first character
-						if not selectCharacter:
-							if charLevel < 40 and not charIsDeleting:
-								selectCharacter = charName
-						# Condition for deleting only one character
-						if not deleteCharacter and not tryingDeleteChar:
-							if charLevel >= 40 and charLevel <= 50 and not charIsDeleting:
-								deleteCharacter = charName
-								deleteCharacterLevel = charLevel
+						# Characters being deleted are skipped from conditions
+						if not charIsDeleting:
+							# Condition to check if character is below 40
+							if not characterBelow40:
+								if charLevel < 40:
+									characterBelow40 = charName
+							# Conditions for select the character between 40~50 and still on academy
+							if not selectCharacterAcademyReady:
+								if charLevel >= 40 and charLevel <= 50 and academyMemberClass != 0:
+									selectCharacterAcademyReady = charName
+							# Condition for deleting character between 40~50
+							if not deleteCharacter:
+								if charLevel >= 40 and charLevel <= 50:
+									deleteCharacter = charName
 
 					if locale == 18 or locale == 54:
-						index+=1 # Removing warning
+						index+=1 # unkByte01 / Remove warning
 
+					# Warning to check if the packet has been parsed successfully
 					try:
 						if i == (nChars-1):
 							data[index]
@@ -484,21 +486,35 @@ def handle_joymax(opcode,data):
 						except:
 							log("Plugin: [Warning] Packet partially parsed.")
 
-					# Check for deleting a character
+					# Checking conditions/settings, the order matters here!
+					# Check setting
+					if selectCharacterAcademyReady and QtBind.isChecked(gui,cbxSelectCharOnAcademy):
+						log("Plugin: Selecting character ["+selectCharacterAcademyReady+"] (Still on Academy)")
+						select_character(selectCharacterAcademyReady)
+						return
+					# Check setting
 					if deleteCharacter and QtBind.isChecked(gui,cbxDeleteChar):
-						# Start checking for response
-						tryingDeleteChar = deleteCharacter
-						# Try delete it
-						log("Plugin: Deleting character ["+deleteCharacter+"] (Lv."+str(deleteCharacterLevel)+")")
+						# Try to delete it
+						isDeletingCharacter = True
+						log("Plugin: Deleting character ["+deleteCharacter+"] (Between level 40 and 50)")
 						Inject_DeleteCharacter(deleteCharacter)
-					# Select or create character if is required
-					if not selectCharacter:
+						# Asking the character list to avoid phbot getting stupid on popup window
+						Timer(3.0,Inject_RequestCharacterList).start()
+						return
+					# Check if exist character below 40
+					if characterBelow40:
+						# Check setting
+						if QtBind.isChecked(gui,cbxSelectChar):
+							log("Plugin: Selecting character ["+characterBelow40+"] (Lower than level 40)")
+							select_character(characterBelow40)
+					else:
 						# Check the char limit
 						if nChars < 4:
+							# Check setting
 							if QtBind.isChecked(gui,cbxCreateChar):
 								isCreatingCharacter = True
-								# Wait 10 seconds, then start looking for nicknames
-								Timer(10.0,create_nickname).start()
+								# Wait 3 seconds, then start looking for nicknames
+								Timer(3.0,createNickname).start()
 						else:
 							errMessage = "Plugin: Not enough space to create a new character!"
 							log(errMessage)
@@ -535,15 +551,7 @@ def handle_joymax(opcode,data):
 							# Exit from bot
 							if QtBind.isChecked(gui,cbxExit):
 								log("Plugin: Your bot will be closed at 5 seconds..")
-								Timer(5.0,CloseBot).start()
-					else:
-						# Do not select any character if we are trying to delete another one
-						if not deleteCharacter:
-							# Check settings
-							if QtBind.isChecked(gui,cbxSelectChar):
-								# Select the character without timer delay to avoid bot getting stupid
-								log("Plugin: Selecting character ["+selectCharacter+"] (lower than level 40)")
-								select_character(selectCharacter)
+								Timer(5.0,KillBot).start()
 		except:
 			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
 			log("If you want support, send me all this via private message:")
