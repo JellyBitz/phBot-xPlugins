@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.5.0'
+pVersion = '2.6.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -526,12 +526,12 @@ def CreateInfo(t,data):
 # channel_id : ID from channel to be sent
 # message : Text shown as discord notification
 # info : Extra data used at server for some notifications
-def Notify(channel_id,message,info=None):
+def Notify(channel_id,message,info=None,colour=None):
 	# Run this in another thread to avoid locking the client/bot and wait more time for the response
-	Timer(0.01,_Notify,(channel_id,message,info)).start()
+	Timer(0.001,_Notify,(channel_id,message,info,colour)).start()
 
 # Send a notification to discord channel
-def _Notify(channel_id,message,info):
+def _Notify(channel_id,message,info,colour):
 	# Check if there is enough data to create a notification
 	if not channel_id or not message:
 		return
@@ -544,11 +544,17 @@ def _Notify(channel_id,message,info):
 		# Add timestamp
 		if QtBind.isChecked(gui,cbxAddTimestamp):
 			message = "||"+datetime.now().strftime('%H:%M:%S')+"|| "+message
-		# Prepare json to send through POST method
-		params = json.dumps({"token":token,"channel":channel_id,"message":message,'info':info}).encode()
+		# Create json to send
+		data = {"token":token,"channel":channel_id,"message":message}
+		if info:
+			data['info'] = info
+		if colour != None:
+			data['colour'] = colour
+		# Prepare data to send through POST method
+		data = json.dumps(data).encode()
 		if not url.endswith("/"):
 			url += "/"
-		req = urllib.request.Request(url+"api/notify",data=params,headers={'content-type': 'application/json'})
+		req = urllib.request.Request(url+"api/notify",data=data,headers={'content-type':'application/json'})
 		with urllib.request.urlopen(req,timeout=URL_REQUEST_TIMEOUT) as f:
 			try:
 				resp = json.loads(f.read().decode())
@@ -565,7 +571,7 @@ def _Notify(channel_id,message,info):
 # Fetch messages on discord (queue) from the guild server indicated
 def Fetch(guild_id):
 	# Run this in another thread to avoid locking the client/bot and wait more time for the response
-	Timer(0.01,_Fetch,(guild_id,)).start()
+	Timer(0.001,_Fetch,(guild_id,)).start()
 
 # Fetch messages on discord (queue) from the guild server indicated
 def _Fetch(guild_id):
@@ -742,11 +748,11 @@ def handle_chat(t,player,msg):
 			if searchMessage:
 				try:
 					if re.search(searchMessage,msg):
-						Notify(QtBind.text(gui,cmbxEvtMessage_global),"[**Global**] `"+player+"`: "+msg)
+						Notify(QtBind.text(gui,cmbxEvtMessage_global),"[**Global**] `"+player+"`: "+msg,colour=0xffeb3b)
 				except Exception as ex:
 					log("Plugin: Error at regex ["+str(ex)+"]")
 		else:
-			Notify(QtBind.text(gui,cmbxEvtMessage_global),"[**Global**] `"+player+"`: "+msg)
+			Notify(QtBind.text(gui,cmbxEvtMessage_global),"[**Global**] `"+player+"`: "+msg,colour=0xffeb3b)
 	elif t == 7:
 		if QtBind.isChecked(gui,cbxEvtMessage_notice_filter):
 			searchMessage = QtBind.text(gui,tbxEvtMessage_notice_filter)
@@ -773,7 +779,7 @@ def handle_event(t, data):
 	elif t == 2:
 		Notify(QtBind.text(gui_,cmbxEvtNear_thief),"|`"+character_data['name']+"`| - **Thief** `"+data+"` is near to you!",CreateInfo("position",get_position()))
 	elif t == 4:
-		Notify(QtBind.text(gui_,cmbxEvtChar_attacked),"|`"+character_data['name']+"`| - `"+data+"` is attacking you!")
+		Notify(QtBind.text(gui_,cmbxEvtChar_attacked),"|`"+character_data['name']+"`| - `"+data+"` is attacking you!",colour=0xFF5722)
 	elif t == 7:
 		Notify(QtBind.text(gui_,cmbxEvtChar_died),"|`"+character_data['name']+"`| - You died",CreateInfo("position",get_position()))
 	elif t == 3:
@@ -820,11 +826,11 @@ def handle_joymax(opcode, data):
 					if searchName:
 						try:
 							if re.search(searchName,uniqueName):
-								Notify(channel_id,"**"+uniqueName+"** has appeared")
+								Notify(channel_id,"**"+uniqueName+"** has appeared",colour=0x9C27B0)
 						except Exception as ex:
 							log("Plugin: Error at regex ["+str(ex)+"]")
 				else:
-					Notify(channel_id,"**"+uniqueName+"** has appeared")
+					Notify(channel_id,"**"+uniqueName+"** has appeared",colour=0x9C27B0)
 		elif updateType == 6:
 			channel_id = QtBind.text(gui,cmbxEvtMessage_uniqueKilled)
 			if channel_id:
@@ -837,11 +843,11 @@ def handle_joymax(opcode, data):
 					if searchName:
 						try:
 							if re.search(searchName,uniqueName):
-								Notify(channel_id,"**"+uniqueName+"** killed by `"+killerName+"`")
+								Notify(channel_id,"**"+uniqueName+"** killed by `"+killerName+"`",colour=0x9C27B0)
 						except Exception as ex:
 							log("Plugin: Error at regex ["+str(ex)+"]")
 				else:
-					Notify(channel_id,"**"+uniqueName+"** killed by `"+killerName+"`")
+					Notify(channel_id,"**"+uniqueName+"** killed by `"+killerName+"`",colour=0x9C27B0)
 	# SERVER_BA_NOTICE
 	elif opcode == 0x34D2:
 		channel_id = QtBind.text(gui,cmbxEvtMessage_battlearena)
