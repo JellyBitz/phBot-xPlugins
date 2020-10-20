@@ -6,7 +6,7 @@ import json
 import struct
 import os
 
-pVersion = '1.3.0'
+pVersion = '1.3.1'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -505,7 +505,7 @@ def GoDimensional(args):
 		inject_joymax(0x704C,p,True)
 	else:
 		# Error message
-		log('Plugin: '+( '"'+Name+'"' if searchByName else 'Dimensional Hole')+' cannot be found at your inventory')
+		log('Plugin: '+( '"'+name+'"' if name else 'Dimensional Hole')+' cannot be found at your inventory')
 	return 0
 
 # Called when the character enters the game world
