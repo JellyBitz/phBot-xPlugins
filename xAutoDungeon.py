@@ -6,7 +6,7 @@ import json
 import struct
 import os
 
-pVersion = '1.3.1'
+pVersion = '1.3.2'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -351,10 +351,10 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 		# Setting training area far away. The bot should continue where he was at the script
 		set_training_position(0,0,0)
 		# Wait for bot to calm down and move back to the starting point
-		Timer(1.5,move_to,[x,y,z]).start()
-		Timer(1.5,log,["Plugin: Getting back to the script..."]).start()
+		log("Plugin: Getting back to the script...")
+		Timer(2.5,move_to,[x,y,z]).start()
 		# give it some time to reach the movement
-		Timer(4.0,start_bot).start()
+		Timer(5.0,start_bot).start()
 
 # Count all mobs around your character (60 or more it's the max. range I think)
 def getMobCount(radius):
@@ -392,7 +392,6 @@ def getMobCount(radius):
 def GetDistance(ax,ay,bx,by):
 	return ((bx-ax)**2 + (by-ay)**2)**(0.5)
 
-
 # Returns the item information if is found
 def GetDimensionalHole(Name):
 	searchByName = Name != ''
@@ -407,7 +406,6 @@ def GetDimensionalHole(Name):
 			else:
 				itemData = get_item(item['model'])
 				match = (itemData['tid1'] == 3 and itemData['tid2'] == 12 and itemData['tid3'] == 7)
-
 
 			if match:
 				item['slot'] = slot
@@ -477,7 +475,7 @@ def AttackArea(args):
 		if len(args) >= 3 and float(args[2]) > 0:
 			wait = float(args[2])
 		# start to kill mobs on other thread because interpreter lock
-		Timer(0.01,AttackMobs,[wait,False,p['x'],p['y'],p['z'],radius]).start()
+		Timer(0.001,AttackMobs,[wait,False,p['x'],p['y'],p['z'],radius]).start()
 	# otherwise continue normally
 	else:
 		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
@@ -533,7 +531,7 @@ def handle_joymax(opcode, data):
 			if data[0] == 1:
 				log('Plugin: "'+usingDimensionalItem['name']+'" has been opened')
 				# Avoid locking the proxy thread
-				Timer(0.01,EnterToDimensional,[usingDimensionalItem['name']]).start()
+				Timer(1.0,EnterToDimensional,[usingDimensionalItem['name']]).start()
 			else:
 				log('Plugin: "'+usingDimensionalItem['name']+'" cannot be opened')
 			usingDimensionalItem = None
