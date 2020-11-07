@@ -6,17 +6,18 @@ import json
 import struct
 import os
 
-pVersion = '1.3.2'
+pVersion = '1.4.1'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
 # ______________________________ Initializing ______________________________ #
 
 DEFAULT_CHECK_DELAY = 1.0 # seconds
+DEFAULT_DIMENSIONAL_MAX_TIME = 120 * 60 # seconds
 
 # Globals
 character_data = None
-usingDimensionalItem = None
+dimensionalItemUsed = None
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
@@ -424,7 +425,6 @@ def GetDimensionalPillarUID(Name):
 			if item and item['name'] == Name:
 				return uid
 	return 0
-	
 
 # Select and enter to the dimensional hole specified
 def EnterToDimensional(Name):
@@ -444,14 +444,39 @@ def EnterToDimensional(Name):
 		# Start bot, doesn't matter if is teleporting
 		Timer(5.0,start_bot).start()
 		return
-
 	# Error message
 	log('Plugin: "'+Name+'" cannot be found around you!')
 
+# Avoid interpreter lock
+def GoDimensionalThread(Name):
+	global dimensionalItemUsed
+	# Check if dimensional still opened
+	if dimensionalItemUsed:
+		Name = dimensionalItemUsed['name']
+		log('Plugin: '+( '"'+Name+'"' if Name else 'Dimensional Hole')+' still opened!')
+		EnterToDimensional(Name)
+		return
+	# Check if the item exists on inventory
+	item = GetDimensionalHole(Name)
+	if item:
+		# Set item used and reset his cooldown
+		dimensionalItemUsed = item
+		def DimensionalReset():
+			global dimensionalItemUsed
+			dimensionalItemUsed = None
+		Timer(DEFAULT_DIMENSIONAL_MAX_TIME*60,DimensionalReset).start()
+		# Inject item usage
+		log('Plugin: Using "'+item['name']+'"...')
+		p = struct.pack('B',item['slot'])
+		p += struct.pack('H',15980) # Usage type
+		inject_joymax(0x704C,p,True)
+	else:
+		# Error message
+		log('Plugin: '+( '"'+Name+'"' if Name else 'Dimensional Hole')+' cannot be found at your inventory')
+
 # ______________________________ Events ______________________________ #
 
-# Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,5" or "AttackArea,5,75"
-# Will be checking mobs every 5 seconds at the area as default.
+# Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,75"
 # Will be using radius maximum (75 approx) as default
 def AttackArea(args):
 	# radius maximum as default
@@ -470,12 +495,8 @@ def AttackArea(args):
 			set_training_radius(radius)
 		else:
 			set_training_radius(100.0)
-		# checking mobs delay
-		wait = DEFAULT_CHECK_DELAY
-		if len(args) >= 3 and float(args[2]) > 0:
-			wait = float(args[2])
 		# start to kill mobs on other thread because interpreter lock
-		Timer(0.001,AttackMobs,[wait,False,p['x'],p['y'],p['z'],radius]).start()
+		Timer(0.001,AttackMobs,[DEFAULT_CHECK_DELAY,False,p['x'],p['y'],p['z'],radius]).start()
 	# otherwise continue normally
 	else:
 		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
@@ -490,20 +511,8 @@ def GoDimensional(args):
 	name = ''
 	if len(args) > 1:
 		name = args[1]
-	# Check if the item exists
-	item = GetDimensionalHole(name)
-	if item:
-		# Start checking for item usage
-		global usingDimensionalItem
-		usingDimensionalItem = item
-		# Inject item usage
-		log('Plugin: Using "'+item['name']+'"...')
-		p = struct.pack('B',item['slot'])
-		p += struct.pack('H',15980) # Usage type
-		inject_joymax(0x704C,p,True)
-	else:
-		# Error message
-		log('Plugin: '+( '"'+name+'"' if name else 'Dimensional Hole')+' cannot be found at your inventory')
+	# Avoid lock
+	Timer(0.001,GoDimensionalThread,[name]).start()
 	return 0
 
 # Called when the character enters the game world
@@ -525,16 +534,18 @@ def handle_joymax(opcode, data):
 	# SERVER_INVENTORY_ITEM_USE
 	elif opcode == 0xB04C:
 		# Check if plugin used recently an item
-		global usingDimensionalItem
-		if usingDimensionalItem:
-			# Success
-			if data[0] == 1:
-				log('Plugin: "'+usingDimensionalItem['name']+'" has been opened')
-				# Avoid locking the proxy thread
-				Timer(1.0,EnterToDimensional,[usingDimensionalItem['name']]).start()
-			else:
-				log('Plugin: "'+usingDimensionalItem['name']+'" cannot be opened')
-			usingDimensionalItem = None
+		global dimensionalItemUsed
+		if dimensionalItemUsed:
+			# Check usage type it's from dimensional
+			usageType = struct.unpack_from('<H',data,4)[0]
+			if usageType == 15980:
+				# Success
+				if data[0] == 1:
+					log('Plugin: "'+dimensionalItemUsed['name']+'" has been opened')
+					# Avoid locking the proxy thread
+					Timer(1.0,EnterToDimensional,[dimensionalItemUsed['name']]).start()
+				else:
+					log('Plugin: "'+dimensionalItemUsed['name']+'" cannot be opened')
 	return True
 
 # Plugin loaded
