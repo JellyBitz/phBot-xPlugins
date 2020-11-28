@@ -6,7 +6,7 @@ import os
 import re
 
 pName = 'xTrivia'
-pVersion = '0.1.2'
+pVersion = '0.1.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTrivia.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -290,6 +290,10 @@ def CheckAnswerPattern(msg):
 			log("Plugin: Error at regex ["+str(ex)+"]")
 	return False
 # ______________________________ Events ______________________________ #
+
+# Called when the character enters the game world
+def joined_game():
+	loadConfigs()
 
 # All chat messages received are sent to this function
 def handle_chat(t,player,msg):
