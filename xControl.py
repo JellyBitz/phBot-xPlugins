@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.4.0'
+pVersion = '1.4.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -21,7 +21,7 @@ followDistance = 0
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
-lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA #PosX? #PosY? #Region? : Set training area.\n - SETRADIUS #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TP #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data? : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
+lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA #PosX? #PosY? #Region? #PosZ? : Set training area.\n - SETRADIUS #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TP #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data? : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
 lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game\n - MOUNT #PetType? : Mount horse by default\n - DISMOUNT #PetType? : Dismount horse by default\n - GETOUT : Left party\n - RECALL #Town : Set recall on city portal\n - SETSCRIPT #Path : Change script path for training area',345,101)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
@@ -324,9 +324,14 @@ def handle_chat(t,player,msg):
 		elif msg.startswith("SETAREA"):
 			# deletes empty spaces on right
 			msg = msg.rstrip()
+			# API compatibility
+			compatibility = tuple(map(int, (get_version().split(".")))) >= (25.0.7)
 			if msg == "SETAREA":
 				p = get_position()
-				set_training_position(p['region'], p['x'], p['y'])
+				if compatibility:
+					set_training_position(p['region'], p['x'], p['y'],p['z'])
+				else
+					set_training_position(p['region'], p['x'], p['y'])
 				log("Plugin: Training area set to current position (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
 			else:
 				try:
@@ -336,7 +341,11 @@ def handle_chat(t,player,msg):
 					y = float(p[1])
 					# auto calculated if is not specified
 					region = int(p[2]) if len(p) >= 3 else 0
-					set_training_position(region,x,y)
+					if compatibility:
+						z = float(p[3]) if len(p) >= 4 else 0
+						set_training_position(region,x,y,z)
+					else:
+						set_training_position(region,x,y)
 					log("Plugin: Training area set to (X:%.1f,Y:%.1f)"%(x,y))
 				except:
 					log("Plugin: Wrong training area coordinates!")
