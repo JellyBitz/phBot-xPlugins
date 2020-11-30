@@ -15,6 +15,9 @@ pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoD
 DEFAULT_CHECK_DELAY = 1.0 # seconds
 DEFAULT_DIMENSIONAL_MAX_TIME = 120 * 60 # seconds
 
+# API compatibility
+API_COMPATIBILITY = tuple(map(int, (get_version().split(".")))) < (25.0.7)
+
 # Globals
 character_data = None
 dimensionalItemUsed = None
@@ -350,7 +353,10 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 		# All mobs killed, stop botting
 		stop_bot()
 		# Setting training area far away. The bot should continue where he was at the script
-		set_training_position(0,0,0)
+		if API_COMPATIBILITY:
+			set_training_position(0,0,0)
+		else:
+			set_training_position(0,0,0,0)
 		# Wait for bot to calm down and move back to the starting point
 		log("Plugin: Getting back to the script...")
 		Timer(2.5,move_to,[x,y,z]).start()
@@ -489,7 +495,10 @@ def AttackArea(args):
 		stop_bot()
 		# set automatically the training area
 		p = get_position()
-		set_training_position(p['region'], p['x'], p['y'])
+		if API_COMPATIBILITY:
+			set_training_position(p['region'], p['x'], p['y'])
+		else:
+			set_training_position(p['region'], p['x'], p['y'],p['z'])
 		# set automatically the radius to avoid setting conflict
 		if radius != None:
 			set_training_radius(radius)
