@@ -6,7 +6,7 @@ import json
 import struct
 import os
 
-pVersion = '1.4.2'
+pVersion = '1.4.3'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -16,7 +16,7 @@ DEFAULT_CHECK_DELAY = 1.0 # seconds
 DEFAULT_DIMENSIONAL_MAX_TIME = 120 * 60 # seconds
 
 # API compatibility
-API_COMPATIBILITY = tuple(map(int, (get_version().split(".")))) < (25.0.7)
+API_COMPATIBILITY = tuple(map(int, (get_version().split(".")))) < (25,0,7)
 
 # Globals
 character_data = None
