@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.4.2'
+pVersion = '1.4.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -330,7 +330,7 @@ def handle_chat(t,player,msg):
 				p = get_position()
 				if compatibility:
 					set_training_position(p['region'], p['x'], p['y'])
-				else
+				else:
 					set_training_position(p['region'], p['x'], p['y'],p['z'])
 				log("Plugin: Training area set to current position (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
 			else:
