@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.4.3'
+pVersion = '1.4.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -418,9 +418,16 @@ def handle_chat(t,player,msg):
 			log("Plugin: Using Berserker mode")
 			inject_joymax(0x70A7,b'\x01',False)
 		elif msg == "RETURN":
-			log('Plugin: Trying to use return scroll...')
-			# Avoid high CPU usage with too many chars at the same time
-			Timer(random.uniform(0.5,2),use_return_scroll).start()
+			# Quickly check if is dead
+			character = get_character_data()
+			if character['hp'] == 0:
+				# RIP
+				log('Plugin: Resurrecting at town...')
+				inject_joymax(0x3053,b'\x01',False)
+			else:
+				log('Plugin: Trying to use return scroll...')
+				# Avoid high CPU usage with too many chars at the same time
+				Timer(random.uniform(0.5,2),use_return_scroll).start()
 		elif msg.startswith("TP"):
 			# deletes command header
 			msg = msg[2:]
