@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.7.0'
+pVersion = '2.7.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -168,13 +168,6 @@ _y+=20
 QtBind.createLabel(gui_,'Transport/Horse died',_x+_cmbxWidth+4,_y+3)
 cmbxEvtPet_died = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
-QtBind.createLabel(gui_,'Hunter consignment notices',_x+_cmbxWidth+4,_y+3)
-cmbxEvtHunter_consignment = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui_,'Thief consignment notices',_x+_cmbxWidth+4,_y+3)
-cmbxEvtThief_consignment = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
-_y+=20
-
 
 # party
 _y+=5
@@ -222,10 +215,16 @@ cmbxEvtBot_alchemy = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
 QtBind.createLabel(gui_,'Stall item sold',_x+_cmbxWidth+4,_y+3)
 cmbxEvtMessage_item_sold = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui_,'Hunter consignment notices',_x+_cmbxWidth+4,_y+3)
+cmbxEvtHunter_consignment = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui_,'Thief consignment notices',_x+_cmbxWidth+4,_y+3)
+cmbxEvtThief_consignment = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 
 # wrap to iterate
 cmbxTriggers={"cmbxEvtMessage_all":cmbxEvtMessage_all,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtChar_disconnected":cmbxEvtChar_disconnected,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
-cmbxTriggers_={"cmbxEvtNear_gm":cmbxEvtNear_gm,"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtHunter_consignment":cmbxEvtHunter_consignment,"cmbxEvtThief_consignment":cmbxEvtThief_consignment,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy,"cmbxEvtMessage_item_sold":cmbxEvtMessage_item_sold}
+cmbxTriggers_={"cmbxEvtNear_gm":cmbxEvtNear_gm,"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy,"cmbxEvtMessage_item_sold":cmbxEvtMessage_item_sold,"cmbxEvtHunter_consignment":cmbxEvtHunter_consignment,"cmbxEvtThief_consignment":cmbxEvtThief_consignment}
 
 # ______________________________ Methods ______________________________ #
 
@@ -860,11 +859,11 @@ def handle_joymax(opcode, data):
 				else:
 					Notify(channel_id,"**"+uniqueName+"** killed by `"+killerName+"`",colour=0x9C27B0)
 		elif updateType == 29:
-			eventType = data[1]
+			eventType = data[2]
 			if eventType == 1:
 				channel_id = QtBind.text(gui_,cmbxEvtHunter_consignment)
 				if channel_id:
-					progressType = data[2]
+					progressType = data[3]
 					if progressType == 0:
 						Notify(channel_id,"[**Consignment**] Hunter trade will start at 10 minutes")
 					elif eventProgress == 1:
@@ -874,7 +873,7 @@ def handle_joymax(opcode, data):
 			elif eventType == 2:
 				channel_id = QtBind.text(gui_,cmbxEvtThief_consignment)
 				if channel_id:
-					progressType = data[2]
+					progressType = data[3]
 					if progressType == 0:
 						Notify(channel_id,"[**Consignment**] Thief trade will start at 10 minutes")
 					elif eventProgress == 1:
