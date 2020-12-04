@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.7.1'
+pVersion = '2.7.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -866,9 +866,9 @@ def handle_joymax(opcode, data):
 					progressType = data[3]
 					if progressType == 0:
 						Notify(channel_id,"[**Consignment**] Hunter trade will start at 10 minutes")
-					elif eventProgress == 1:
+					elif progressType == 1:
 						Notify(channel_id,"[**Consignment**] Hunter trade started")
-					elif eventProgress == 2:
+					elif progressType == 2:
 						Notify(channel_id,"[**Consignment**] Hunter trade has ended")
 			elif eventType == 2:
 				channel_id = QtBind.text(gui_,cmbxEvtThief_consignment)
@@ -876,9 +876,9 @@ def handle_joymax(opcode, data):
 					progressType = data[3]
 					if progressType == 0:
 						Notify(channel_id,"[**Consignment**] Thief trade will start at 10 minutes")
-					elif eventProgress == 1:
+					elif progressType == 1:
 						Notify(channel_id,"[**Consignment**] Thief trade started")
-					elif eventProgress == 2:
+					elif progressType == 2:
 						Notify(channel_id,"[**Consignment**] Thief trade has ended")
 	# SERVER_BA_NOTICE
 	elif opcode == 0x34D2:
