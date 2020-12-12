@@ -11,22 +11,22 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.7.2'
+pVersion = '2.8.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
 
-CHECK_DISCONNECT_DELAY_MAX = 15000 # ms
-DISCORD_FETCH_DELAY = 5000 # ms
-URL_REQUEST_TIMEOUT = 15 # sec
 URL_HOST = "https://jellydix.ddns.net" # API server
+URL_REQUEST_TIMEOUT = 15 # sec
+DISCORD_FETCH_DELAY = 5000 # ms
 
 # Globals
 character_data = None
 party_data = None
+chat_data = {}
+isOnline = False
 hasStall = False
-checking_disconnect = False
-checking_disconnect_counter = 0
+
 discord_fetch_counter = 0
 discord_chat_handlers = []
 
@@ -323,10 +323,9 @@ def loadConfigs():
 	loadDefaultConfig()
 	if isJoined():
 
-		# Start checking the ping
-		global checking_disconnect,checking_disconnect_counter
-		checking_disconnect = True
-		checking_disconnect_counter = 0
+		# Connection status
+		global isOnline
+		isOnline = True
 
 		# Check config exists to load
 		if os.path.exists(getConfig()):
@@ -463,10 +462,6 @@ def loadConfigs():
 					QtBind.setText(gui_,cmbxEvtBot_alchemy,triggers["cmbxEvtBot_alchemy"])
 				if "cmbxEvtMessage_item_sold" in triggers:
 					QtBind.setText(gui_,cmbxEvtMessage_item_sold,triggers["cmbxEvtMessage_item_sold"])
-
-# Checkbox trigger clicked
-def cbxDoNothing(checked):
-	pass
 
 # Return True if the text exist at the array
 def ListContains(list,text):
@@ -721,6 +716,77 @@ def GetChatHandlers():
 			except Exception as ex:
 				log('Plugin: Error loading '+path.name+' plugin. '+str(ex))
 	return handlers
+
+# Analyze and extract item information from the index given
+def ParseItem(data,index):
+	rentID = struct.unpack_from('<I', data, index)[0]
+	index += 4 # Rent id
+	# TO DO: Parse rentability stuffs
+	index += 4 # UnkUInt01
+	itemID = struct.unpack_from('<I', data, index)[0]
+	index += 4 # Item ID
+	itemData = get_item(itemID)
+	# IsEquipable
+	if itemData['tid1'] == 1:
+		index += 1 # plus
+		index += 8 # stats
+		index += 4 # durability
+		count = data[index]
+		index += 1 # magic options
+		for i in range(count):
+			index += 4 # id
+			index += 4 # value
+		index += 1 # (1)
+		count = data[index]
+		index += 1 # sockets
+		for i in range(count):
+			index += 1 # slot
+			index += 4 # id
+			index += 4 # value
+		index += 1 # (2)
+		count = data[index]
+		index += 1 # adv
+		for i in range(count):
+			index += 1 # slot
+			index += 4 # id
+			index += 4 # value
+		index += 4 # UnkUint02
+	# IsCOS
+	elif itemData['tid1'] == 2:
+		# IsPet
+		if itemData['tid2'] == 1:
+			state = data[index]
+			index += 1 # state
+			if state != 1:
+				index += 4 # model
+				index += 2 + struct.unpack_from('<H', data, index)[0] # name
+				# NeedsTime
+				if data['tid3'] == 2:
+					index += 4 # endtime
+				index += 1 # UnkByte01
+		# IsTransform
+		elif itemData['tid2'] == 2:
+			index += 4 # model
+		# IsCube?
+		elif itemData['tid2'] == 3:
+			index += 4 # quantity
+	# IsETC
+	elif itemData['tid1'] == 3:
+		index += 2 # quantity
+		# IsAlchemy
+		if itemData['tid2'] == 11:
+			# IsStone
+			if itemData['tid3'] == 1 or itemData['tid3'] == 2:
+				index += 1 # assimilation
+		# IsCard
+		elif itemData['tid2'] == 14 and itemData['tid3'] == 2:
+			count = data[index]
+			index += 1 # params
+			for i in range(count):
+				index += 4 # id
+				index += 4 # value
+	return index,itemData
+
 # ______________________________ Events ______________________________ #
 
 # Scripting support to send notifications like "JellyDix,Channel ID,Message"
@@ -735,8 +801,31 @@ def joined_game():
 	loadConfigs()
 	Notify(QtBind.text(gui,cmbxEvtChar_joined),"|`"+character_data['name']+"`| - Joined to the game")
 
+# Called when the character has been disconnected
+def disconnected():
+	global isOnline
+	if isOnline:
+		isOnline = False
+		channel_id = QtBind.text(gui,cmbxEvtChar_disconnected)
+		if channel_id:
+			Notify(channel_id,"|`"+character_data['name']+"`| You has been disconnected")
+
 # All chat messages received are sent to this function
 def handle_chat(t,player,msg):
+	# Check if contains item linking
+	itemLink = re.search('([0-9]*)',msg)
+	if itemLink:
+		global chat_data
+		links = itemLink.groups()
+		for i in range(len(links)):
+			uid = int(links[i])
+			if uid in chat_data:
+				item = chat_data[uid]
+				race = getRaceText(item['servername'])
+				genre = getGenreText(item['servername'])
+				msg = msg.replace(''+links[i]+'','`< '+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+' >`')
+			else:
+				msg = msg.replace(''+links[i]+'','`< '+links[i]+' >`')
 	# Check message type
 	if t == 1:
 		Notify(QtBind.text(gui,cmbxEvtMessage_all),"|`"+character_data['name']+"`| - [**General**] from `"+player+"`: "+msg)
@@ -815,11 +904,6 @@ def handle_event(t, data):
 # All packets received from game server will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game client
 def handle_joymax(opcode, data):
-	# Reset disconnect delay counter on every server packet
-	# You has been disconnected probably if no packets has been received for a long time
-	global checking_disconnect_counter
-	checking_disconnect_counter = 0
-	
 	# globals used in more than one IF statement
 	global party_data,hasStall
 
@@ -1001,18 +1085,35 @@ def handle_joymax(opcode, data):
 					if oldLevel < newLevel:
 						Notify(channel_id,"|`"+character_data['name']+"`| `"+party_data[joinID]['name']+"` level up!\n"+getPartyTextList(party_data))
 	# SERVER_STALL_CREATE_RESPONSE
-	elif opcode == 0xB0B1 and data[0] == 1:
-		hasStall = True
+	elif opcode == 0xB0B1:
+		if data[0] == 1:
+			hasStall = True
 	# SERVER_STALL_DESTROY_RESPONSE
-	elif opcode == 0xB0B2 and data[0] == 1:
-		hasStall = False
+	elif opcode == 0xB0B2:
+		if data[0] == 1:
+			hasStall = False
 	# SERVER_STALL_ENTITY_ACTION
-	elif opcode == 0x30B7 and data[0] == 3 and hasStall:
-		channel_id = QtBind.text(gui_,cmbxEvtMessage_item_sold)
-		if channel_id:
-			playerNameLength = struct.unpack_from('<H', data, 2)[0]
-			playerName = struct.unpack_from('<' + str(playerNameLength) + 's', data, 4)[0].decode('cp1252')
-			Notify(channel_id,"|`"+character_data['name']+"`| `"+playerName+"` bought an item from your stall\n```Your gold now: "+getGoldText()+"```")
+	elif opcode == 0x30B7:
+		if data[0] == 3 and hasStall:
+			channel_id = QtBind.text(gui_,cmbxEvtMessage_item_sold)
+			if channel_id:
+				playerNameLength = struct.unpack_from('<H', data, 2)[0]
+				playerName = struct.unpack_from('<' + str(playerNameLength) + 's', data, 4)[0].decode('cp1252')
+				Notify(channel_id,"|`"+character_data['name']+"`| `"+playerName+"` bought an item from your stall\n```Your gold now: "+getGoldText()+"```")
+	# SERVER_CHAT_ITEM_DATA
+	elif opcode == 0xB504:
+		global chat_data
+		index = 2
+		for i in range(data[1]):
+			uid = struct.unpack_from('<I', data, index)[0]
+			index += 4 # Unique ID
+			try:
+				index, item = ParseItem(data,index)
+				chat_data[uid] = item
+			except Exception as ex:
+				# Make easy log file for user
+				with open(getPath()+"error.log","a") as f:
+					f.write("["+str(ex)+"] Server: (Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+'\r\n')
 	return True
 
 # All picked up items are sent to this function (only vSRO working at the moment) 
@@ -1058,17 +1159,6 @@ def notify_pickup(channel_id,itemID):
 def event_loop():
 	# Check if is in game at first
 	if character_data:
-		# generate disconnect event
-		global checking_disconnect
-		if checking_disconnect:
-			global checking_disconnect_counter
-			checking_disconnect_counter += 500
-			# Check if delay is longer to trigger disconnect event
-			if checking_disconnect_counter >= CHECK_DISCONNECT_DELAY_MAX:
-				# Execute only once
-				checking_disconnect = False
-				on_disconnect()
-
 		# generate fetch stuff
 		global discord_fetch_counter
 		discord_fetch_counter += 500
@@ -1078,12 +1168,6 @@ def event_loop():
 			if QtBind.isChecked(gui,cbxDiscord_interactions):
 				# Fetch messages from guild
 				Fetch(QtBind.text(gui,tbxDiscord_guild_id))
-
-# Called when the character has not received the ping for a long time which means is disconnected
-def on_disconnect():
-	channel_id = QtBind.text(gui,cmbxEvtChar_disconnected)
-	if channel_id:
-		Notify(channel_id,"|`"+character_data['name']+"`| You has been disconnected")
 
 # Called everytime discord has been fetch
 def on_discord_fetch(data):
