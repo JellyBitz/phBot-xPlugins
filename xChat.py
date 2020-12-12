@@ -236,8 +236,8 @@ def logline(args):
 	if len(args) == 2:
 		path = "log.txt" if QtBind.isChecked(gui,cbxLogsInOne) else character_data["server"]+"_"+character_data["name"]+"_log.txt"
 		date = strftime("%d/%m %I:%M:%S %p", localtime())
-		with open(getPath()+path,"a+") as f:
-			f.write(date+" > "+args[1])
+		with open(getPath()+path, "a", encoding='utf-8') as f:
+			f.write(date+" > "+ (args[1]).encode('utf-8').decode('utf-8') +'\n')
 
 # Called when the bot successfully connects to the game server
 def connected():
