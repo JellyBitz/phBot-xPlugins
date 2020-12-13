@@ -6,7 +6,7 @@ import json
 import struct
 import os
 
-pVersion = '1.4.3'
+pVersion = '1.4.4'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -339,7 +339,7 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 		log("Plugin: All mobs killed!")
 		# Check pickable drops and max attempts
 		waitAttemptsMax = 10
-		drops = get_drops()
+		drops = None #get_drops()
 		while drops:
 			if not waitAttemptsMax:
 				log("Plugin: Waiting for picking up timeout!")
