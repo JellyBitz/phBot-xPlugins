@@ -1,6 +1,8 @@
 from phBot import *
 import QtBind
 from threading import Timer
+from datetime import datetime
+from datetime import timedelta
 import struct
 import random
 import json
@@ -8,7 +10,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.3.1'
+pVersion = '1.4.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -384,20 +386,20 @@ def handle_joymax(opcode,data):
 			elif action == 2:
 				if success == 1:
 					# Main process
-					characterBelow40 = ""
-					selectCharacter = ""
-					selectCharacterAcademyReady = ""
-					deleteCharacter = ""
+					charList = []
 					# Check all characters at selection screen
 					nChars = data[index]
 					index+=1
 					log("Plugin: xAcademy character list: "+ ("None" if not nChars else ""))
 					for i in range(nChars):
+						# Build character object
+						character = {}
+						character['model_id'] = struct.unpack_from('<I',data,index)[0]
 						index+=4 # model id
 						# ReadAscii() / ushort (2) + string (length)
 						charLength = struct.unpack_from('<H',data,index)[0]
 						index+=2 # name length
-						charName = struct.unpack_from('<' + str(charLength) + 's',data,index)[0].decode('cp1252')
+						character['name'] = struct.unpack_from('<' + str(charLength) + 's',data,index)[0].decode('cp1252')
 						index+= charLength # name
 						
 						if locale == 18 or locale == 54:
@@ -407,7 +409,7 @@ def handle_joymax(opcode,data):
 							index+= nickLength # nickname
 						
 						index+=1 # scale
-						charLevel = data[index]
+						character['level'] = data[index]
 						index+=1 # level
 						index+=8 # exp
 						index+=2 # str
@@ -423,10 +425,12 @@ def handle_joymax(opcode,data):
 						if locale == 18 or locale == 54:
 							index+=2
 
-						charIsDeleting = data[index]
+						character['is_deleting'] = data[index]
 						index+=1 # isDeleting
-						if charIsDeleting:
-							index+=4
+						if character['is_deleting']:
+							minutesLeft = struct.unpack_from('<I',data,index)[0]
+							character['deleted_at'] = datetime.now() + timedelta(minutes=minutesLeft)
+							index+=4 # minutes left
 
 						if locale == 18 or locale == 54:
 							index+=4
@@ -440,7 +444,8 @@ def handle_joymax(opcode,data):
 							index+=(2 + strLength)
 						else:
 							index+=1
-						academyMemberClass = data[index]
+
+						character['academy_type'] = data[index]
 						index+=1 # academyMemberClass
 						forCount = data[index]
 						index+=1 # item count
@@ -453,23 +458,9 @@ def handle_joymax(opcode,data):
 							index+=4 # RefItemID
 							index+=1 # plus
 						
-						# Show info about previous character
-						log(str(i+1)+") "+charName+" (Lv."+str(charLevel)+")"+(" [*]" if charIsDeleting else ""))
-
-						# Characters being deleted are skipped from conditions
-						if not charIsDeleting:
-							# Condition to check if character is below 40
-							if not characterBelow40:
-								if charLevel < 40:
-									characterBelow40 = charName
-							# Conditions for select the character between 40~50 and still on academy
-							if not selectCharacterAcademyReady:
-								if charLevel >= 40 and charLevel <= 50 and academyMemberClass != 0:
-									selectCharacterAcademyReady = charName
-							# Condition for deleting character between 40~50
-							if not deleteCharacter:
-								if charLevel >= 40 and charLevel <= 50:
-									deleteCharacter = charName
+						# Show info about character
+						charList.append(character)
+						log(str(i+1)+") "+character['name']+" (Lv."+str(character['level'])+")"+(" [*] ("+character['deleted_at'].strftime('%H:%M %d/%m/%Y')+")" if character['is_deleting'] else ""))
 
 					if locale == 18 or locale == 54:
 						index+=1 # unkByte01 / Remove warning
@@ -486,77 +477,103 @@ def handle_joymax(opcode,data):
 						except:
 							log("Plugin: [Warning] Packet partially parsed.")
 
-					# Checking conditions/settings, the order matters here!
-					# Check setting
-					if selectCharacterAcademyReady and QtBind.isChecked(gui,cbxSelectCharOnAcademy):
-						log("Plugin: Selecting character ["+selectCharacterAcademyReady+"] (Still on Academy)")
-						select_character(selectCharacterAcademyReady)
-						return
-					# Check setting
-					if deleteCharacter and QtBind.isChecked(gui,cbxDeleteChar):
-						# Try to delete it
-						isDeletingCharacter = True
-						log("Plugin: Deleting character ["+deleteCharacter+"] (Between level 40 and 50)")
-						Inject_DeleteCharacter(deleteCharacter)
-						# Asking the character list to avoid phbot getting stupid on popup window
-						Timer(3.0,Inject_RequestCharacterList).start()
-						return
-					# Check if exist character below 40
-					if characterBelow40:
-						# Check setting
-						if QtBind.isChecked(gui,cbxSelectChar):
-							log("Plugin: Selecting character ["+characterBelow40+"] (Lower than level 40)")
-							select_character(characterBelow40)
-					else:
-						# Check the char limit
-						if nChars < 4:
-							# Check setting
-							if QtBind.isChecked(gui,cbxCreateChar):
-								isCreatingCharacter = True
-								# Wait 3 seconds, then start looking for nicknames
-								Timer(3.0,createNickname).start()
-						else:
-							errMessage = "Plugin: Not enough space to create a new character!"
-							log(errMessage)
-
-							# Check actions
-							cmd = QtBind.text(gui,tbxCMD)
-							if cmd:
-								log("Plugin: Trying to execute command ["+cmd+"]")
-								# Run in subprocess to avoid lock it
-								subprocess.Popen(cmd)
-
-							# Try to show notification
-							if QtBind.isChecked(gui,cbxNotification_Full):
-								show_notification(pName+' v'+pVersion,errMessage)
-
-							# Play sound
-							if QtBind.isChecked(gui,cbxSound_Full):
-								try:
-									# Check if path has been set somehow
-									path = QtBind.text(gui,tbxSound_Full)
-									play_wav(path if path else NOTIFICATION_SOUND_PATH)
-								except:
-									pass
-
-							# Log into the file
-							if QtBind.isChecked(gui,cbxLog_Full):
-								from datetime import datetime
-								logText = datetime.now().strftime('%m/%d/%Y - %H:%M:%S')+': '+errMessage
-								profileName = QtBind.text(gui,tbxProfileName)
-								logText += '\nProfile being used: '+ (profileName if profileName else 'None')
-								with open(getPath()+'_log.txt','a') as f:
-									f.write(logText)
-
-							# Exit from bot
-							if QtBind.isChecked(gui,cbxExit):
-								log("Plugin: Your bot will be closed at 5 seconds..")
-								Timer(5.0,KillBot).start()
-		except:
-			log("Plugin: Oops! Parsing error.. "+pName+" cannot run at this server!")
-			log("If you want support, send me all this via private message:")
+					# Make sure it's not a parsing error
+					try:
+						# call event
+						OnCharacterList(charList)
+					except Exception as innerEx:
+						log("Plugin: "+str(innerEx))
+		except Exception as ex:
+			log("Plugin: Error ["+str(ex)+"] - "+pName+" doesn't work at this server!")
+			log("If you need support, send me all this via private message:")
 			log("Data [" + ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+"] Locale ["+str(locale)+"]")
 	return True
+
+
+# Called after character list is loaded
+def OnCharacterList(CharList):
+	# Check chars conditions
+	for character in CharList:
+		# Avoid check chars being deleted
+		if not character['is_deleting']:
+			charName = character['name']
+			charLevel = character['level']
+			charAcademyType = character['academy_type']
+
+			# Conditions for select the character between 40~50 and still on academy
+			if charLevel >= 40 and charLevel <= 50 and charAcademyType != 0:
+				# Check setting
+				if QtBind.isChecked(gui,cbxSelectCharOnAcademy):
+					log("Plugin: Selecting character ["+charName+"] (Still on Academy)")
+					select_character(charName)
+					return
+
+			# Condition to check if character is below 40
+			if charLevel < 40:
+				# Check setting
+				if QtBind.isChecked(gui,cbxSelectChar):
+					log("Plugin: Selecting character ["+charName+"] (Lower than level 40)")
+					select_character(charName)
+					return
+
+			# Condition for deleting character between 40~50
+			if charLevel >= 40 and charLevel <= 50:
+				# Check setting
+				if QtBind.isChecked(gui,cbxDeleteChar):
+					# Try to delete it
+					global isDeletingCharacter
+					isDeletingCharacter = True
+					log("Plugin: Deleting character ["+charName+"] (Between level 40 and 50)")
+					Inject_DeleteCharacter(charName)
+					# Asking the character list to avoid phbot getting stupid on popup window
+					Timer(3.0,Inject_RequestCharacterList).start()
+					return
+
+	# No conditions triggered
+	if len(CharList) < 4:
+		# Check setting
+		if QtBind.isChecked(gui,cbxCreateChar):
+			global isCreatingCharacter
+			isCreatingCharacter = True
+			# Wait 3 seconds, then start looking for nicknames
+			Timer(3.0,createNickname).start()
+	else:
+		errMessage = "Plugin: Not enough space to create a new character!"
+		log(errMessage)
+
+		# Check actions
+		cmd = QtBind.text(gui,tbxCMD)
+		if cmd:
+			log("Plugin: Trying to execute command ["+cmd+"]")
+			# Run in subprocess to avoid lock it
+			subprocess.Popen(cmd)
+
+		# Try to show notification
+		if QtBind.isChecked(gui,cbxNotification_Full):
+			show_notification(pName+' v'+pVersion,errMessage)
+
+		# Play sound
+		if QtBind.isChecked(gui,cbxSound_Full):
+			try:
+				# Check if path has been set somehow
+				path = QtBind.text(gui,tbxSound_Full)
+				play_wav(path if path else NOTIFICATION_SOUND_PATH)
+			except:
+				pass
+
+		# Log into the file
+		if QtBind.isChecked(gui,cbxLog_Full):
+			from datetime import datetime
+			logText = datetime.now().strftime('%m/%d/%Y - %H:%M:%S')+': '+errMessage
+			profileName = QtBind.text(gui,tbxProfileName)
+			logText += '\nProfile being used: '+ (profileName if profileName else 'None')
+			with open(getPath()+'_log.txt','a') as f:
+				f.write(logText)
+
+		# Exit from bot
+		if QtBind.isChecked(gui,cbxExit):
+			log("Plugin: Your bot will be closed at 5 seconds..")
+			Timer(5.0,KillBot).start()
 
 # Plugin loading ...
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
