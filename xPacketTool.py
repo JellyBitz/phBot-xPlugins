@@ -4,7 +4,7 @@ import json
 import os
 
 pName = 'xPackeTool'
-pVersion = '1.1.0'
+pVersion = '1.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPackeTool.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -120,16 +120,18 @@ def btnInjectPacket(IProxySend):
 	strData = QtBind.text(gui,txtData)
 	# Opcode or Data is not empty
 	if strOpcode and strData:
-		packet = bytearray()
+		data = bytearray()
 		opcode = int(strOpcode,16)
 		data = strData.split()
 		i = 0
 		while i < len(data):
-			packet.append(int(data[i],16))
+			data.append(int(data[i],16))
 			i += 1
 		encrypted = QtBind.isChecked(gui,cbxEncrypted)
-		log("Plugin: Injecting packet...\n(Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not packet else ' '.join('{:02X}'.format(x) for x in packet)))
-		IProxySend(opcode,packet,encrypted)
+		# Show injection log
+		log("Plugin: Injecting packet"+(' (Encrypted)' if encrypted else '')+" :")
+		log("(Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not data else ' '.join('{:02X}'.format(x) for x in data)))
+		IProxySend(opcode,data,encrypted)
 
 # Checkbox "Don't show" checked
 def cbxDontShow_clicked(checked):
@@ -213,9 +215,11 @@ def inject(args):
 	# Create packet data and inject it
 	for i in range(dataIndex, argCount):
 		data.append(int(args[i],16))
-	inject_joymax(opcode,data,encrypted)
 	# Show injection log
-	log("Plugin: Injecting packet "+'{:02X}'.format(opcode)+"...")
+	log("Plugin: Injecting packet"+(' (Encrypted)' if encrypted else '')+" :")
+	log("(Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not data else ' '.join('{:02X}'.format(x) for x in data)))
+	# inject it
+	inject_joymax(opcode,data,encrypted)
 	return 0
 
 # All packets received from Silkroad will be passed to this function
