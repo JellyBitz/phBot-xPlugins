@@ -10,7 +10,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.4.0'
+pVersion = '1.4.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -243,14 +243,14 @@ def CreateCharacter():
 	isCreatingCharacter = True
 	log('Plugin: Creating character ['+CreatingNickname+'] ('+race+')')
 	p = b'\x01'
-	p += struct.pack('H', len(CreatingNickname))
+	p += struct.pack('<H', len(CreatingNickname))
 	p += CreatingNickname.encode('ascii')
-	p += struct.pack('I', model)
-	p += struct.pack('B', 0)
-	p += struct.pack('I', chest)
-	p += struct.pack('I', legs)
-	p += struct.pack('I', shoes)
-	p += struct.pack('I', weapon)
+	p += struct.pack('<I', model)
+	p += struct.pack('<B', 0)
+	p += struct.pack('<I', chest)
+	p += struct.pack('<I', legs)
+	p += struct.pack('<I', shoes)
+	p += struct.pack('<I', weapon)
 	# Try to create character
 	inject_joymax(0x7007,p, False)
 
@@ -264,14 +264,14 @@ def Inject_RequestCharacterList():
 # Inject Packet
 def Inject_DeleteCharacter(charName):
 	p = b'\x03'
-	p += struct.pack('H', len(charName))
+	p += struct.pack('<H', len(charName))
 	p += charName.encode('ascii')
 	inject_joymax(0x7007,p, False)
 
 # Inject Packet
 def Inject_CheckName(charName):
 	p = b'\x04'
-	p += struct.pack('H', len(charName))
+	p += struct.pack('<H', len(charName))
 	p += charName.encode('ascii')
 	inject_joymax(0x7007,p, False)
 
