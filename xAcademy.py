@@ -10,7 +10,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.4.1'
+pVersion = '1.4.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -402,7 +402,7 @@ def handle_joymax(opcode,data):
 						character['name'] = struct.unpack_from('<' + str(charLength) + 's',data,index)[0].decode('cp1252')
 						index+= charLength # name
 						
-						if locale == 18 or locale == 54:
+						if locale == 18 or locale == 54 or locale == 56:
 							nickLength = struct.unpack_from('<H',data,index)[0]
 							index+=2 # nick length
 							nickName = struct.unpack_from('<' + str(nickLength) + 's',data,index)[0].decode('cp1252')
@@ -416,13 +416,13 @@ def handle_joymax(opcode,data):
 						index+=2 # int
 						index+=2 # stats
 
-						if locale == 18 or locale == 54:
+						if locale == 18 or locale == 54 or locale == 56:
 							index+=4
 
 						index+=4 # hp
 						index+=4 # mp
 
-						if locale == 18 or locale == 54:
+						if locale == 18 or locale == 54 or locale == 56:
 							index+=2
 
 						character['is_deleting'] = data[index]
@@ -432,7 +432,7 @@ def handle_joymax(opcode,data):
 							character['deleted_at'] = datetime.now() + timedelta(minutes=minutesLeft)
 							index+=4 # minutes left
 
-						if locale == 18 or locale == 54:
+						if locale == 18 or locale == 54 or locale == 56:
 							index+=4
 						
 						index+=1 # guildMemberClass
@@ -462,7 +462,7 @@ def handle_joymax(opcode,data):
 						charList.append(character)
 						log(str(i+1)+") "+character['name']+" (Lv."+str(character['level'])+")"+(" [*] ("+character['deleted_at'].strftime('%H:%M %d/%m/%Y')+")" if character['is_deleting'] else ""))
 
-					if locale == 18 or locale == 54:
+					if locale == 18 or locale == 54 or locale == 56:
 						index+=1 # unkByte01 / Remove warning
 
 					# Warning to check if the packet has been parsed successfully
