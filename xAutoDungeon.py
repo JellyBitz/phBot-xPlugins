@@ -6,7 +6,7 @@ import json
 import struct
 import os
 
-pVersion = '1.4.4'
+pVersion = '1.4.5'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -326,15 +326,15 @@ def QtBind_ItemsContains(text,lst):
 	return ListContains(text,QtBind.getItems(gui,lst))
 
 # Attacking mobs using all configs from bot
-def AttackMobs(wait,isAttacking,x,y,z,radius):
-	count = getMobCount(radius)
+def AttackMobs(wait,isAttacking,position,radius):
+	count = getMobCount(position,radius)
 	if count > 0:
 		# Start to kill mobs using bot
 		if not isAttacking:
 			start_bot()
 			log("Plugin: Starting to kill ("+str(count)+") mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
 		# Check if there is not mobs to continue script
-		Timer(wait,AttackMobs,[wait,True,x,y,z,radius]).start()
+		Timer(wait,AttackMobs,[wait,True,position,radius]).start()
 	else:
 		log("Plugin: All mobs killed!")
 		# Check pickable drops and max attempts
@@ -359,18 +359,18 @@ def AttackMobs(wait,isAttacking,x,y,z,radius):
 			set_training_position(0,0,0,0)
 		# Wait for bot to calm down and move back to the starting point
 		log("Plugin: Getting back to the script...")
-		Timer(2.5,move_to,[x,y,z]).start()
+		Timer(2.5,move_to,[p['x'],p['y'],p['z']]).start()
 		# give it some time to reach the movement
 		Timer(5.0,start_bot).start()
 
 # Count all mobs around your character (60 or more it's the max. range I think)
-def getMobCount(radius):
+def getMobCount(position,radius):
 	# Clear
 	QtBind.clear(gui,lstMonsterCounter)
 	QtBind.append(gui,lstMonsterCounter,'Name (Type)') # Header
 	count = 0
 	# Get my position to calc radius
-	p = get_position() if radius != None else None
+	p = position if radius != None else None
 	# Check all mob around
 	monsters = get_monsters()
 	if monsters:
@@ -489,12 +489,13 @@ def AttackArea(args):
 	radius = None
 	if len(args) >= 2:
 		radius = round(float(args[1]),2)
+	# Check position
+	p = get_position()
 	# stop bot and kill mobs through bot
-	if getMobCount(radius) > 0:
+	if getMobCount(p,radius) > 0:
 		# stop scripting
 		stop_bot()
 		# set automatically the training area
-		p = get_position()
 		if API_COMPATIBILITY:
 			set_training_position(p['region'], p['x'], p['y'])
 		else:
@@ -505,7 +506,7 @@ def AttackArea(args):
 		else:
 			set_training_radius(100.0)
 		# start to kill mobs on other thread because interpreter lock
-		Timer(0.001,AttackMobs,[DEFAULT_CHECK_DELAY,False,p['x'],p['y'],p['z'],radius]).start()
+		Timer(0.001,AttackMobs,[DEFAULT_CHECK_DELAY,False,p,radius]).start()
 	# otherwise continue normally
 	else:
 		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
