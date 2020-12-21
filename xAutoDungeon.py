@@ -6,7 +6,7 @@ import json
 import struct
 import os
 
-pVersion = '1.4.5'
+pVersion = '1.4.6'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -359,7 +359,7 @@ def AttackMobs(wait,isAttacking,position,radius):
 			set_training_position(0,0,0,0)
 		# Wait for bot to calm down and move back to the starting point
 		log("Plugin: Getting back to the script...")
-		Timer(2.5,move_to,[p['x'],p['y'],p['z']]).start()
+		Timer(2.5,move_to,[position['x'],position['y'],position['z']]).start()
 		# give it some time to reach the movement
 		Timer(5.0,start_bot).start()
 
