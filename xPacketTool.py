@@ -4,7 +4,7 @@ import json
 import os
 
 pName = 'xPackeTool'
-pVersion = '1.1.1'
+pVersion = '1.1.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPackeTool.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -122,10 +122,10 @@ def btnInjectPacket(IProxySend):
 	if strOpcode and strData:
 		data = bytearray()
 		opcode = int(strOpcode,16)
-		data = strData.split()
+		strData = strData.split()
 		i = 0
 		while i < len(data):
-			data.append(int(data[i],16))
+			data.append(int(strData[i],16))
 			i += 1
 		encrypted = QtBind.isChecked(gui,cbxEncrypted)
 		# Show injection log
