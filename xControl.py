@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.4.4'
+pVersion = '1.5.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -21,13 +21,16 @@ followDistance = 0
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
-lblxControl01 = QtBind.createLabel(gui,'Manage your partys easily using the ingame chat.\nThe Leader(s) is the character that write chat commands.\nIf you character have Leader(s) into the leader list, this will follow his orders.\n\n* UPPERCASE is required to use the command, all his data is separated by spaces.\n* #Variable (required) #Variable? (optional)\n Supported commands :\n - START : Start bot\n - STOP : Stop bot\n - TRACE #Player? : Start trace to leader or another character\n - NOTRACE : Stop trace\n - SETAREA #PosX? #PosY? #Region? #PosZ? : Set training area.\n - SETRADIUS #Radius? : Set training radius.\n - SIT : Sit or Stand up, depends\n - CAPE #Type? : Use PVP Cape\n - ZERK : Use berserker mode if is available\n - RETURN : Use some "Return Scroll" from your inventory\n - TP #A #B : Use teleport from location A to B\n - INJECT #Opcode #Encrypted? #Data? : Inject packet\n - CHAT #Type #Message : Send any message type',21,11)
-lblxControl02 = QtBind.createLabel(gui,' - MOVEON #Radius? : Set a random movement\n - FOLLOW #Player? #Distance? : Trace a party player using distance\n - NOFOLLOW : Stop following\n - PROFILE #Name? : Loads a profile by his name\n - JUMP : Generate knockback visual effect\n - DC : Disconnect from game\n - MOUNT #PetType? : Mount horse by default\n - DISMOUNT #PetType? : Dismount horse by default\n - GETOUT : Left party\n - RECALL #Town : Set recall on city portal\n - SETSCRIPT #Path : Change script path for training area',345,101)
+QtBind.createLabel(gui,'Control your party using in-game chat. Leader writes commands and your character will follow it.',11,11)
 
-tbxLeaders = QtBind.createLineEdit(gui,"",511,11,100,20)
-lstLeaders = QtBind.createList(gui,511,32,176,48)
-btnAddLeader = QtBind.createButton(gui,'btnAddLeader_clicked',"    Add    ",612,10)
-btnRemLeader = QtBind.createButton(gui,'btnRemLeader_clicked',"     Remove     ",560,79)
+QtBind.createLabel(gui,'< COMMAND (uppercased) #Variable (required) #Variable? (optional) >',11,30)
+QtBind.createLabel(gui,'- START : Start bot\n- STOP : Stop bot\n- TRACE #Player? : Start trace to leader or another player\n- NOTRACE : Stop trace\n- RETURN : Use some "Return Scroll" from your inventory\n- TP #A #B : Use teleport from location A to B\n- RECALL #Town : Set recall on city portal\n- ZERK : Use berserker mode if is available\n- GETOUT : Left party\n- MOVEON #Radius? : Set a random movement\n- MOUNT #PetType? : Mount horse by default\n- DISMOUNT #PetType? : Dismount horse by default\n- SETAREA #PosX? #PosY? #Region? #PosZ? : Set training area\n- SETRADIUS #Radius? : Set training radius\n- SETSCRIPT #Path : Change script path for training area\n- PROFILE #Name? : Loads a profile by his name\n- DC : Disconnect from game\n- INJECT #Opcode #Encrypted? #Data? : Inject packet',15,45)
+QtBind.createLabel(gui,'- CHAT #Type #Message : Send any message type\n- FOLLOW #Player? #Distance? : Trace a party player using distance\n- NOFOLLOW : Stop following\n- JUMP : Generate knockback visual effect\n- SIT : Sit or Stand up, depends\n- CAPE #Type? : Use PVP Cape\n- EQUIP #ItemName : Equips an item from inventory\n- UNEQUIP #ItemName : Unequips item from character',345,80)
+
+tbxLeaders = QtBind.createLineEdit(gui,"",525,11,110,20)
+lstLeaders = QtBind.createList(gui,525,32,110,38)
+btnAddLeader = QtBind.createButton(gui,'btnAddLeader_clicked',"    Add   ",635,10)
+btnRemLeader = QtBind.createButton(gui,'btnRemLeader_clicked',"     Remove     ",635,32)
 
 # ______________________________ Methods ______________________________ #
 
@@ -286,6 +289,125 @@ def GetNPCUniqueID(name):
 			if name == NPCName:
 				return UniqueID
 	return 0
+
+# Search an item by name or servername through lambda expression and return his information
+def GetItemByExpression(_lambda,start=0,end=0):
+	inventory = get_inventory()
+	items = inventory['items']
+	if end == 0:
+		end = inventory['size']
+	# check items between intervals
+	for slot, item in enumerate(items):
+		if start <= slot and slot <= end:
+			if item:
+				# Search by lambda
+				if _lambda(item['name'],item['servername']):
+					# Save slot location
+					item['slot'] = slot
+					return item
+	return None
+
+# Finds an empty slot, returns -1 if inventory is full
+def GetEmptySlot():
+	items = get_inventory()['items']
+	# check the first empty
+	for slot, item in enumerate(items):
+		if slot >= 13:
+			if not item:
+				return slot
+	return -1
+
+# Injects item movement on inventory
+def Inject_InventoryMovement(movementType,slotInitial,slotFinal,logItemName,quantity=0):
+	p = struct.pack('<B',movementType)
+	p += struct.pack('<B',slotInitial)
+	p += struct.pack('<B',slotFinal)
+	p += struct.pack('<H',quantity)
+	log('Plugin: Moving item "'+logItemName+'"...')
+	# CLIENT_INVENTORY_ITEM_MOVEMENT
+	inject_joymax(0x7034,p,False)
+
+# Try to equip item
+def EquipItem(item):
+	itemData = get_item(item['model'])
+	# Check equipables only
+	if itemData['tid1'] != 1:
+		log('Plugin: '+item['name']+' cannot be equiped!')
+		return
+	# Check equipable type
+	t = itemData['tid2']
+	# garment, protector, armor, robe, light, heavy
+	if t == 1 or t == 2 or t == 3 or t == 9 or t == 10 or t == 11:
+		t = itemData['tid3']
+		# head
+		if t == 1:
+			Inject_InventoryMovement(0,item['slot'],0,item['name'])
+		# shoulders
+		elif t == 2:
+			Inject_InventoryMovement(0,item['slot'],2,item['name'])
+		# chest
+		elif t == 3:
+			Inject_InventoryMovement(0,item['slot'],1,item['name'])
+		# pants
+		elif t == 4:
+			Inject_InventoryMovement(0,item['slot'],4,item['name'])
+		# gloves
+		elif t == 5:
+			Inject_InventoryMovement(0,item['slot'],3,item['name'])
+		# boots
+		elif t == 6:
+			Inject_InventoryMovement(0,item['slot'],5,item['name'])
+	# shields
+	elif t == 4:
+		Inject_InventoryMovement(0,item['slot'],7,item['name'])
+	# accesories ch/eu
+	elif t == 5 or t == 12:
+		t = itemData['tid3']
+		# earring
+		if t == 1:
+			Inject_InventoryMovement(0,item['slot'],9,item['name'])
+		# necklace
+		elif t == 2:
+			Inject_InventoryMovement(0,item['slot'],10,item['name'])
+		# ring
+		elif t == 3:
+			# Check if second ring slot is empty
+			if not GetItemByExpression(lambda s,n: True,11):
+				Inject_InventoryMovement(0,item['slot'],12,item['name'])
+			else:
+				Inject_InventoryMovement(0,item['slot'],11,item['name'])
+	# weapon ch/eu
+	elif t == 6:
+		Inject_InventoryMovement(0,item['slot'],6,item['name'])
+	# job
+	elif t == 7:
+		Inject_InventoryMovement(0,item['slot'],8,item['name'])
+	# avatar
+	elif t == 13:
+		t = itemData['tid3']
+		# hat
+		if t == 1:
+			Inject_InventoryMovement(36,item['slot'],0,item['name'])
+		# dress
+		elif t == 2:
+			Inject_InventoryMovement(36,item['slot'],1,item['name'])
+		# accesory
+		elif t == 3:
+			Inject_InventoryMovement(36,item['slot'],2,item['name'])
+		# flag
+		elif t == 4:
+			Inject_InventoryMovement(36,item['slot'],3,item['name'])
+	# devil spirit
+	elif t == 14:
+		Inject_InventoryMovement(36,item['slot'],4,item['name'])
+
+# Try to unequip item
+def UnequipItem(item):
+	# find an empty slot
+	slot = GetEmptySlot()
+	if slot != -1:
+		Inject_InventoryMovement(0,item['slot'],slot,item['name'])
+
 # ______________________________ Events ______________________________ #
 
 # Called when the bot successfully connects to the game server
@@ -429,12 +551,8 @@ def handle_chat(t,player,msg):
 				# Avoid high CPU usage with too many chars at the same time
 				Timer(random.uniform(0.5,2),use_return_scroll).start()
 		elif msg.startswith("TP"):
-			# deletes command header
-			msg = msg[2:]
-			if not msg:
-				return
-			# remove whatever used as separator
-			msg = msg[1:]
+			# deletes command header and whatever used as separator
+			msg = msg[3:]
 			if not msg:
 				return
 			# select split char
@@ -545,6 +663,20 @@ def handle_chat(t,player,msg):
 				if npcUID > 0:
 					log("Plugin: Designating recall to \""+msg.title()+"\"...")
 					inject_joymax(0x7059, struct.pack('I',npcUID), False)
+		elif msg.startswith("EQUIP "):
+			msg = msg[6:]
+			if msg:
+				# search item with similar name or exact server name
+				item = GetItemByExpression(lambda n,s: msg in n or msg == s,13)
+				if item:
+					EquipItem(item)
+		elif msg.startswith("UNEQUIP "):
+			msg = msg[8:]
+			if msg:
+				# search item with similar name or exact server name
+				item = GetItemByExpression(lambda n,s: msg in n or msg == s,0,12)
+				if item:
+					UnequipItem(item)
 
 # Called every 500ms
 def event_loop():
