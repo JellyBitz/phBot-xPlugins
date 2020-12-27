@@ -6,14 +6,14 @@ import json
 import struct
 import os
 
-pVersion = '1.4.6'
+pVersion = '1.4.7'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
 # ______________________________ Initializing ______________________________ #
 
 DEFAULT_CHECK_DELAY = 1.0 # seconds
-DEFAULT_DIMENSIONAL_MAX_TIME = 120 * 60 # seconds
+DEFAULT_DIMENSIONAL_MAX_TIME = 7200 # seconds (2 hours)
 
 # API compatibility
 API_COMPATIBILITY = tuple(map(int, (get_version().split(".")))) < (25,0,7)
@@ -470,7 +470,7 @@ def GoDimensionalThread(Name):
 		def DimensionalReset():
 			global dimensionalItemUsed
 			dimensionalItemUsed = None
-		Timer(DEFAULT_DIMENSIONAL_MAX_TIME*60,DimensionalReset).start()
+		Timer(DEFAULT_DIMENSIONAL_MAX_TIME,DimensionalReset).start()
 		# Inject item usage
 		log('Plugin: Using "'+item['name']+'"...')
 		p = struct.pack('B',item['slot'])
