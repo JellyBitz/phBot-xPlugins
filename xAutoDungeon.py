@@ -6,14 +6,15 @@ import json
 import struct
 import os
 
-pVersion = '1.4.7'
+pVersion = '1.4.8'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
 # ______________________________ Initializing ______________________________ #
 
-DEFAULT_CHECK_DELAY = 1.0 # seconds
-DEFAULT_DIMENSIONAL_MAX_TIME = 7200 # seconds (2 hours)
+DIMENSIONAL_COOLDOWN_DELAY = 7200 # seconds (2 hours)
+WAIT_DROPS_DELAY_MAX = 10 # seconds
+COUNT_MOBS_DELAY = 1.0 # seconds
 
 # API compatibility
 API_COMPATIBILITY = tuple(map(int, (get_version().split(".")))) < (25,0,7)
@@ -337,19 +338,8 @@ def AttackMobs(wait,isAttacking,position,radius):
 		Timer(wait,AttackMobs,[wait,True,position,radius]).start()
 	else:
 		log("Plugin: All mobs killed!")
-		# Check pickable drops and max attempts
-		waitAttemptsMax = 10
-		drops = None #get_drops()
-		while drops:
-			if not waitAttemptsMax:
-				log("Plugin: Waiting for picking up timeout!")
-				break
-			log("Plugin: Waiting for picking up ("+str(len(drops))+") drops...")
-			# wait 1s
-			sleep(1.0)
-			# check data again
-			waitAttemptsMax -= 1
-			drops = get_drops()
+		# Waits for pickable drops
+		WaitPickableDrops()
 		# All mobs killed, stop botting
 		stop_bot()
 		# Setting training area far away. The bot should continue where he was at the script
@@ -398,6 +388,27 @@ def getMobCount(position,radius):
 # Calc the distance from point A to B
 def GetDistance(ax,ay,bx,by):
 	return ((bx-ax)**2 + (by-ay)**2)**(0.5)
+
+# Sleep the thread while waits for pickable drops
+def WaitPickableDrops(waiting=0):
+	# Time is over for waiting drops
+	if waiting >= WAIT_DROPS_DELAY_MAX:
+		log("Plugin: Timeout for picking up drops!")
+		return
+	# check if there is a pickable drop
+	drops = get_drops()
+	if drops:
+		for key in drops:
+			value = drops[key]
+			if value['can_pick']:
+				drop = value
+				break
+		if drop:
+			log('Plugin: Waiting for picking up "'+drop['name']+'"...')
+			# wait 1s
+			sleep(1.0)
+			# Check again
+			WaitPickableDrops(waiting+1)
 
 # Returns the item information if is found
 def GetDimensionalHole(Name):
@@ -470,7 +481,7 @@ def GoDimensionalThread(Name):
 		def DimensionalReset():
 			global dimensionalItemUsed
 			dimensionalItemUsed = None
-		Timer(DEFAULT_DIMENSIONAL_MAX_TIME,DimensionalReset).start()
+		Timer(DIMENSIONAL_COOLDOWN_DELAY,DimensionalReset).start()
 		# Inject item usage
 		log('Plugin: Using "'+item['name']+'"...')
 		p = struct.pack('B',item['slot'])
@@ -506,7 +517,7 @@ def AttackArea(args):
 		else:
 			set_training_radius(100.0)
 		# start to kill mobs on other thread because interpreter lock
-		Timer(0.001,AttackMobs,[DEFAULT_CHECK_DELAY,False,p,radius]).start()
+		Timer(0.001,AttackMobs,[COUNT_MOBS_DELAY,False,p,radius]).start()
 	# otherwise continue normally
 	else:
 		log("Plugin: No mobs at this area. Radius: "+(str(radius) if radius != None else "Max."))
