@@ -5,7 +5,7 @@ import json
 import os
 
 pName = 'xTargetSupport'
-pVersion = '1.2.0'
+pVersion = '1.2.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTargetSupport.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -15,14 +15,14 @@ inGame = None
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
-cbxEnabled = QtBind.createCheckBox(gui,'cbxDoNothing','Enabled',6,10)
+cbxEnabled = QtBind.createCheckBox(gui,'cbxDoNothing','Enabled',6,9)
+cbxDefensive = QtBind.createCheckBox(gui,'cbxDoNothing','Defensive Mode',85,9)
 
-cbxDefensive = QtBind.createCheckBox(gui,'cbxDoNothing','Defensive Mode',356,30)
-
-tbxLeaders = QtBind.createLineEdit(gui,"",6,11,100,20)
-lvwLeaders = QtBind.createList(gui,6,32,176,48)
-btnAddLeader = QtBind.createButton(gui,'btnAddLeader_clicked',"    Add    ",107,10)
-btnRemLeader = QtBind.createButton(gui,'btnRemLeader_clicked',"     Remove     ",55,79)
+QtBind.createLabel(gui,'* Leader list',11,35)
+tbxLeaders = QtBind.createLineEdit(gui,"",6,51,100,20)
+lvwLeaders = QtBind.createList(gui,6,72,176,60)
+btnAddLeader = QtBind.createButton(gui,'btnAddLeader_clicked',"    Add    ",107,50)
+btnRemLeader = QtBind.createButton(gui,'btnRemLeader_clicked',"     Remove     ",55,131)
 
 # ______________________________ Methods ______________________________ #
 
