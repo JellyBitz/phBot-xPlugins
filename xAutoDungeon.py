@@ -6,7 +6,7 @@ import json
 import struct
 import os
 
-pVersion = '1.4.8'
+pVersion = '1.4.9'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -398,6 +398,7 @@ def WaitPickableDrops(waiting=0):
 	# check if there is a pickable drop
 	drops = get_drops()
 	if drops:
+		drop = None
 		for key in drops:
 			value = drops[key]
 			if value['can_pick']:
