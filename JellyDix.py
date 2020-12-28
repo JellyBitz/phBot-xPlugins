@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.8.1'
+pVersion = '2.8.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -802,7 +802,7 @@ def joined_game():
 	Notify(QtBind.text(gui,cmbxEvtChar_joined),"|`"+character_data['name']+"`| - Joined to the game")
 
 # Called when the character has been disconnected
-def disconnect():
+def disconnected():
 	global isOnline
 	if isOnline:
 		isOnline = False
