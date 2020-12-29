@@ -6,7 +6,7 @@ import json
 import struct
 import os
 
-pVersion = '1.4.9'
+pVersion = '1.4.10'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -477,16 +477,18 @@ def GoDimensionalThread(Name):
 	# Check if the item exists on inventory
 	item = GetDimensionalHole(Name)
 	if item:
-		# Set item used and reset his cooldown
-		dimensionalItemUsed = item
-		def DimensionalReset():
-			global dimensionalItemUsed
-			dimensionalItemUsed = None
-		Timer(DIMENSIONAL_COOLDOWN_DELAY,DimensionalReset).start()
 		# Inject item usage
 		log('Plugin: Using "'+item['name']+'"...')
 		p = struct.pack('B',item['slot'])
-		p += struct.pack('H',15980) # Usage type
+		locale = get_locale()
+		if locale == 56 or locale == 18: # TRSRO & (PROBABLY) iSRO
+			p += b'\xEE\x21\x02'
+		else: #locale == 22: # vSRO
+			p += b'\x6C\x3E'
+		# set usage type to check it later
+		item['usage_type'] = p[1:]
+		# Set item used
+		dimensionalItemUsed = item
 		inject_joymax(0x704C,p,True)
 	else:
 		# Error message
@@ -558,12 +560,17 @@ def handle_joymax(opcode, data):
 		# Check if plugin used recently an item
 		global dimensionalItemUsed
 		if dimensionalItemUsed:
-			# Check usage type it's from dimensional
-			usageType = struct.unpack_from('<H',data,4)[0]
-			if usageType == 15980:
-				# Success
-				if data[0] == 1:
+			# Success
+			if data[0] == 1:
+				usageType = dimensionalItemUsed['usage_type']
+				# Make sure item used it's a dimensional
+				if usageType == data[2:len(usageType)+2]:
 					log('Plugin: "'+dimensionalItemUsed['name']+'" has been opened')
+					# Set timer for cooldown usage
+					def DimensionalCooldown():
+						global dimensionalItemUsed
+						dimensionalItemUsed = None
+					Timer(DIMENSIONAL_COOLDOWN_DELAY,DimensionalCooldown).start()
 					# Avoid locking the proxy thread
 					Timer(1.0,EnterToDimensional,[dimensionalItemUsed['name']]).start()
 				else:
