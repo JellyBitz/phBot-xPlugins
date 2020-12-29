@@ -5,7 +5,7 @@ import json
 import os
 
 pName = 'xTargetSupport'
-pVersion = '1.2.2'
+pVersion = '1.2.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTargetSupport.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -158,7 +158,8 @@ def handle_joymax(opcode, data):
 			index = 7
 			attackerUID = struct.unpack_from("<I",data,index)[0]
 			index += 8
-			if get_locale() == 18: # iSRO
+			locale = get_locale()
+			if locale == 18 or locale == 56: # iSRO & TRSRO
 				index += 4
 			targetUID = struct.unpack_from("<I",data,index)[0]
 			# Check attack types only
