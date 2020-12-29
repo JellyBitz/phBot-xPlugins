@@ -5,13 +5,13 @@ import json
 import os
 
 pName = 'xTargetSupport'
-pVersion = '1.2.1'
+pVersion = '1.2.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTargetSupport.py'
 
 # ______________________________ Initializing ______________________________ #
 
 # globals
-inGame = None
+character_data = None
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
@@ -32,15 +32,15 @@ def getPath():
 
 # Return character configs path (JSON)
 def getConfig():
-	return getPath()+inGame['server'] + "_" + inGame['name'] + ".json"
+	return getPath()+character_data['server'] + "_" + character_data['name'] + ".json"
 
 # Check if character is ingame
 def isJoined():
-	global inGame
-	inGame = get_character_data()
-	if not (inGame and "name" in inGame and inGame["name"]):
-		inGame = None
-	return inGame
+	global character_data
+	character_data = get_character_data()
+	if not (character_data and "name" in character_data and character_data["name"]):
+		character_data = None
+	return character_data
 
 # Load default configs
 def loadDefaultConfig():
@@ -74,7 +74,7 @@ def ListContains(text,lst):
 
 # Add leader to the list
 def btnAddLeader_clicked():
-	if inGame:
+	if character_data:
 		player = QtBind.text(gui,tbxLeaders)
 		# Player nickname it's not empty
 		if player and not ListContains(player,QtBind.getItems(gui,lvwLeaders)):
@@ -97,7 +97,7 @@ def btnAddLeader_clicked():
 
 # Remove leader selected from list
 def btnRemLeader_clicked():
-	if inGame:
+	if character_data:
 		selectedItem = QtBind.text(gui,lvwLeaders)
 		if selectedItem:
 			if os.path.exists(getConfig()):
@@ -116,13 +116,12 @@ def btnRemLeader_clicked():
 
 # Return character name from player ID but only if is in party
 def getCharName(UniqueID):
-	# Load all near players
-	# players = get_players() << obsolete >>
+	# Load all players from party
 	players = get_party()
 	
 	# Checking if UID is mine
-	if UniqueID == inGame['player_id']:
-		return inGame['name']
+	if UniqueID == character_data['player_id']:
+		return character_data['name']
 	
 	# Check the UID with all players
 	if players:
@@ -133,8 +132,8 @@ def getCharName(UniqueID):
 
 # Inject Packet - Select Target
 def Inject_SelectTarget(targetUID):
-	packet = struct.pack('<I',targetUID)
-	inject_joymax(0x7045,packet,False)
+	p = struct.pack('<I',targetUID)
+	inject_joymax(0x7045,p,False)
 
 # ______________________________ Events ______________________________ #
 
@@ -142,33 +141,39 @@ def Inject_SelectTarget(targetUID):
 def joined_game():
 	loadConfigs()
 
+# Called after teleporting
+def teleported():
+	global character_data
+	# update uid on teleported
+	character_data = get_character_data()
+
 # All packets received from game server will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game client
 def handle_joymax(opcode, data):
 	# Object skill action & Enabled xTargetSupport
 	if opcode == 0xB070 and QtBind.isChecked(gui,cbxEnabled):
-		 # Success
+		# Success
 		if data[0] == 1:
-			SkillType = data[1] # 2 = Attack
-			packetIndex = 7
-			AttackerID = struct.unpack_from("<I",data,packetIndex)[0]
-			packetIndex += 8
+			skillType = data[1] # 2 = Attack
+			index = 7
+			attackerUID = struct.unpack_from("<I",data,index)[0]
+			index += 8
 			if get_locale() == 18: # iSRO
-				packetIndex += 4
-			TargetID = struct.unpack_from("<I",data,packetIndex)[0]
+				index += 4
+			targetUID = struct.unpack_from("<I",data,index)[0]
 			# Check attack types only
-			if SkillType == 2:
+			if skillType == 2:
 				# Check the nickname from attacker
-				charName = getCharName(AttackerID)
+				charName = getCharName(attackerUID)
 				if charName and ListContains(charName,QtBind.getItems(gui,lvwLeaders)):
 					log("Plugin: Targetting enemy from "+charName)
-					Inject_SelectTarget(TargetID)
+					Inject_SelectTarget(targetUID)
 				elif QtBind.isChecked(gui,cbxDefensive):
 					# Check the nickname from target
-					charName = getCharName(TargetID)
+					charName = getCharName(targetUID)
 					if charName and ListContains(charName,QtBind.getItems(gui,lvwLeaders)):
 						log("Plugin: Targetting attacker from "+charName)
-						Inject_SelectTarget(AttackerID)
+						Inject_SelectTarget(attackerUID)
 	return True
 
 # All chat messages received are sent to this function
