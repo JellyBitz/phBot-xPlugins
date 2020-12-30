@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.5.0'
+pVersion = '1.6.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -25,7 +25,7 @@ QtBind.createLabel(gui,'Control your party using in-game chat. Leader writes com
 
 QtBind.createLabel(gui,'< COMMAND (uppercased) #Variable (required) #Variable? (optional) >',11,30)
 QtBind.createLabel(gui,'- START : Start bot\n- STOP : Stop bot\n- TRACE #Player? : Start trace to leader or another player\n- NOTRACE : Stop trace\n- RETURN : Use some "Return Scroll" from your inventory\n- TP #A #B : Use teleport from location A to B\n- RECALL #Town : Set recall on city portal\n- ZERK : Use berserker mode if is available\n- GETOUT : Left party\n- MOVEON #Radius? : Set a random movement\n- MOUNT #PetType? : Mount horse by default\n- DISMOUNT #PetType? : Dismount horse by default\n- SETAREA #PosX? #PosY? #Region? #PosZ? : Set training area\n- SETRADIUS #Radius? : Set training radius\n- SETSCRIPT #Path : Change script path for training area\n- PROFILE #Name? : Loads a profile by his name\n- DC : Disconnect from game\n- INJECT #Opcode #Encrypted? #Data? : Inject packet',15,45)
-QtBind.createLabel(gui,'- CHAT #Type #Message : Send any message type\n- FOLLOW #Player? #Distance? : Trace a party player using distance\n- NOFOLLOW : Stop following\n- JUMP : Generate knockback visual effect\n- SIT : Sit or Stand up, depends\n- CAPE #Type? : Use PVP Cape\n- EQUIP #ItemName : Equips an item from inventory\n- UNEQUIP #ItemName : Unequips item from character',345,80)
+QtBind.createLabel(gui,'- CHAT #Type #Message : Send any message type\n- FOLLOW #Player? #Distance? : Trace a party player using distance\n- NOFOLLOW : Stop following\n- JUMP : Generate knockback visual effect\n- SIT : Sit or Stand up, depends\n- CAPE #Type? : Use PVP Cape\n- EQUIP #ItemName : Equips an item from inventory\n- UNEQUIP #ItemName : Unequips item from character\n- REVERSE #Type #Name?',345,80)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",525,11,110,20)
 lstLeaders = QtBind.createList(gui,525,32,110,38)
@@ -677,6 +677,33 @@ def handle_chat(t,player,msg):
 				item = GetItemByExpression(lambda n,s: msg in n or msg == s,0,12)
 				if item:
 					UnequipItem(item)
+		elif msg.startswith("REVERSE "):
+			# remove command
+			msg = msg[8:]
+			if msg:
+				# check params
+				msg = msg.split()
+				# param type
+				if msg[0] == 'return':
+					# try to use it
+					if reverse_return(0,''):
+						log('Plugin: Using reverse to the last return scroll location')
+				elif msg[0] == 'death':
+					# try to use it
+					if reverse_return(0,''):
+						log('Plugin: Using reverse to the last death location')
+				elif msg[0] == 'player':
+					# Check existing name
+					if len(msg) >= 2:
+						# try to use it
+						if reverse_return(0,msg[1]):
+							log('Plugin: Using reverse to player "'+msg[1]+'" location')
+				elif msg[0] == 'zone':
+					# Check existing zone
+					if len(msg) >= 2:
+						# try to use it
+						if reverse_return(0,msg[1]):
+							log('Plugin: Using reverse to zone "'+msg[1]+'" location')
 
 # Called every 500ms
 def event_loop():
