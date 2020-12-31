@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.6.0'
+pVersion = '1.6.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -690,19 +690,19 @@ def handle_chat(t,player,msg):
 						log('Plugin: Using reverse to the last return scroll location')
 				elif msg[0] == 'death':
 					# try to use it
-					if reverse_return(0,''):
+					if reverse_return(1,''):
 						log('Plugin: Using reverse to the last death location')
 				elif msg[0] == 'player':
 					# Check existing name
 					if len(msg) >= 2:
 						# try to use it
-						if reverse_return(0,msg[1]):
+						if reverse_return(2,msg[1]):
 							log('Plugin: Using reverse to player "'+msg[1]+'" location')
 				elif msg[0] == 'zone':
 					# Check existing zone
 					if len(msg) >= 2:
 						# try to use it
-						if reverse_return(0,msg[1]):
+						if reverse_return(3,msg[1]):
 							log('Plugin: Using reverse to zone "'+msg[1]+'" location')
 
 # Called every 500ms
