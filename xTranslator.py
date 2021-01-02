@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xTranslator'
-pVersion = '1.0.0'
+pVersion = '1.0.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xTranslator.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -186,7 +186,7 @@ def handle_joymax(opcode,data):
 		elif chatType in [2,4,5,6,9,11,16]:
 			nickLenght = struct.unpack_from('<H', data,index)[0]
 			index+=2 # nickLenght
-			nickname = struct.unpack_from('<' + str(nickLenght) + 's', data, 8)[0].decode('cp1252')
+			nickname = struct.unpack_from('<' + str(nickLenght) + 's', data,index)[0].decode('cp1252')
 			index+=nickLenght
 		else:
 			# Not supported
