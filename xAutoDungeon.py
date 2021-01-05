@@ -560,11 +560,11 @@ def handle_joymax(opcode, data):
 		# Check if plugin used recently an item
 		global dimensionalItemUsed
 		if dimensionalItemUsed:
-			# Success
-			if data[0] == 1:
-				usageType = dimensionalItemUsed['usage_type']
-				# Make sure item used it's a dimensional
-				if usageType == data[2:len(usageType)+2]:
+			usageType = dimensionalItemUsed['usage_type']
+			# Make sure item used it's a dimensional
+			if usageType == data[2:len(usageType)+2]:
+				# Success
+				if data[0] == 1:
 					log('Plugin: "'+dimensionalItemUsed['name']+'" has been opened')
 					# Set timer for cooldown usage
 					def DimensionalCooldown():
@@ -575,6 +575,7 @@ def handle_joymax(opcode, data):
 					Timer(1.0,EnterToDimensional,[dimensionalItemUsed['name']]).start()
 				else:
 					log('Plugin: "'+dimensionalItemUsed['name']+'" cannot be opened')
+					dimensionalItemUsed = None
 	return True
 
 # Plugin loaded
