@@ -6,7 +6,7 @@ import json
 import struct
 import os
 
-pVersion = '1.4.10'
+pVersion = '1.4.11'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
