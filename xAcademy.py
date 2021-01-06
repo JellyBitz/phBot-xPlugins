@@ -10,7 +10,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.4.2'
+pVersion = '1.4.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -402,11 +402,9 @@ def handle_joymax(opcode,data):
 						character['name'] = struct.unpack_from('<' + str(charLength) + 's',data,index)[0].decode('cp1252')
 						index+= charLength # name
 						
+						# Parsing differences on iSRO, jSRO and TrSRO
 						if locale == 18 or locale == 54 or locale == 56:
-							nickLength = struct.unpack_from('<H',data,index)[0]
-							index+=2 # nick length
-							nickName = struct.unpack_from('<' + str(nickLength) + 's',data,index)[0].decode('cp1252')
-							index+= nickLength # nickname
+							index+=2+struct.unpack_from('<H',data,index)[0]
 						
 						index+=1 # scale
 						character['level'] = data[index]
@@ -427,13 +425,14 @@ def handle_joymax(opcode,data):
 
 						character['is_deleting'] = data[index]
 						index+=1 # isDeleting
+
+						if locale == 18 or locale == 54 or locale == 56:
+							index+=4
+
 						if character['is_deleting']:
 							minutesLeft = struct.unpack_from('<I',data,index)[0]
 							character['deleted_at'] = datetime.now() + timedelta(minutes=minutesLeft)
 							index+=4 # minutes left
-
-						if locale == 18 or locale == 54 or locale == 56:
-							index+=4
 						
 						index+=1 # guildMemberClass
 						# isGuildRenameRequired
@@ -460,7 +459,7 @@ def handle_joymax(opcode,data):
 						
 						# Show info about character
 						charList.append(character)
-						log(str(i+1)+") "+character['name']+" (Lv."+str(character['level'])+")"+(" [*] ("+character['deleted_at'].strftime('%H:%M %d/%m/%Y')+")" if character['is_deleting'] else ""))
+						log(str(i+1)+") "+character['name']+" (Lv."+str(character['level'])+")"+(" [* "+character['deleted_at'].strftime('%H:%M %d/%m/%Y')+"]" if character['is_deleting'] else ""))
 
 					if locale == 18 or locale == 54 or locale == 56:
 						index+=1 # unkByte01 / Remove warning
