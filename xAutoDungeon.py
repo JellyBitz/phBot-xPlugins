@@ -6,7 +6,7 @@ import json
 import struct
 import os
 
-pVersion = '1.4.11'
+pVersion = '1.4.12'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -560,9 +560,14 @@ def handle_joymax(opcode, data):
 		# Check if plugin used recently an item
 		global dimensionalItemUsed
 		if dimensionalItemUsed:
-			usageType = dimensionalItemUsed['usage_type']
+			# Find usage type index
+			index = 4
+			locale = get_locale()
+			if locale == 18 or locale == 56:
+				index = 2
+			itemUsageType = data[index:index+len(dimensionalItemUsed['usage_type'])]
 			# Make sure item used it's a dimensional
-			if usageType == data[2:len(usageType)+2]:
+			if dimensionalItemUsed['usage_type'] == itemUsageType:
 				# Success
 				if data[0] == 1:
 					log('Plugin: "'+dimensionalItemUsed['name']+'" has been opened')
