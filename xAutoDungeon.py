@@ -2,11 +2,12 @@ from phBot import *
 import QtBind
 from threading import Timer
 from time import sleep
+import sqlite3
 import json
 import struct
 import os
 
-pVersion = '1.4.12'
+pVersion = '1.5.0'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -21,7 +22,8 @@ API_COMPATIBILITY = tuple(map(int, (get_version().split(".")))) < (25,0,7)
 
 # Globals
 character_data = None
-dimensionalItemUsed = None
+itemUsedByPlugin = None
+dimensionalItemActivated = None
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
@@ -389,8 +391,19 @@ def getMobCount(position,radius):
 def GetDistance(ax,ay,bx,by):
 	return ((bx-ax)**2 + (by-ay)**2)**(0.5)
 
+# Create a database connection to config filter
+def GetFilterConnection():
+	# Path to the filter database
+	path = get_config_path()[:-3]+'db3'
+	# Connect to db3
+	return sqlite3.connect(path)
+
+def IsPickable(FilterConnCursor,ItemID):
+	# Check existence of pickable item by character
+	return FilterConnCursor.execute('SELECT EXISTS(SELECT 1 FROM pickfilter WHERE id=? AND pick=1 LIMIT 1)',(ItemID,)).fetchone()[0]
+
 # Sleep the thread while waits for pickable drops
-def WaitPickableDrops(waiting=0):
+def WaitPickableDrops(waiting=0,filterConn=None):
 	# Time is over for waiting drops
 	if waiting >= WAIT_DROPS_DELAY_MAX:
 		log("Plugin: Timeout for picking up drops!")
@@ -398,10 +411,15 @@ def WaitPickableDrops(waiting=0):
 	# check if there is a pickable drop
 	drops = get_drops()
 	if drops:
+		# Create connection once
+		if not filterConn:
+			filterConn = GetFilterConnection()
+		# Check drops if someone is pickable
 		drop = None
+		dbCursor = filterConn.cursor()
 		for key in drops:
 			value = drops[key]
-			if value['can_pick']:
+			if IsPickable(dbCursor,value['model']):
 				drop = value
 				break
 		if drop:
@@ -409,7 +427,10 @@ def WaitPickableDrops(waiting=0):
 			# wait 1s
 			sleep(1.0)
 			# Check again
-			WaitPickableDrops(waiting+1)
+			WaitPickableDrops(waiting+1,filterConn)
+		else:
+			# Close connection
+			filterConn.close()
 
 # Returns the item information if is found
 def GetDimensionalHole(Name):
@@ -467,10 +488,9 @@ def EnterToDimensional(Name):
 
 # Avoid interpreter lock
 def GoDimensionalThread(Name):
-	global dimensionalItemUsed
 	# Check if dimensional still opened
-	if dimensionalItemUsed:
-		Name = dimensionalItemUsed['name']
+	if dimensionalItemActivated:
+		Name = dimensionalItemActivated['name']
 		log('Plugin: '+( '"'+Name+'"' if Name else 'Dimensional Hole')+' still opened!')
 		EnterToDimensional(Name)
 		return
@@ -485,10 +505,9 @@ def GoDimensionalThread(Name):
 			p += b'\xEE\x21\x02'
 		else: #locale == 22: # vSRO
 			p += b'\x6C\x3E'
-		# set usage type to check it later
-		item['usage_type'] = p[1:]
 		# Set item used
-		dimensionalItemUsed = item
+		global itemUsedByPlugin
+		itemUsedByPlugin = item
 		inject_joymax(0x704C,p,True)
 	else:
 		# Error message
@@ -557,30 +576,25 @@ def handle_joymax(opcode, data):
 			log('Plugin: Forgotten World invitation accepted!')
 	# SERVER_INVENTORY_ITEM_USE
 	elif opcode == 0xB04C:
-		# Check if plugin used recently an item
-		global dimensionalItemUsed
-		if dimensionalItemUsed:
-			# Find usage type index
-			index = 4
-			locale = get_locale()
-			if locale == 18 or locale == 56:
-				index = 2
-			itemUsageType = data[index:index+len(dimensionalItemUsed['usage_type'])]
-			# Make sure item used it's a dimensional
-			if dimensionalItemUsed['usage_type'] == itemUsageType:
-				# Success
-				if data[0] == 1:
-					log('Plugin: "'+dimensionalItemUsed['name']+'" has been opened')
-					# Set timer for cooldown usage
-					def DimensionalCooldown():
-						global dimensionalItemUsed
-						dimensionalItemUsed = None
-					Timer(DIMENSIONAL_COOLDOWN_DELAY,DimensionalCooldown).start()
-					# Avoid locking the proxy thread
-					Timer(1.0,EnterToDimensional,[dimensionalItemUsed['name']]).start()
-				else:
-					log('Plugin: "'+dimensionalItemUsed['name']+'" cannot be opened')
-					dimensionalItemUsed = None
+		# Just check recent item used to keep it simple
+		global itemUsedByPlugin
+		if itemUsedByPlugin:
+			# Success
+			if data[0] == 1:
+				log('Plugin: "'+itemUsedByPlugin['name']+'" has been opened')
+				# Set timer for cooldown usage
+				global dimensionalItemActivated
+				dimensionalItemActivated = itemUsedByPlugin
+				def DimensionalCooldown():
+					global dimensionalItemActivated
+					dimensionalItemActivated = None
+				Timer(DIMENSIONAL_COOLDOWN_DELAY,DimensionalCooldown).start()
+				# Avoid locking the proxy thread
+				Timer(1.0,EnterToDimensional,[itemUsedByPlugin['name']]).start()
+			else:
+				log('Plugin: "'+itemUsedByPlugin['name']+'" cannot be opened')
+			# Stop checking item used
+			itemUsedByPlugin = None
 	return True
 
 # Plugin loaded
