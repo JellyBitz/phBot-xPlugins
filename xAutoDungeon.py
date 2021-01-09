@@ -7,7 +7,7 @@ import json
 import struct
 import os
 
-pVersion = '1.5.0'
+pVersion = '1.5.1'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -394,7 +394,7 @@ def GetDistance(ax,ay,bx,by):
 # Create a database connection to config filter
 def GetFilterConnection():
 	# Path to the filter database
-	path = get_config_path()[:-3]+'db3'
+	path = get_config_path()[:-4]+'db3'
 	# Connect to db3
 	return sqlite3.connect(path)
 
