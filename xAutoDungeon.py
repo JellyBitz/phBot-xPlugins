@@ -7,7 +7,7 @@ import json
 import struct
 import os
 
-pVersion = '1.5.1'
+pVersion = '1.5.2'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -340,8 +340,11 @@ def AttackMobs(wait,isAttacking,position,radius):
 		Timer(wait,AttackMobs,[wait,True,position,radius]).start()
 	else:
 		log("Plugin: All mobs killed!")
-		# Waits for pickable drops
-		WaitPickableDrops()
+		# Waits for pickable drops from pick filter database
+		conn = GetFilterConnection()
+		cursor = conn.cursor()
+		WaitPickableDrops(cursor)
+		conn.close()
 		# All mobs killed, stop botting
 		stop_bot()
 		# Setting training area far away. The bot should continue where he was at the script
@@ -398,12 +401,12 @@ def GetFilterConnection():
 	# Connect to db3
 	return sqlite3.connect(path)
 
-def IsPickable(FilterConnCursor,ItemID):
+def IsPickable(filterCursor,ItemID):
 	# Check existence of pickable item by character
-	return FilterConnCursor.execute('SELECT EXISTS(SELECT 1 FROM pickfilter WHERE id=? AND pick=1 LIMIT 1)',(ItemID,)).fetchone()[0]
+	return filterCursor.execute('SELECT EXISTS(SELECT 1 FROM pickfilter WHERE id=? AND pick=1 LIMIT 1)',(ItemID,)).fetchone()[0]
 
 # Sleep the thread while waits for pickable drops
-def WaitPickableDrops(waiting=0,filterConn=None):
+def WaitPickableDrops(filterCursor,waiting=0):
 	# Time is over for waiting drops
 	if waiting >= WAIT_DROPS_DELAY_MAX:
 		log("Plugin: Timeout for picking up drops!")
@@ -411,15 +414,11 @@ def WaitPickableDrops(waiting=0,filterConn=None):
 	# check if there is a pickable drop
 	drops = get_drops()
 	if drops:
-		# Create connection once
-		if not filterConn:
-			filterConn = GetFilterConnection()
 		# Check drops if someone is pickable
 		drop = None
-		dbCursor = filterConn.cursor()
 		for key in drops:
 			value = drops[key]
-			if IsPickable(dbCursor,value['model']):
+			if IsPickable(filterCursor,value['model']):
 				drop = value
 				break
 		if drop:
@@ -427,10 +426,7 @@ def WaitPickableDrops(waiting=0,filterConn=None):
 			# wait 1s
 			sleep(1.0)
 			# Check again
-			WaitPickableDrops(waiting+1,filterConn)
-		else:
-			# Close connection
-			filterConn.close()
+			WaitPickableDrops(filterCursor,waiting+1)
 
 # Returns the item information if is found
 def GetDimensionalHole(Name):
