@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.9.0'
+pVersion = '2.9.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -715,7 +715,7 @@ def getSoXText(servername,level):
 			return '^Legend'
 		elif servername.endswith('SET_A'):
 			return '^Egy A'
-		elif servername.endswith('SET_A'):
+		elif servername.endswith('SET_B'):
 			return '^Egy B'
 	return ''
 
