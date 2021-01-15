@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.8.2'
+pVersion = '2.9.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -697,6 +697,28 @@ def getGenreText(servername):
 		return '[F]'
 	return ''
 
+# Return the sox type as text, empty if none is found
+def getSoXText(servername,level):
+	if level < 101:
+		if servername.endswith('A_RARE'):
+			return '^Star'
+		elif servername.endswith('B_RARE'):
+			return '^Moon'
+		elif servername.endswith('C_RARE'):
+			return '^Sun'
+	else:
+		if servername.endswith('A_RARE'):
+			return '^Nova'
+		elif servername.endswith('B_RARE'):
+			return '^Rare'
+		elif servername.endswith('C_RARE'):
+			return '^Legend'
+		elif servername.endswith('SET_A'):
+			return '^Egy A'
+		elif servername.endswith('SET_A'):
+			return '^Egy B'
+	return ''
+
 # Loads all plugins handling chat 
 def GetChatHandlers():
 	import importlib
@@ -823,7 +845,8 @@ def handle_chat(t,player,msg):
 				item = chat_data[uid]
 				race = getRaceText(item['servername'])
 				genre = getGenreText(item['servername'])
-				msg = msg.replace(''+links[i]+'','`< '+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+' >`')
+				sox = getSoXText(item['model'],item['level'])
+				msg = msg.replace(''+links[i]+'','`< '+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+(' '+sox if sox else '')+' >`')
 			else:
 				msg = msg.replace(''+links[i]+'','`< '+links[i]+' >`')
 	# Check message type
@@ -890,14 +913,16 @@ def handle_event(t, data):
 			item = get_item(int(data))
 			race = getRaceText(item['servername'])
 			genre = getGenreText(item['servername'])
-			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Rare)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+"***")
+			sox = getSoXText(item['model'],item['level'])
+			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Rare)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+(' '+sox if sox else '')+"***")
 	elif t == 6:
 		channel_id = QtBind.text(gui_,cmbxEvtPick_equip)
 		if channel_id:
 			item = get_item(int(data))
 			race = getRaceText(item['servername'])
 			genre = getGenreText(item['servername'])
-			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Equipable)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+"***")
+			sox = getSoXText(item['model'],item['level'])
+			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Equipable)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+(' '+sox if sox else '')+"***")
 	elif t == 8:
 		Notify(QtBind.text(gui_,cmbxEvtBot_alchemy),"|`"+character_data['name']+"`| - **Auto alchemy** has been completed")
 
@@ -1126,7 +1151,8 @@ def notify_pickup(channel_id,itemID):
 		# No filters activated
 		race = getRaceText(item['servername'])
 		genre = getGenreText(item['servername'])
-		Notify(channel_id,"|`"+character_data['name']+"`| - **Item** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+"***")
+		sox = getSoXText(item['model'],item['level'])
+		Notify(channel_id,"|`"+character_data['name']+"`| - **Item** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+(' '+sox if sox else '')+"***")
 		return
 	# check filter name
 	if usefilterName:
@@ -1137,7 +1163,8 @@ def notify_pickup(channel_id,itemID):
 					# Filtered by Name
 					race = getRaceText(item['servername'])
 					genre = getGenreText(item['servername'])
-					Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+"***")
+					sox = getSoXText(item['model'],item['level'])
+					Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+(' '+sox if sox else '')+"***")
 					return
 			except Exception as ex:
 				log("Plugin: Error at regex (name) ["+str(ex)+"]")
@@ -1150,7 +1177,8 @@ def notify_pickup(channel_id,itemID):
 					# Filtered by server name
 					race = getRaceText(item['servername'])
 					genre = getGenreText(item['servername'])
-					Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+"***")
+					sox = getSoXText(item['model'],item['level'])
+					Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Filtered)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+(' '+sox if sox else '')+"***")
 					return
 			except Exception as ex:
 				log("Plugin: Error at regex (servername) ["+str(ex)+"]")
