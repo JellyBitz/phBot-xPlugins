@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.6.1'
+pVersion = '1.6.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -682,7 +682,7 @@ def handle_chat(t,player,msg):
 			msg = msg[8:]
 			if msg:
 				# check params
-				msg = msg.split()
+				msg = msg.split(' ',1)
 				# param type
 				if msg[0] == 'return':
 					# try to use it
