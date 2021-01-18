@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.9.2'
+pVersion = '2.10.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -48,8 +48,6 @@ cbxDiscord_interactions = QtBind.createCheckBox(gui,'cbxDoNothing','Use Discord 
 tbxDiscord_guild_id = QtBind.createLineEdit(gui,'',6,225,145,19)
 cbxDiscord_check_all = QtBind.createCheckBox(gui,'cbxDoNothing','Check all interactions',6,245)
 
-QtBind.createLabel(gui,'* '+URL_HOST,595,268)
-
 # Separator line
 QtBind.createLineEdit(gui,"",169,10,1,262)
 
@@ -58,52 +56,13 @@ QtBind.createLabel(gui,"Select the Discord channel to send the notification ( Fi
 btnSaveConfig = QtBind.createButton(gui,'saveConfigs',"     Save Changes     ",615,4)
 
 # Creating margins to locate all quickly
-_x = 175
+_x = 180
 _y = 30
 _Height = 19
 _cmbxWidth = 131
 _tbxWidth = 118
 
-# messages
-QtBind.createLabel(gui,'General',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_all = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui,'Private',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_private = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui,'Stall',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_stall = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui,'Party',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_party = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui,'Academy',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_academy = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui,'Guild',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_guild = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui,'Union',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_union = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui,'Global',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_global = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
-_y+=20
-cbxEvtMessage_global_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',_x,_y+3)
-tbxEvtMessage_global_filter = QtBind.createLineEdit(gui,"",_x+13,_y,_tbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui,'Notice',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_notice = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
-_y+=20
-cbxEvtMessage_notice_filter = QtBind.createCheckBox(gui,'cbxDoNothing','',_x,_y+3)
-tbxEvtMessage_notice_filter = QtBind.createLineEdit(gui,"",_x+13,_y,_tbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui,'GM Talk',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_gm = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
-
 # login states
-_x += _cmbxWidth * 2 + 13
-_y = 30
 QtBind.createLabel(gui,'Joined to the game',_x+_cmbxWidth+4,_y+3)
 cmbxEvtChar_joined = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
 _y+=20
@@ -136,6 +95,52 @@ cmbxEvtMessage_battlearena = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
 _y+=20
 QtBind.createLabel(gui,'Fortress War',_x+_cmbxWidth+4,_y+3)
 cmbxEvtMessage_fortress = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui,'Consignment Hunter',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_consignmenthunter = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui,'Consignment Thief',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_consignmentthief = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+
+# warnings
+_x += _cmbxWidth * 2 + 10
+_y = 30
+QtBind.createLabel(gui,'GM near to you',_x+_cmbxWidth+4,_y+3)
+cmbxEvtNear_gm = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui,'Unique near to you',_x+_cmbxWidth+4,_y+3)
+cmbxEvtNear_unique = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui,'Hunter/Trader near',_x+_cmbxWidth+4,_y+3)
+cmbxEvtNear_hunter = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui,'Thief near',_x+_cmbxWidth+4,_y+3)
+cmbxEvtNear_thief = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui,'Character attacked',_x+_cmbxWidth+4,_y+3)
+cmbxEvtChar_attacked = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui,'Character died',_x+_cmbxWidth+4,_y+3)
+cmbxEvtChar_died = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui,'Transport/Horse died',_x+_cmbxWidth+4,_y+3)
+cmbxEvtPet_died = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+
+# misc
+_y+=5
+QtBind.createLabel(gui,'Quest completed',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_quest = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui,'Alchemy completed',_x+_cmbxWidth+4,_y+3)
+cmbxEvtBot_alchemy = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui,'Stall item sold',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_item_sold = QtBind.createCombobox(gui,_x,_y,_cmbxWidth,_Height)
+_y+=20
+
+# wrap to iterate
+cmbxTriggers={'cmbxEvtChar_joined':cmbxEvtChar_joined,'cmbxEvtChar_disconnected':cmbxEvtChar_disconnected,'cmbxEvtMessage_uniqueSpawn':cmbxEvtMessage_uniqueSpawn,'cmbxEvtMessage_uniqueKilled':cmbxEvtMessage_uniqueKilled,'cmbxEvtMessage_ctf':cmbxEvtMessage_ctf,'cmbxEvtMessage_battlearena':cmbxEvtMessage_battlearena,'cmbxEvtMessage_fortress':cmbxEvtMessage_fortress,'cmbxEvtMessage_consignmenthunter':cmbxEvtMessage_consignmenthunter,'cmbxEvtMessage_consignmentthief':cmbxEvtMessage_consignmentthief,'cmbxEvtNear_gm':cmbxEvtNear_gm,'cmbxEvtNear_unique':cmbxEvtNear_unique,'cmbxEvtNear_hunter':cmbxEvtNear_hunter,'cmbxEvtNear_thief':cmbxEvtNear_thief,'cmbxEvtChar_attacked':cmbxEvtChar_attacked,'cmbxEvtChar_died':cmbxEvtChar_died,'cmbxEvtPet_died':cmbxEvtPet_died,'cmbxEvtMessage_quest':cmbxEvtMessage_quest,'cmbxEvtBot_alchemy':cmbxEvtBot_alchemy,'cmbxEvtMessage_item_sold':cmbxEvtMessage_item_sold}
 
 # Graphic user interface (+)
 gui_ = QtBind.init(__name__,pName+"(+)")
@@ -146,31 +151,46 @@ _y = 7
 _cmbxWidth = 131
 _tbxWidth = 118
 
-# warnings
-QtBind.createLabel(gui_,'GM near to you',_x+_cmbxWidth+4,_y+3)
-cmbxEvtNear_gm = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+# chat messages
+QtBind.createLabel(gui_,'General',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_all = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
-QtBind.createLabel(gui_,'Unique near to you',_x+_cmbxWidth+4,_y+3)
-cmbxEvtNear_unique = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+QtBind.createLabel(gui_,'Private',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_private = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
-QtBind.createLabel(gui_,'Hunter/Trader near',_x+_cmbxWidth+4,_y+3)
-cmbxEvtNear_hunter = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+QtBind.createLabel(gui_,'Stall',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_stall = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
-QtBind.createLabel(gui_,'Thief near',_x+_cmbxWidth+4,_y+3)
-cmbxEvtNear_thief = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+QtBind.createLabel(gui_,'Party',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_party = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
-QtBind.createLabel(gui_,'Character attacked',_x+_cmbxWidth+4,_y+3)
-cmbxEvtChar_attacked = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+QtBind.createLabel(gui_,'Academy',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_academy = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
-QtBind.createLabel(gui_,'Character died',_x+_cmbxWidth+4,_y+3)
-cmbxEvtChar_died = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+QtBind.createLabel(gui_,'Guild',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_guild = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
-QtBind.createLabel(gui_,'Transport/Horse died',_x+_cmbxWidth+4,_y+3)
-cmbxEvtPet_died = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+QtBind.createLabel(gui_,'Union',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_union = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
+QtBind.createLabel(gui_,'Global',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_global = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+cbxEvtMessage_global_filter = QtBind.createCheckBox(gui_,'cbxDoNothing','',_x,_y+3)
+tbxEvtMessage_global_filter = QtBind.createLineEdit(gui_,"",_x+13,_y,_tbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui_,'Notice',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_notice = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+cbxEvtMessage_notice_filter = QtBind.createCheckBox(gui_,'cbxDoNothing','',_x,_y+3)
+tbxEvtMessage_notice_filter = QtBind.createLineEdit(gui_,"",_x+13,_y,_tbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui_,'GM Talk',_x+_cmbxWidth+4,_y+3)
+cmbxEvtMessage_gm = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 
 # party
-_y+=5
+_x += int(_cmbxWidth*1.5) 
+_y = 7
 QtBind.createLabel(gui_,'Party joined',_x+_cmbxWidth+4,_y+3)
 cmbxEvtParty_joined = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
@@ -185,9 +205,22 @@ cmbxEvtParty_memberLeft = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
 QtBind.createLabel(gui_,'Party member level up',_x+_cmbxWidth+4,_y+3)
 cmbxEvtParty_memberLvlUp = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+
+# guild
+_y+=5
+QtBind.createLabel(gui_,'Guild notice changed',_x+_cmbxWidth+4,_y+3)
+cmbxEvtGuild_noticechanged = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui_,'Guild member login',_x+_cmbxWidth+4,_y+3)
+cmbxEvtGuild_memberLogin = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
+QtBind.createLabel(gui_,'Guild member logout',_x+_cmbxWidth+4,_y+3)
+cmbxEvtGuild_memberLogout = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
+_y+=20
 
 # picks
-_x += _cmbxWidth * 2 + 13
+_x += _cmbxWidth * 2 + 10
 _y = 7
 QtBind.createLabel(gui_,'Item picked up (vSRO)',_x+_cmbxWidth+4,_y+3)
 cmbxEvtPick_item = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
@@ -205,26 +238,8 @@ QtBind.createLabel(gui_,'Item (Equipable) picked up',_x+_cmbxWidth+4,_y+3)
 cmbxEvtPick_equip = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
 _y+=20
 
-# Stuffs
-_y+=5
-QtBind.createLabel(gui_,'Quest completed',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_quest = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui_,'Alchemy completed',_x+_cmbxWidth+4,_y+3)
-cmbxEvtBot_alchemy = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui_,'Stall item sold',_x+_cmbxWidth+4,_y+3)
-cmbxEvtMessage_item_sold = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui_,'Hunter consignment notices',_x+_cmbxWidth+4,_y+3)
-cmbxEvtHunter_consignment = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
-_y+=20
-QtBind.createLabel(gui_,'Thief consignment notices',_x+_cmbxWidth+4,_y+3)
-cmbxEvtThief_consignment = QtBind.createCombobox(gui_,_x,_y,_cmbxWidth,_Height)
-
 # wrap to iterate
-cmbxTriggers={"cmbxEvtMessage_all":cmbxEvtMessage_all,"cmbxEvtMessage_private":cmbxEvtMessage_private,"cmbxEvtMessage_stall":cmbxEvtMessage_stall,"cmbxEvtMessage_party":cmbxEvtMessage_party,"cmbxEvtMessage_academy":cmbxEvtMessage_academy,"cmbxEvtMessage_guild":cmbxEvtMessage_guild,"cmbxEvtMessage_union":cmbxEvtMessage_union,"cmbxEvtMessage_global":cmbxEvtMessage_global,"cmbxEvtMessage_notice":cmbxEvtMessage_notice,"cmbxEvtMessage_gm":cmbxEvtMessage_gm,"cmbxEvtChar_joined":cmbxEvtChar_joined,"cmbxEvtChar_disconnected":cmbxEvtChar_disconnected,"cmbxEvtMessage_uniqueSpawn":cmbxEvtMessage_uniqueSpawn,"cmbxEvtMessage_uniqueKilled":cmbxEvtMessage_uniqueKilled,"cmbxEvtMessage_battlearena":cmbxEvtMessage_battlearena,"cmbxEvtMessage_ctf":cmbxEvtMessage_ctf,"cmbxEvtMessage_fortress":cmbxEvtMessage_fortress}
-cmbxTriggers_={"cmbxEvtNear_gm":cmbxEvtNear_gm,"cmbxEvtNear_unique":cmbxEvtNear_unique,"cmbxEvtNear_hunter":cmbxEvtNear_hunter,"cmbxEvtNear_thief":cmbxEvtNear_thief,"cmbxEvtChar_attacked":cmbxEvtChar_attacked,"cmbxEvtChar_died":cmbxEvtChar_died,"cmbxEvtPet_died":cmbxEvtPet_died,"cmbxEvtParty_joined":cmbxEvtParty_joined,"cmbxEvtParty_left":cmbxEvtParty_left,"cmbxEvtParty_memberJoin":cmbxEvtParty_memberJoin,"cmbxEvtParty_memberLeft":cmbxEvtParty_memberLeft,"cmbxEvtParty_memberLvlUp":cmbxEvtParty_memberLvlUp,"cmbxEvtPick_item":cmbxEvtPick_item,"cmbxEvtPick_rare":cmbxEvtPick_rare,"cmbxEvtPick_equip":cmbxEvtPick_equip,"cmbxEvtMessage_quest":cmbxEvtMessage_quest,"cmbxEvtBot_alchemy":cmbxEvtBot_alchemy,"cmbxEvtMessage_item_sold":cmbxEvtMessage_item_sold,"cmbxEvtHunter_consignment":cmbxEvtHunter_consignment,"cmbxEvtThief_consignment":cmbxEvtThief_consignment}
+cmbxTriggers_={'cmbxEvtMessage_all':cmbxEvtMessage_all,'cmbxEvtMessage_private':cmbxEvtMessage_private,'cmbxEvtMessage_stall':cmbxEvtMessage_stall,'cmbxEvtMessage_party':cmbxEvtMessage_party,'cmbxEvtMessage_academy':cmbxEvtMessage_academy,'cmbxEvtMessage_guild':cmbxEvtMessage_guild,'cmbxEvtMessage_union':cmbxEvtMessage_union,'cmbxEvtMessage_global':cmbxEvtMessage_global,'cmbxEvtMessage_notice':cmbxEvtMessage_notice,'cmbxEvtMessage_gm':cmbxEvtMessage_gm,'cmbxEvtParty_joined':cmbxEvtParty_joined,'cmbxEvtParty_left':cmbxEvtParty_left,'cmbxEvtParty_memberJoin':cmbxEvtParty_memberJoin,'cmbxEvtParty_memberLeft':cmbxEvtParty_memberLeft,'cmbxEvtParty_memberLvlUp':cmbxEvtParty_memberLvlUp,'cmbxEvtGuild_noticechanged':cmbxEvtGuild_noticechanged,'cmbxEvtGuild_memberLogin':cmbxEvtGuild_memberLogin,'cmbxEvtGuild_memberLogout':cmbxEvtGuild_memberLogout,'cmbxEvtPick_item':cmbxEvtPick_item,'cmbxEvtPick_rare':cmbxEvtPick_rare,'cmbxEvtPick_equip':cmbxEvtPick_equip}
 
 # ______________________________ Methods ______________________________ #
 
@@ -254,11 +269,6 @@ def loadDefaultConfig():
 		QtBind.clear(gui,cmbx)
 		QtBind.append(gui,cmbx,"")
 
-	QtBind.setChecked(gui,cbxEvtMessage_global_filter,False)
-	QtBind.setText(gui,tbxEvtMessage_global_filter," Filter by message")
-	QtBind.setChecked(gui,cbxEvtMessage_notice_filter,False)
-	QtBind.setText(gui,tbxEvtMessage_notice_filter," Filter by message")
-
 	QtBind.setChecked(gui,cbxEvtMessage_uniqueSpawn_filter,False)
 	QtBind.setText(gui,tbxEvtMessage_uniqueSpawn_filter," Filter by name")
 	QtBind.setChecked(gui,cbxEvtMessage_uniqueKilled_filter,False)
@@ -267,6 +277,11 @@ def loadDefaultConfig():
 	for name,cmbx in cmbxTriggers_.items():
 		QtBind.clear(gui_,cmbx)
 		QtBind.append(gui_,cmbx,"")
+
+	QtBind.setChecked(gui_,cbxEvtMessage_global_filter,False)
+	QtBind.setText(gui_,tbxEvtMessage_global_filter," Filter by message")
+	QtBind.setChecked(gui_,cbxEvtMessage_notice_filter,False)
+	QtBind.setText(gui_,tbxEvtMessage_notice_filter," Filter by message")
 
 	QtBind.setChecked(gui_,cbxEvtPick_name_filter,False)
 	QtBind.setText(gui_,tbxEvtPick_name_filter," Filter by name")
@@ -295,11 +310,6 @@ def saveConfigs():
 		for name,cmbx in cmbxTriggers.items():
 			triggers[name] = QtBind.text(gui,cmbx)
 
-		triggers["cbxEvtMessage_global_filter"] = QtBind.isChecked(gui,cbxEvtMessage_global_filter)
-		triggers["tbxEvtMessage_global_filter"] = QtBind.text(gui,tbxEvtMessage_global_filter)
-		triggers["cbxEvtMessage_notice_filter"] = QtBind.isChecked(gui,cbxEvtMessage_notice_filter)
-		triggers["tbxEvtMessage_notice_filter"] = QtBind.text(gui,tbxEvtMessage_notice_filter)
-
 		triggers["cbxEvtMessage_uniqueSpawn_filter"] = QtBind.isChecked(gui,cbxEvtMessage_uniqueSpawn_filter)
 		triggers["tbxEvtMessage_uniqueSpawn_filter"] = QtBind.text(gui,tbxEvtMessage_uniqueSpawn_filter)
 		triggers["cbxEvtMessage_uniqueKilled_filter"] = QtBind.isChecked(gui,cbxEvtMessage_uniqueKilled_filter)
@@ -307,6 +317,11 @@ def saveConfigs():
 
 		for name,cmbx in cmbxTriggers_.items():
 			triggers[name] = QtBind.text(gui_,cmbx)
+
+		triggers["cbxEvtMessage_global_filter"] = QtBind.isChecked(gui_,cbxEvtMessage_global_filter)
+		triggers["tbxEvtMessage_global_filter"] = QtBind.text(gui_,tbxEvtMessage_global_filter)
+		triggers["cbxEvtMessage_notice_filter"] = QtBind.isChecked(gui_,cbxEvtMessage_notice_filter)
+		triggers["tbxEvtMessage_notice_filter"] = QtBind.text(gui_,tbxEvtMessage_notice_filter)
 
 		triggers["cbxEvtPick_name_filter"] = QtBind.isChecked(gui_,cbxEvtPick_name_filter)
 		triggers["tbxEvtPick_name_filter"] = QtBind.text(gui_,tbxEvtPick_name_filter)
@@ -357,35 +372,6 @@ def loadConfigs():
 			if "Triggers" in data:
 				triggers = data["Triggers"]
 
-				if "cmbxEvtMessage_all" in triggers:
-					QtBind.setText(gui,cmbxEvtMessage_all,triggers["cmbxEvtMessage_all"])
-				if "cmbxEvtMessage_private" in triggers:
-					QtBind.setText(gui,cmbxEvtMessage_private,triggers["cmbxEvtMessage_private"])
-				if "cmbxEvtMessage_stall" in triggers:
-					QtBind.setText(gui,cmbxEvtMessage_stall,triggers["cmbxEvtMessage_stall"])
-				if "cmbxEvtMessage_party" in triggers:
-					QtBind.setText(gui,cmbxEvtMessage_party,triggers["cmbxEvtMessage_party"])
-				if "cmbxEvtMessage_academy" in triggers:
-					QtBind.setText(gui,cmbxEvtMessage_academy,triggers["cmbxEvtMessage_academy"])
-				if "cmbxEvtMessage_guild" in triggers:
-					QtBind.setText(gui,cmbxEvtMessage_guild,triggers["cmbxEvtMessage_guild"])
-				if "cmbxEvtMessage_union" in triggers:
-					QtBind.setText(gui,cmbxEvtMessage_union,triggers["cmbxEvtMessage_union"])
-				if "cmbxEvtMessage_global" in triggers:
-					QtBind.setText(gui,cmbxEvtMessage_global,triggers["cmbxEvtMessage_global"])
-				if "cbxEvtMessage_global_filter" in triggers and triggers["cbxEvtMessage_global_filter"]:
-					QtBind.setChecked(gui,cbxEvtMessage_global_filter,True)
-				if "tbxEvtMessage_global_filter" in triggers and triggers["tbxEvtMessage_global_filter"]:
-					QtBind.setText(gui,tbxEvtMessage_global_filter,triggers["tbxEvtMessage_global_filter"])
-				if "cmbxEvtMessage_notice" in triggers:
-					QtBind.setText(gui,cmbxEvtMessage_notice,triggers["cmbxEvtMessage_notice"])
-				if "cbxEvtMessage_notice_filter" in triggers and triggers["cbxEvtMessage_notice_filter"]:
-					QtBind.setChecked(gui,cbxEvtMessage_notice_filter,True)
-				if "tbxEvtMessage_notice_filter" in triggers and triggers["tbxEvtMessage_notice_filter"]:
-					QtBind.setText(gui,tbxEvtMessage_notice_filter,triggers["tbxEvtMessage_notice_filter"])
-				if "cmbxEvtMessage_gm" in triggers:
-					QtBind.setText(gui,cmbxEvtMessage_gm,triggers["cmbxEvtMessage_gm"])
-
 				if "cmbxEvtChar_joined" in triggers:
 					QtBind.setText(gui,cmbxEvtChar_joined,triggers["cmbxEvtChar_joined"])
 				if "cmbxEvtChar_disconnected" in triggers:
@@ -410,25 +396,62 @@ def loadConfigs():
 					QtBind.setText(gui,cmbxEvtMessage_ctf,triggers["cmbxEvtMessage_ctf"])
 				if "cmbxEvtMessage_fortress" in triggers:
 					QtBind.setText(gui,cmbxEvtMessage_fortress,triggers["cmbxEvtMessage_fortress"])
+				if "cmbxEvtMessage_consignmenthunter" in triggers:
+					QtBind.setText(gui,cmbxEvtMessage_consignmenthunter,triggers["cmbxEvtMessage_consignmenthunter"])
+				if "cmbxEvtMessage_consignmentthief" in triggers:
+					QtBind.setText(gui,cmbxEvtMessage_consignmentthief,triggers["cmbxEvtMessage_consignmentthief"])
 
 				if "cmbxEvtNear_gm" in triggers:
-					QtBind.setText(gui_,cmbxEvtNear_gm,triggers["cmbxEvtNear_gm"])
+					QtBind.setText(gui,cmbxEvtNear_gm,triggers["cmbxEvtNear_gm"])
 				if "cmbxEvtNear_unique" in triggers:
-					QtBind.setText(gui_,cmbxEvtNear_unique,triggers["cmbxEvtNear_unique"])
+					QtBind.setText(gui,cmbxEvtNear_unique,triggers["cmbxEvtNear_unique"])
 				if "cmbxEvtNear_hunter" in triggers:
-					QtBind.setText(gui_,cmbxEvtNear_hunter,triggers["cmbxEvtNear_hunter"])
+					QtBind.setText(gui,cmbxEvtNear_hunter,triggers["cmbxEvtNear_hunter"])
 				if "cmbxEvtNear_thief" in triggers:
-					QtBind.setText(gui_,cmbxEvtNear_thief,triggers["cmbxEvtNear_thief"])
+					QtBind.setText(gui,cmbxEvtNear_thief,triggers["cmbxEvtNear_thief"])
 				if "cmbxEvtChar_attacked" in triggers:
-					QtBind.setText(gui_,cmbxEvtChar_attacked,triggers["cmbxEvtChar_attacked"])
+					QtBind.setText(gui,cmbxEvtChar_attacked,triggers["cmbxEvtChar_attacked"])
 				if "cmbxEvtChar_died" in triggers:
-					QtBind.setText(gui_,cmbxEvtChar_died,triggers["cmbxEvtChar_died"])
+					QtBind.setText(gui,cmbxEvtChar_died,triggers["cmbxEvtChar_died"])
 				if "cmbxEvtPet_died" in triggers:
-					QtBind.setText(gui_,cmbxEvtPet_died,triggers["cmbxEvtPet_died"])
-				if "cmbxEvtHunter_consignment" in triggers:
-					QtBind.setText(gui_,cmbxEvtHunter_consignment,triggers["cmbxEvtHunter_consignment"])
-				if "cmbxEvtThief_consignment" in triggers:
-					QtBind.setText(gui_,cmbxEvtThief_consignment,triggers["cmbxEvtThief_consignment"])
+					QtBind.setText(gui,cmbxEvtPet_died,triggers["cmbxEvtPet_died"])
+
+				if "cmbxEvtMessage_quest" in triggers:
+					QtBind.setText(gui,cmbxEvtMessage_quest,triggers["cmbxEvtMessage_quest"])
+				if "cmbxEvtBot_alchemy" in triggers:
+					QtBind.setText(gui,cmbxEvtBot_alchemy,triggers["cmbxEvtBot_alchemy"])
+				if "cmbxEvtMessage_item_sold" in triggers:
+					QtBind.setText(gui,cmbxEvtMessage_item_sold,triggers["cmbxEvtMessage_item_sold"])
+
+				# (+)
+				if "cmbxEvtMessage_all" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_all,triggers["cmbxEvtMessage_all"])
+				if "cmbxEvtMessage_private" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_private,triggers["cmbxEvtMessage_private"])
+				if "cmbxEvtMessage_stall" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_stall,triggers["cmbxEvtMessage_stall"])
+				if "cmbxEvtMessage_party" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_party,triggers["cmbxEvtMessage_party"])
+				if "cmbxEvtMessage_academy" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_academy,triggers["cmbxEvtMessage_academy"])
+				if "cmbxEvtMessage_guild" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_guild,triggers["cmbxEvtMessage_guild"])
+				if "cmbxEvtMessage_union" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_union,triggers["cmbxEvtMessage_union"])
+				if "cmbxEvtMessage_global" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_global,triggers["cmbxEvtMessage_global"])
+				if "cbxEvtMessage_global_filter" in triggers and triggers["cbxEvtMessage_global_filter"]:
+					QtBind.setChecked(gui_,cbxEvtMessage_global_filter,True)
+				if "tbxEvtMessage_global_filter" in triggers and triggers["tbxEvtMessage_global_filter"]:
+					QtBind.setText(gui_,tbxEvtMessage_global_filter,triggers["tbxEvtMessage_global_filter"])
+				if "cmbxEvtMessage_notice" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_notice,triggers["cmbxEvtMessage_notice"])
+				if "cbxEvtMessage_notice_filter" in triggers and triggers["cbxEvtMessage_notice_filter"]:
+					QtBind.setChecked(gui_,cbxEvtMessage_notice_filter,True)
+				if "tbxEvtMessage_notice_filter" in triggers and triggers["tbxEvtMessage_notice_filter"]:
+					QtBind.setText(gui_,tbxEvtMessage_notice_filter,triggers["tbxEvtMessage_notice_filter"])
+				if "cmbxEvtMessage_gm" in triggers:
+					QtBind.setText(gui_,cmbxEvtMessage_gm,triggers["cmbxEvtMessage_gm"])
 
 				if "cmbxEvtParty_joined" in triggers:
 					QtBind.setText(gui_,cmbxEvtParty_joined,triggers["cmbxEvtParty_joined"])
@@ -440,6 +463,13 @@ def loadConfigs():
 					QtBind.setText(gui_,cmbxEvtParty_memberLeft,triggers["cmbxEvtParty_memberLeft"])
 				if "cmbxEvtParty_memberLvlUp" in triggers:
 					QtBind.setText(gui_,cmbxEvtParty_memberLvlUp,triggers["cmbxEvtParty_memberLvlUp"])
+
+				if "cmbxEvtGuild_noticechanged" in triggers:
+					QtBind.setText(gui_,cmbxEvtGuild_noticechanged,triggers["cmbxEvtGuild_noticechanged"])
+				if "cmbxEvtGuild_memberLogin" in triggers:
+					QtBind.setText(gui_,cmbxEvtGuild_memberLogin,triggers["cmbxEvtGuild_memberLogin"])
+				if "cmbxEvtGuild_memberLogout" in triggers:
+					QtBind.setText(gui_,cmbxEvtGuild_memberLogout,triggers["cmbxEvtGuild_memberLogout"])
 
 				if "cmbxEvtPick_item" in triggers:
 					QtBind.setText(gui_,cmbxEvtPick_item,triggers["cmbxEvtPick_item"])
@@ -455,13 +485,6 @@ def loadConfigs():
 					QtBind.setText(gui_,cmbxEvtPick_rare,triggers["cmbxEvtPick_rare"])
 				if "cmbxEvtPick_equip" in triggers:
 					QtBind.setText(gui_,cmbxEvtPick_equip,triggers["cmbxEvtPick_equip"])
-
-				if "cmbxEvtMessage_quest" in triggers:
-					QtBind.setText(gui_,cmbxEvtMessage_quest,triggers["cmbxEvtMessage_quest"])
-				if "cmbxEvtBot_alchemy" in triggers:
-					QtBind.setText(gui_,cmbxEvtBot_alchemy,triggers["cmbxEvtBot_alchemy"])
-				if "cmbxEvtMessage_item_sold" in triggers:
-					QtBind.setText(gui_,cmbxEvtMessage_item_sold,triggers["cmbxEvtMessage_item_sold"])
 
 # Return True if the text exist at the array
 def ListContains(list,text):
@@ -851,62 +874,62 @@ def handle_chat(t,player,msg):
 				msg = msg.replace(''+links[i]+'','`< '+links[i]+' >`')
 	# Check message type
 	if t == 1:
-		Notify(QtBind.text(gui,cmbxEvtMessage_all),"|`"+character_data['name']+"`| - [**General**] from `"+player+"`: "+msg)
+		Notify(QtBind.text(gui_,cmbxEvtMessage_all),"|`"+character_data['name']+"`| - [**General**] from `"+player+"`: "+msg)
 	elif t == 2:
-		Notify(QtBind.text(gui,cmbxEvtMessage_private),"|`"+character_data['name']+"`| - [**Private**] from `"+player+"`: "+msg)
+		Notify(QtBind.text(gui_,cmbxEvtMessage_private),"|`"+character_data['name']+"`| - [**Private**] from `"+player+"`: "+msg)
 	elif t == 9:
-		Notify(QtBind.text(gui,cmbxEvtMessage_stall),"|`"+character_data['name']+"`| - [**Stall**] from `"+player+"`: "+msg)
+		Notify(QtBind.text(gui_,cmbxEvtMessage_stall),"|`"+character_data['name']+"`| - [**Stall**] from `"+player+"`: "+msg)
 	elif t == 4:
-		Notify(QtBind.text(gui,cmbxEvtMessage_party),"|`"+character_data['name']+"`| - "+"[**Party**] `"+player+"`: "+msg)
+		Notify(QtBind.text(gui_,cmbxEvtMessage_party),"|`"+character_data['name']+"`| - "+"[**Party**] `"+player+"`: "+msg)
 	elif t == 16:
-		Notify(QtBind.text(gui,cmbxEvtMessage_academy),"|`"+character_data['name']+"`| - "+"[**Academy**] `"+player+"`: "+msg)
+		Notify(QtBind.text(gui_,cmbxEvtMessage_academy),"|`"+character_data['name']+"`| - "+"[**Academy**] `"+player+"`: "+msg)
 	elif t == 5:
-		Notify(QtBind.text(gui,cmbxEvtMessage_guild),"[**Guild**] `"+player+"`: "+msg)
+		Notify(QtBind.text(gui_,cmbxEvtMessage_guild),"[**Guild**] `"+player+"`: "+msg)
 	elif t == 11:
-		Notify(QtBind.text(gui,cmbxEvtMessage_union),"[**Union**] `"+player+"`: "+msg)
+		Notify(QtBind.text(gui_,cmbxEvtMessage_union),"[**Union**] `"+player+"`: "+msg)
 	elif t == 6:
-		if QtBind.isChecked(gui,cbxEvtMessage_global_filter):
-			searchMessage = QtBind.text(gui,tbxEvtMessage_global_filter)
+		if QtBind.isChecked(gui_,cbxEvtMessage_global_filter):
+			searchMessage = QtBind.text(gui_,tbxEvtMessage_global_filter)
 			if searchMessage:
 				try:
 					if re.search(searchMessage,msg):
-						Notify(QtBind.text(gui,cmbxEvtMessage_global),"[**Global**] `"+player+"`: "+msg,colour=0xffeb3b)
+						Notify(QtBind.text(gui_,cmbxEvtMessage_global),"[**Global**] `"+player+"`: "+msg,colour=0xffeb3b)
 				except Exception as ex:
 					log("Plugin: Error at regex ["+str(ex)+"]")
 		else:
-			Notify(QtBind.text(gui,cmbxEvtMessage_global),"[**Global**] `"+player+"`: "+msg,colour=0xffeb3b)
+			Notify(QtBind.text(gui_,cmbxEvtMessage_global),"[**Global**] `"+player+"`: "+msg,colour=0xffeb3b)
 	elif t == 7:
-		if QtBind.isChecked(gui,cbxEvtMessage_notice_filter):
-			searchMessage = QtBind.text(gui,tbxEvtMessage_notice_filter)
+		if QtBind.isChecked(gui_,cbxEvtMessage_notice_filter):
+			searchMessage = QtBind.text(gui_,tbxEvtMessage_notice_filter)
 			if searchMessage:
 				try:
 					if re.search(searchMessage,msg):
-						Notify(QtBind.text(gui,cmbxEvtMessage_notice),"[**Notice**] : "+msg)
+						Notify(QtBind.text(gui_,cmbxEvtMessage_notice),"[**Notice**] : "+msg)
 				except Exception as ex:
 					log("Plugin: Error at regex ["+str(ex)+"]")
 		else:
-			Notify(QtBind.text(gui,cmbxEvtMessage_notice),"[**Notice**] : "+msg)
+			Notify(QtBind.text(gui_,cmbxEvtMessage_notice),"[**Notice**] : "+msg)
 	elif t == 3:
-		Notify(QtBind.text(gui,cmbxEvtMessage_gm),"[**GameMaster**] `"+player+"`: "+msg)
+		Notify(QtBind.text(gui_,cmbxEvtMessage_gm),"[**GameMaster**] `"+player+"`: "+msg)
 
 # Called for specific events. data field will always be a string.
 def handle_event(t, data):
 	# Filter events
 	if t == 9:
-		Notify(QtBind.text(gui_,cmbxEvtNear_gm),"|`"+character_data['name']+"`| - **GameMaster** `"+data+"` is near to you!",CreateInfo("position",get_position()))
+		Notify(QtBind.text(gui,cmbxEvtNear_gm),"|`"+character_data['name']+"`| - **GameMaster** `"+data+"` is near to you!",CreateInfo("position",get_position()))
 	elif t == 0:
-		Notify(QtBind.text(gui_,cmbxEvtNear_unique),"|`"+character_data['name']+"`| - **"+data+"** unique is near to you!",CreateInfo("position",get_position()))
+		Notify(QtBind.text(gui,cmbxEvtNear_unique),"|`"+character_data['name']+"`| - **"+data+"** unique is near to you!",CreateInfo("position",get_position()))
 	elif t == 1:
-		Notify(QtBind.text(gui_,cmbxEvtNear_hunter),"|`"+character_data['name']+"`| - **Hunter/Trader** `"+data+"` is near to you!",CreateInfo("position",get_position()))
+		Notify(QtBind.text(gui,cmbxEvtNear_hunter),"|`"+character_data['name']+"`| - **Hunter/Trader** `"+data+"` is near to you!",CreateInfo("position",get_position()))
 	elif t == 2:
-		Notify(QtBind.text(gui_,cmbxEvtNear_thief),"|`"+character_data['name']+"`| - **Thief** `"+data+"` is near to you!",CreateInfo("position",get_position()))
+		Notify(QtBind.text(gui,cmbxEvtNear_thief),"|`"+character_data['name']+"`| - **Thief** `"+data+"` is near to you!",CreateInfo("position",get_position()))
 	elif t == 4:
-		Notify(QtBind.text(gui_,cmbxEvtChar_attacked),"|`"+character_data['name']+"`| - `"+data+"` is attacking you!",colour=0xFF5722)
+		Notify(QtBind.text(gui,cmbxEvtChar_attacked),"|`"+character_data['name']+"`| - `"+data+"` is attacking you!",colour=0xFF5722)
 	elif t == 7:
-		Notify(QtBind.text(gui_,cmbxEvtChar_died),"|`"+character_data['name']+"`| - You died",CreateInfo("position",get_position()))
+		Notify(QtBind.text(gui,cmbxEvtChar_died),"|`"+character_data['name']+"`| - You died",CreateInfo("position",get_position()))
 	elif t == 3:
 		pet = get_pets()[data]
-		Notify(QtBind.text(gui_,cmbxEvtPet_died),"|`"+character_data['name']+"`| - Your pet `"+(pet['type'].title())+"` died")
+		Notify(QtBind.text(gui,cmbxEvtPet_died),"|`"+character_data['name']+"`| - Your pet `"+(pet['type'].title())+"` died")
 	elif t == 5:
 		channel_id = QtBind.text(gui_,cmbxEvtPick_rare)
 		if channel_id:
@@ -924,7 +947,7 @@ def handle_event(t, data):
 			sox = getSoXText(item['servername'],item['level'])
 			Notify(channel_id,"|`"+character_data['name']+"`| - **Item (Equipable)** picked up ***"+item['name']+(' '+race if race else '')+(' '+genre if genre else '')+(' '+sox if sox else '')+"***")
 	elif t == 8:
-		Notify(QtBind.text(gui_,cmbxEvtBot_alchemy),"|`"+character_data['name']+"`| - **Auto alchemy** has been completed")
+		Notify(QtBind.text(gui,cmbxEvtBot_alchemy),"|`"+character_data['name']+"`| - **Auto alchemy** has been completed")
 
 # All packets received from game server will be passed to this function
 # Returning True will keep the packet and False will not forward it to the game client
@@ -970,7 +993,7 @@ def handle_joymax(opcode, data):
 		elif updateType == 29:
 			eventType = data[2]
 			if eventType == 1:
-				channel_id = QtBind.text(gui_,cmbxEvtHunter_consignment)
+				channel_id = QtBind.text(gui,cmbxEvtMessage_consignmenthunter)
 				if channel_id:
 					progressType = data[3]
 					if progressType == 0:
@@ -980,7 +1003,7 @@ def handle_joymax(opcode, data):
 					elif progressType == 2:
 						Notify(channel_id,"[**Consignment**] Hunter trade has ended")
 			elif eventType == 2:
-				channel_id = QtBind.text(gui_,cmbxEvtThief_consignment)
+				channel_id = QtBind.text(gui,cmbxEvtMessage_consignmentthief)
 				if channel_id:
 					progressType = data[3]
 					if progressType == 0:
@@ -1023,7 +1046,7 @@ def handle_joymax(opcode, data):
 				Notify(channel_id,"[**Capture the Flag**] has ended")
 	# SERVER_QUEST_UPDATE
 	elif opcode == 0x30D5:
-		channel_id = QtBind.text(gui_,cmbxEvtMessage_quest)
+		channel_id = QtBind.text(gui,cmbxEvtMessage_quest)
 		if channel_id:
 			# Quest update & Quest completed
 			if data[0] == 2 and data[10] == 2:
@@ -1120,7 +1143,7 @@ def handle_joymax(opcode, data):
 	# SERVER_STALL_ENTITY_ACTION
 	elif opcode == 0x30B7:
 		if data[0] == 3 and hasStall:
-			channel_id = QtBind.text(gui_,cmbxEvtMessage_item_sold)
+			channel_id = QtBind.text(gui,cmbxEvtMessage_item_sold)
 			if channel_id:
 				playerNameLength = struct.unpack_from('<H', data, 2)[0]
 				playerName = struct.unpack_from('<' + str(playerNameLength) + 's', data, 4)[0].decode('cp1252')
@@ -1139,6 +1162,35 @@ def handle_joymax(opcode, data):
 				# Make easy log file for user
 				with open(getPath()+"error.log","a") as f:
 					f.write("["+str(ex)+"] Server: (Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+'\r\n')
+	# GUILD_INFO_UPDATE
+	elif opcode == 0x38F5:
+		updateType = data[0]
+		if updateType == 6: # member update
+			memberID = struct.unpack_from("<I",data,1)[0]
+			infoType = data[5]
+			if infoType == 2: # session
+				if data[6]:
+					channel_id = QtBind.text(gui_,cmbxEvtGuild_memberLogout)
+					if channel_id:
+						member = get_guild()[memberID]
+						Notify(channel_id,"|`"+character_data['name']+"`| Guild member `"+member['name']+"` has logged off")
+				else:
+					channel_id = QtBind.text(gui_,cmbxEvtGuild_memberLogin)
+					if channel_id:
+						member = get_guild()[memberID]
+						Notify(channel_id,"|`"+character_data['name']+"`|  Guild member `"+member['name']+"` has logged on")
+		elif updateType == 5: # general info
+			infoType = data[1]
+			if infoType == 16: # notice changed
+				channel_id = QtBind.text(gui_,cmbxEvtGuild_noticechanged)
+				if channel_id:
+					index = 2
+					titleLength = struct.unpack_from('<H', data, index)[0]
+					title = struct.unpack_from('<' + str(titleLength) + 's', data,index+2)[0].decode('cp1252')
+					index+=2+titleLength
+					textLength = struct.unpack_from('<H', data,index)[0]
+					text = struct.unpack_from('<' + str(textLength) + 's', data, index+2)[0].decode('cp1252')
+					Notify(channel_id,"|`"+character_data['name']+"`| Guild notice updated : **`"+title+"`**\n"+text)
 	return True
 
 # All picked up items are sent to this function (only vSRO working at the moment) 
