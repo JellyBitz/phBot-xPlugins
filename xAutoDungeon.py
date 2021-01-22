@@ -7,7 +7,7 @@ import json
 import struct
 import os
 
-pVersion = '1.5.3'
+pVersion = '1.5.4'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -498,7 +498,7 @@ def GoDimensionalThread(Name):
 		p = struct.pack('B',item['slot'])
 		locale = get_locale()
 		if locale == 56 or locale == 18: # TRSRO & (PROBABLY) iSRO
-			p += b'\xEE\x21\x02'
+			p += b'\x30\x0C\x0C\x07'
 		else: #locale == 22: # vSRO
 			p += b'\x6C\x3E'
 		# Set item used
