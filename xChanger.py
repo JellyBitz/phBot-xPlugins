@@ -5,7 +5,7 @@ import json
 import os
 
 pName = 'xChanger'
-pVersion = '1.0.0'
+pVersion = '1.0.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xChanger.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -38,14 +38,14 @@ _y+=60
 QtBind.createButton(gui,'btnRemExchanger_clicked',"     Remove     ",_x+49,_y-2)
 _y+=20 + 10
 
-cbxReplyAccept = QtBind.createCheckBox(gui,'save_configs','Auto accept reply',_x,_y)
+cbxReplyAccept = QtBind.createCheckBox(gui,'checkbox_changed','Auto accept reply',_x,_y)
 _y+=20
-cbxReplyApprove = QtBind.createCheckBox(gui,'save_configs','Auto approve reply',_x,_y)
+cbxReplyApprove = QtBind.createCheckBox(gui,'checkbox_changed','Auto approve reply',_x,_y)
 
 
 _x+=185
 _y=9
-cbxAcceptAll = QtBind.createCheckBox(gui,'save_configs','Accept all exchange invitations',_x,_y)
+cbxAcceptAll = QtBind.createCheckBox(gui,'checkbox_changed','Accept all exchange invitations',_x,_y)
 
 # ______________________________ Methods ______________________________ #
 
@@ -109,6 +109,10 @@ def load_configs():
 				for charName in data["Exchangers"]:
 					QtBind.append(gui,lvwExchangers,charName)
 
+# Called when any checkbox value changed
+def checkbox_changed(newValue):
+	save_configs()
+
 # Return True if text exist at the list
 def string_in_list(vString,vList,ModeSensitive=False):
 	if not ModeSensitive:
@@ -137,8 +141,8 @@ def btnAddExchanger_clicked():
 def btnRemExchanger_clicked():
 	# Check in game data
 	if character_data:
-		selectedItem = QtBind.currentIndex(gui,lvwExchangers)
-		if selectedItem >= 0:
+		selectedItem = QtBind.text(gui,lvwExchangers)
+		if selectedItem:
 			QtBind.remove(gui,lvwExchangers,selectedItem)
 			# saved successfully
 			save_configs()
