@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.10.0'
+pVersion = '2.10.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -650,17 +650,15 @@ def getBattleArenaText(t):
 		return 'Job'
 	return 'Unknown['+str(t)+']'
 
-# Get Fortress text by id 
-def getFortressText(fw_id):
-	if fw_id == 1:
+# Get Fortress text by id
+def getFortressText(code):
+	if code == 1:
 		return "Jangan"
-	if fw_id == 3:
+	if code == 3:
 		return "Hotan"
-	if fw_id == 3:
-		return "Constantinople"
-	if fw_id == 6:
+	if code == 6:
 		return "Bandit"
-	return 'Fortress (#'+str(fw_id)+')'
+	return 'Fortress #'+str(code)
 
 # Get the party list as discord formatted text
 def getPartyTextList(party):
@@ -741,6 +739,12 @@ def getSoXText(servername,level):
 		elif servername.endswith('SET_B'):
 			return '^Egy B'
 	return ''
+
+# Returns the town name from consignment id
+def getConsignmentTownText(code):
+	if code == 1:
+		return 'Donwhang'
+	return 'Town #'+str(code)
 
 # Loads all plugins handling chat 
 def GetChatHandlers():
@@ -991,25 +995,25 @@ def handle_joymax(opcode, data):
 				else:
 					Notify(channel_id,"**"+uniqueName+"** killed by `"+killerName+"`",colour=0x9C27B0)
 		elif updateType == 29:
-			eventType = data[2]
-			if eventType == 1:
+			jobType = data[2]
+			if jobType == 1:
 				channel_id = QtBind.text(gui,cmbxEvtMessage_consignmenthunter)
 				if channel_id:
 					progressType = data[3]
 					if progressType == 0:
 						Notify(channel_id,"[**Consignment**] Hunter trade will start at 10 minutes")
 					elif progressType == 1:
-						Notify(channel_id,"[**Consignment**] Hunter trade started")
+						Notify(channel_id,"[**Consignment**] Hunter trade started ("+getConsignmentTownText(data[4])+")")
 					elif progressType == 2:
 						Notify(channel_id,"[**Consignment**] Hunter trade has ended")
-			elif eventType == 2:
+			elif jobType == 2:
 				channel_id = QtBind.text(gui,cmbxEvtMessage_consignmentthief)
 				if channel_id:
 					progressType = data[3]
 					if progressType == 0:
 						Notify(channel_id,"[**Consignment**] Thief trade will start at 10 minutes")
 					elif progressType == 1:
-						Notify(channel_id,"[**Consignment**] Thief trade started")
+						Notify(channel_id,"[**Consignment**] Thief trade started ("+getConsignmentTownText(data[4])+")")
 					elif progressType == 2:
 						Notify(channel_id,"[**Consignment**] Thief trade has ended")
 	# SERVER_BA_NOTICE
@@ -1302,13 +1306,12 @@ def on_discord_message(msg,channel_id):
 # Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
 
-if os.path.exists(getPath()):
-	# Adding RELOAD plugin support
-	loadConfigs()
-else:
+if not os.path.exists(getPath()):
 	# Creating configs folder
 	os.makedirs(getPath())
 	log('Plugin: '+pName+' folder has been created')
+# Adding RELOAD plugin support
+loadConfigs()
 
 # Load discord handlers
 discord_chat_handlers = GetChatHandlers()
