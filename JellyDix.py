@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.10.1'
+pVersion = '2.10.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -742,6 +742,8 @@ def getSoXText(servername,level):
 
 # Returns the town name from consignment id
 def getConsignmentTownText(code):
+	if code == 0:
+		return 'Jangan'
 	if code == 1:
 		return 'Donwhang'
 	return 'Town #'+str(code)
