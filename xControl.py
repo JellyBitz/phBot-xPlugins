@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.6.3'
+pVersion = '1.7.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -24,8 +24,8 @@ gui = QtBind.init(__name__,pName)
 QtBind.createLabel(gui,'Control your party using in-game chat. Leader writes commands and your character will follow it.',11,11)
 
 QtBind.createLabel(gui,'< COMMAND (uppercased) #Variable (required) #Variable? (optional) >',11,30)
-QtBind.createLabel(gui,'- START : Start bot\n- STOP : Stop bot\n- TRACE #Player? : Start trace to leader or another player\n- NOTRACE : Stop trace\n- RETURN : Use some "Return Scroll" from your inventory\n- TP #A #B : Use teleport from location A to B\n- RECALL #Town : Set recall on city portal\n- ZERK : Use berserker mode if is available\n- GETOUT : Left party\n- MOVEON #Radius? : Set a random movement\n- MOUNT #PetType? : Mount horse by default\n- DISMOUNT #PetType? : Dismount horse by default\n- SETPOS #PosX? #PosY? #Region? #PosZ? : Set training position\n- SETRADIUS #Radius? : Set training radius\n- SETSCRIPT #Path : Change script path for training area\n- PROFILE #Name? : Loads a profile by his name\n- DC : Disconnect from game\n- INJECT #Opcode #Encrypted? #Data? : Inject packet',15,45)
-QtBind.createLabel(gui,'- CHAT #Type #Message : Send any message type\n- FOLLOW #Player? #Distance? : Trace a party player using distance\n- NOFOLLOW : Stop following\n- JUMP : Generate knockback visual effect\n- SIT : Sit or Stand up, depends\n- CAPE #Type? : Use PVP Cape\n- EQUIP #ItemName : Equips an item from inventory\n- UNEQUIP #ItemName : Unequips item from character\n- REVERSE #Type #Name?',345,80)
+QtBind.createLabel(gui,'- START : Start bot\n- STOP : Stop bot\n- TRACE #Player? : Start trace to leader or another player\n- NOTRACE : Stop trace\n- RETURN : Use some "Return Scroll" from your inventory\n- TP #A #B : Use teleport from location A to B\n- RECALL #Town : Set recall on city portal\n- ZERK : Use berserker mode if is available\n- GETOUT : Left party\n- MOVEON #Radius? : Set a random movement\n- MOUNT #PetType? : Mount horse by default\n- DISMOUNT #PetType? : Dismount horse by default\n- SETPOS #PosX? #PosY? #Region? #PosZ? : Set training position\n- SETRADIUS #Radius? : Set training radius\n- SETSCRIPT #Path? : Change script path for training area\n- SETAREA #Name : Changes training area by config name\n- PROFILE #Name? : Loads a profile by his name\n- DC : Disconnect from game',15,45)
+QtBind.createLabel(gui,'- INJECT #Opcode #Encrypted? #Data? : Inject packet\n- CHAT #Type #Message : Send any message type\n- FOLLOW #Player? #Distance? : Trace a party player using distance\n- NOFOLLOW : Stop following\n- JUMP : Generate knockback visual effect\n- SIT : Sit or Stand up, depends\n- CAPE #Type? : Use PVP Cape\n- EQUIP #ItemName : Equips an item from inventory\n- UNEQUIP #ItemName : Unequips item from character\n- REVERSE #Type #Name?',345,80)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",525,11,110,20)
 lstLeaders = QtBind.createList(gui,525,32,110,38)
@@ -500,6 +500,15 @@ def handle_chat(t,player,msg):
 				# change script to the path specified
 				set_training_script(msg[9:])
 				log('Plugin: Training script path has been changed')
+		elif msg.startswith('SETAREA '):
+			# deletes empty spaces on right
+			msg = msg[8:]
+			if msg:
+				# try to change to specified area name
+				if set_training_script(msg):
+					log('Plugin: Training area has been changed to ['+msg+']')
+				else:
+					log('Plugin: Training area ['+msg+'] not found in the list')
 		elif msg == "SIT":
 			log("Plugin: Sit/Stand")
 			inject_joymax(0x704F,b'\x04',False)
