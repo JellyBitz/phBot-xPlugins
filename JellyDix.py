@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.10.2'
+pVersion = '2.10.3'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -1184,7 +1184,9 @@ def handle_joymax(opcode, data):
 					channel_id = QtBind.text(gui_,cmbxEvtGuild_memberLogin)
 					if channel_id:
 						member = get_guild()[memberID]
-						Notify(channel_id,"|`"+character_data['name']+"`|  Guild member `"+member['name']+"` has logged on")
+						# Avoid myself
+						if member['name'] != character_data['name']:
+							Notify(channel_id,"|`"+character_data['name']+"`|  Guild member `"+member['name']+"` has logged on")
 		elif updateType == 5: # general info
 			infoType = data[1]
 			if infoType == 16: # notice changed
