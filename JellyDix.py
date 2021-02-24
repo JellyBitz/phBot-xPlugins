@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.10.3'
+pVersion = '2.11.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -1306,6 +1306,10 @@ def on_discord_message(msg,channel_id):
 				Notify(channel_id,'|`'+character_data['name']+'`| - Your guild members from `'+character_data['guild']+'` are :\n'+getGuildTextList(guild))
 			else:
 				Notify(channel_id,'|`'+character_data['name']+'`| - You are not in a guild!')
+		elif msgLower == 'exp':
+			data = get_character_data()
+			percentExp = data['current_exp'] * 100 / data['max_exp'] 
+			Notify(channel_id,'|`'+character_data['name']+'`| - Your current exp is %.2f' % percentExp)
 
 # Plugin loaded
 log('Plugin: '+pName+' v'+pVersion+' successfully loaded')
