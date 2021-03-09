@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.11.0'
+pVersion = '2.11.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -1165,9 +1165,11 @@ def handle_joymax(opcode, data):
 				index, item = ParseItem(data,index)
 				chat_data[uid] = item
 			except Exception as ex:
+				log('Plugin: Saving error parsing item (JellyDix)...')
 				# Make easy log file for user
 				with open(getPath()+"error.log","a") as f:
 					f.write("["+str(ex)+"] Server: (Opcode) 0x" + '{:02X}'.format(opcode) + " (Data) "+ ("None" if not data else ' '.join('{:02X}'.format(x) for x in data))+'\r\n')
+				break
 	# GUILD_INFO_UPDATE
 	elif opcode == 0x38F5:
 		updateType = data[0]
