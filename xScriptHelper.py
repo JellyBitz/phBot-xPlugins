@@ -3,9 +3,10 @@ from threading import Timer
 from time import sleep
 import sqlite3
 import struct
+import os
 
 pName = 'xScriptHelper'
-pVersion = '1.2.1'
+pVersion = '1.3.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xScriptHelper.py'
 
 # Script Commands :
@@ -13,6 +14,11 @@ pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xScrip
 # dismantle,ItemName?
 # - Take items from character storage but keeping the space on inventory empty
 # DoStorageTakeLimit,emptySlots
+# - Switch from script and restart bot to apply changes
+# SwitchScript,C:\path\to\script.txt
+# - Switch profile to default or any other one existing and restarts bot to apply changes
+# SwitchProfile
+# SwitchProfile,FasterAttack
 
 # ______________________________ Initializing ______________________________ #
 
@@ -289,6 +295,41 @@ def DoStorageTakeLimit(args):
 	else:
 		log("Plugin: Storage is not near!")
 		return 0
+
+# Change script and restart bot
+def SwitchScript(args):
+	if len(args) < 2:
+		log('Plugin: Not enough parameters to use "SwitchScript" command')
+	# Try to change script
+	if os.path.exists(args[1]):
+		# Stop
+		stop_bot()
+		# Change script
+		set_training_script(args[1])
+		# Restart
+		Timer(0.1,start_bot).start()
+	else:
+		log('Plugin: Path not found ['+args[1]+']')
+	return 0
+
+# Change profile and restart bot
+def SwitchProfile(args):
+	# Stop it
+	stop_bot()
+	# Change profile
+	if len(args) < 2:
+		if set_profile(''):
+			log('Plugin: Profile changed to Default')
+		else:
+			log('Plugin: Error changing profile!')
+	else:
+		if set_profile(args[1]):
+			log('Plugin: Profile changed to ['+args[1]+']')
+		else:
+			log('Plugin: Error changing profile!')
+	# Restart
+	Timer(0.1,start_bot).start()
+	return 0
 
 # Called when the character enters the game world
 def joined_game():
