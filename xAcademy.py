@@ -10,7 +10,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.4.3'
+pVersion = '1.4.4'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -233,7 +233,7 @@ def CreateCharacter():
 		chest = get_item_string('ITEM_EU_M_HEAVY_01_BA_A_DEF')['model']
 		legs = get_item_string('ITEM_EU_M_HEAVY_01_LA_A_DEF')['model']
 		shoes = get_item_string('ITEM_EU_M_HEAVY_01_FA_A_DEF')['model']
-		weapon = get_item_string('ITEM_EU_DAGGER_01_A_DEF')['model']
+		weapon = get_item_string('ITEM_EU_SWORD_01_A_DEF')['model']
 
 	if model == 0 or chest == 0 or legs == 0 or shoes == 0 or weapon == 0:
 		log('Plugin: Error, the CodeName has changed on this server')
