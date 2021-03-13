@@ -7,7 +7,7 @@ import json
 import struct
 import os
 
-pVersion = '1.0.1'
+pVersion = '1.0.2'
 pName = 'xBattleInfinity'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xBattleInfinity.py'
 
@@ -37,9 +37,10 @@ def GetFilterConnection():
 	# Connect to db3
 	return sqlite3.connect(path)
 
+# Check if the item is pickable from filter
 def IsPickable(filterCursor,ItemID):
-	# Check existence of pickable item by character
-	return filterCursor.execute('SELECT EXISTS(SELECT 1 FROM pickfilter WHERE id=? AND pick=1 LIMIT 1)',(ItemID,)).fetchone()[0]
+	# Check pickable item by character or pet
+	return filterCursor.execute('SELECT EXISTS(SELECT 1 FROM pickfilter WHERE id=? AND (pick=1 OR pet=1) LIMIT 1)',(ItemID,)).fetchone()[0]
 
 # Create a connection to database
 def GetDatabaseConnection():
