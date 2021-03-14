@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.8.1'
+pVersion = '1.8.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -421,6 +421,9 @@ def joined_game():
 
 # All chat messages received are sent to this function
 def handle_chat(t,player,msg):
+	# Remove guild name from union chat messages
+	if t == 11:
+		msg = msg.split(': ',1)[1]
 	# Check player at leader list or a Discord message
 	if player and lstLeaders_exist(player) or t == 100:
 		# Parsing message command
