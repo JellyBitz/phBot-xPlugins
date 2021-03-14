@@ -235,7 +235,7 @@ def FindDrop(Position,Radius):
 			# Check radius
 			if GetDistance(Position['x'],Position['y'],drop['x'],drop['y']) <= Radius:
 				# Check if is pickable by pick filter
-				if IsPickable(conn,drop['model']):
+				if IsPickable(conn.cursor(),drop['model']):
 					drop['uid'] = uid
 					conn.close()
 					return drop
