@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.7.1'
+pVersion = '1.8.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -446,14 +446,9 @@ def handle_chat(t,player,msg):
 		elif msg.startswith("SETPOS"):
 			# deletes empty spaces on right
 			msg = msg.rstrip()
-			# API compatibility
-			compatibility = tuple(map(int, (get_version().split(".")))) < (25,0,7)
 			if msg == "SETPOS":
 				p = get_position()
-				if compatibility:
-					set_training_position(p['region'], p['x'], p['y'])
-				else:
-					set_training_position(p['region'], p['x'], p['y'],p['z'])
+				set_training_position(p['region'], p['x'], p['y'],p['z'])
 				log("Plugin: Training area set to current position (X:%.1f,Y:%.1f)"%(p['x'],p['y']))
 			else:
 				try:
@@ -463,14 +458,15 @@ def handle_chat(t,player,msg):
 					y = float(p[1])
 					# auto calculated if is not specified
 					region = int(p[2]) if len(p) >= 3 else 0
-					if compatibility:
-						set_training_position(region,x,y)
-					else:
-						z = float(p[3]) if len(p) >= 4 else 0
-						set_training_position(region,x,y,z)
+					z = float(p[3]) if len(p) >= 4 else 0
+					set_training_position(region,x,y,z)
 					log("Plugin: Training area set to (X:%.1f,Y:%.1f)"%(x,y))
 				except:
 					log("Plugin: Wrong training area coordinates!")
+		elif msg == 'GETPOS':
+			# Check current position
+			pos = get_position()
+			phBotChat.Private(player,'My training area is (X:%.1f,Y:%.1f,Z:%1f,Region:%d)'%(pos['x'],pos['y'],pos['z'],pos['region']))
 		elif msg.startswith("SETRADIUS"):
 			# deletes empty spaces on right
 			msg = msg.rstrip()
