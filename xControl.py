@@ -8,7 +8,7 @@ import json
 import os
 
 pName = 'xControl'
-pVersion = '1.7.0'
+pVersion = '1.7.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -505,7 +505,7 @@ def handle_chat(t,player,msg):
 			msg = msg[8:]
 			if msg:
 				# try to change to specified area name
-				if set_training_script(msg):
+				if set_training_area(msg):
 					log('Plugin: Training area has been changed to ['+msg+']')
 				else:
 					log('Plugin: Training area ['+msg+'] not found in the list')
