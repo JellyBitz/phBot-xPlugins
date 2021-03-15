@@ -6,7 +6,7 @@ import struct
 import os
 
 pName = 'xScriptHelper'
-pVersion = '1.3.0'
+pVersion = '1.3.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xScriptHelper.py'
 
 # Script Commands :
@@ -90,13 +90,13 @@ def DismantleItem(ItemName=None):
 			# Check if it's dismantling by name 
 			if ItemName and ItemName != item['name']:
 				continue
+			# Check if this slot cannot be dismantled (blacklisted)
+			if slot in DismantlingBlacklisted:
+				continue
 
 			# if at least one item has been found, stop bot!
 			itemFound = True
 			stop_bot()
-			# Check if this slot cannot be dismantled
-			if slot in DismantlingBlacklisted:
-				continue
 			# Check dismantling attempts
 			global DismantlingCurrentSlot
 			global DismantlingAttempts
