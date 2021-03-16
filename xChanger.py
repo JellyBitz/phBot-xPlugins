@@ -5,7 +5,7 @@ import json
 import os
 
 pName = 'xChanger'
-pVersion = '1.1.0'
+pVersion = '1.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xChanger.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -24,7 +24,9 @@ SERVER_EXCHANGE_CANCELED = 0x3088
 CLIENT_EXCHANGE_CONFIRM_REQUEST = 0x7082
 SERVER_EXCHANGE_CONFIRM_RESPONSE = 0xB082
 CLIENT_EXCHANGE_APPROVE_REQUEST = 0x7083
+SERVER_EXCHANGE_INVITATION_RESPONSE = 0xB081
 SERVER_EXCHANGE_APPROVE_RESPONSE = 0xB083
+SERVER_EXCHANGE_EXIT_RESPONSE = 0xB084
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
@@ -209,9 +211,12 @@ def handle_joymax(opcode, data):
 	global ExchangeStatus
 	if opcode == SERVER_EXCHANGE_STARTED:
 		ExchangeStatus = 'STARTED'
+	elif opcode == SERVER_EXCHANGE_INVITATION_RESPONSE:
+		if data[0] == 1: # success
+			ExchangeStatus = 'STARTED'
 	# apply confirmations
 	elif opcode == SERVER_EXCHANGE_PLAYER_CONFIRMED:
-		# check current status
+		# check current status to reply
 		if ExchangeStatus == 'STARTED':
 			if QtBind.isChecked(gui,cbxReplyAccept):
 				# confirm exchange
@@ -221,16 +226,20 @@ def handle_joymax(opcode, data):
 				# approve exchange
 				inject_joymax(CLIENT_EXCHANGE_APPROVE_REQUEST,b'',False)
 	elif opcode == SERVER_EXCHANGE_CONFIRM_RESPONSE:
-		# check success and try to reply again
-		if data[0] == 1:
+		if data[0] == 1: # success
 			ExchangeStatus = 'CONFIRMED'
+			# reply if is required
 			if QtBind.isChecked(gui,cbxReplyApprove):
 				# approve exchange
 				inject_joymax(CLIENT_EXCHANGE_APPROVE_REQUEST,b'',False)
 	elif opcode == SERVER_EXCHANGE_APPROVE_RESPONSE:
-		ExchangeStatus = 'APPROVED'
+		if data[0] == 1: # success
+			ExchangeStatus = 'APPROVED'
 	elif opcode == SERVER_EXCHANGE_COMPLETED or opcode == SERVER_EXCHANGE_CANCELED:
 		ExchangeStatus = ''
+	elif opcode == SERVER_EXCHANGE_EXIT_RESPONSE:
+		if data[0] == 1: # success
+			ExchangeStatus = ''
 	return True
 
 # Plugin loaded
