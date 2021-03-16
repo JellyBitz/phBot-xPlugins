@@ -5,22 +5,26 @@ import json
 import os
 
 pName = 'xChanger'
-pVersion = '1.0.1'
+pVersion = '1.1.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xChanger.py'
 
 # ______________________________ Initializing ______________________________ #
 
 # globals
 character_data = None
-exchangerID = 0
+ExchangeStatus = ''
 
 # opcodes
 CLIENT_GAME_PETITION_RESPONSE = 0x3080
 SERVER_GAME_PETITION_REQUEST = 0x3080
+SERVER_EXCHANGE_STARTED = 0x3085
 SERVER_EXCHANGE_PLAYER_CONFIRMED = 0x3086
+SERVER_EXCHANGE_COMPLETED = 0x3087
+SERVER_EXCHANGE_CANCELED = 0x3088
 CLIENT_EXCHANGE_CONFIRM_REQUEST = 0x7082
 SERVER_EXCHANGE_CONFIRM_RESPONSE = 0xB082
 CLIENT_EXCHANGE_APPROVE_REQUEST = 0x7083
+SERVER_EXCHANGE_APPROVE_RESPONSE = 0xB083
 
 # Initializing GUI
 gui = QtBind.init(__name__,pName)
@@ -200,16 +204,33 @@ def handle_joymax(opcode, data):
 			# Accept if nickname is found in list
 			if string_in_list(charName,QtBind.getItems(gui,lvwExchangers)):
 				Inject_GamePetitionResponse(True,t)
+		return True
+	# Update depending exchange status
+	global ExchangeStatus
+	if opcode == SERVER_EXCHANGE_STARTED:
+		ExchangeStatus = 'STARTED'
 	# apply confirmations
 	elif opcode == SERVER_EXCHANGE_PLAYER_CONFIRMED:
-		if QtBind.isChecked(gui,cbxReplyAccept):
-			# accept exchange
-			inject_joymax(CLIENT_EXCHANGE_CONFIRM_REQUEST,b'',False)
+		# check current status
+		if ExchangeStatus == 'STARTED':
+			if QtBind.isChecked(gui,cbxReplyAccept):
+				# confirm exchange
+				inject_joymax(CLIENT_EXCHANGE_CONFIRM_REQUEST,b'',False)
+		elif ExchangeStatus == 'CONFIRMED':
+			if QtBind.isChecked(gui,cbxReplyApprove):
+				# approve exchange
+				inject_joymax(CLIENT_EXCHANGE_APPROVE_REQUEST,b'',False)
 	elif opcode == SERVER_EXCHANGE_CONFIRM_RESPONSE:
 		# check success and try to reply again
-		if data[0] == 1 and QtBind.isChecked(gui,cbxReplyApprove):
-			# accept exchange
-			inject_joymax(CLIENT_EXCHANGE_APPROVE_REQUEST,b'',False)
+		if data[0] == 1:
+			ExchangeStatus = 'CONFIRMED'
+			if QtBind.isChecked(gui,cbxReplyApprove):
+				# approve exchange
+				inject_joymax(CLIENT_EXCHANGE_APPROVE_REQUEST,b'',False)
+	elif opcode == SERVER_EXCHANGE_APPROVE_RESPONSE:
+		ExchangeStatus = 'APPROVED'
+	elif opcode == SERVER_EXCHANGE_COMPLETED or opcode == SERVER_EXCHANGE_CANCELED:
+		ExchangeStatus = ''
 	return True
 
 # Plugin loaded
