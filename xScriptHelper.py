@@ -6,12 +6,10 @@ import struct
 import os
 
 pName = 'xScriptHelper'
-pVersion = '1.3.1'
+pVersion = '1.4.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xScriptHelper.py'
 
 # Script Commands :
-# - Dismantle items from inventory
-# dismantle,ItemName?
 # - Take items from character storage but keeping the space on inventory empty
 # DoStorageTakeLimit,emptySlots
 # - Switch from script and restart bot to apply changes
@@ -22,23 +20,11 @@ pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xScrip
 
 # ______________________________ Initializing ______________________________ #
 
-DISMANTLE_MAX_ATTEMPTS = 3
-
 # globals
 StorageData = None
 CharacterData = None
 
-# dismantling process
-DismantlingCurrentSlot = 0
-DismantlingAttempts = 0
-DismantlingBlacklisted = []
-DismantlingErrorCode = 0
-
 # ______________________________ Methods ______________________________ #
-
-def Inject_DismantleItem(ItemSlot):
-	p = struct.pack('BB',1,ItemSlot)
-	inject_joymax(0x7157,p,False)
 
 def Inject_SelectEntity(EntityID):
 	inject_joymax(0x7045,struct.pack('<I',EntityID),False)
@@ -60,65 +46,6 @@ def Inject_InventoryStorageMovement(MovementType,SlotInitial,SlotFinal,EntityID)
 
 def Inject_ExitNpc(EntityID):
 	inject_joymax(0x704B,struct.pack('<I',EntityID),False)
-
-# Dismantle items if some item is found
-def DismantleItem(ItemName=None):
-	global DismantlingErrorCode
-	if DismantlingErrorCode:
-		if DismantlingErrorCode == 22536:
-			log("Plugin: Not enough inventory space to continue dismantling!")
-		elif DismantlingErrorCode == 22535:
-			log("Plugin: Not enough Destroyer Rondo's to continue dismantling!")
-		else:
-			log("Plugin: Error code ("+str(DismantlingErrorCode)+") to continue dismantling!")
-		DismantlingErrorCode = 0
-		start_bot()
-		return
-	inventory = get_inventory()
-	items = inventory['items']
-	itemFound = False
-	# Checkk items from inventory
-	for slot, item in enumerate(items):
-		if item and slot > 12:
-			itemData = get_item(item['model'])
-			# Make sure item is equipable
-			if itemData['tid1'] != 1:
-				continue
-			# Make sure item is not an avatar or job item
-			if itemData['tid2'] == 7 or itemData['tid2'] == 13:
-				continue
-			# Check if it's dismantling by name 
-			if ItemName and ItemName != item['name']:
-				continue
-			# Check if this slot cannot be dismantled (blacklisted)
-			if slot in DismantlingBlacklisted:
-				continue
-
-			# if at least one item has been found, stop bot!
-			itemFound = True
-			stop_bot()
-			# Check dismantling attempts
-			global DismantlingCurrentSlot
-			global DismantlingAttempts
-			if slot == DismantlingCurrentSlot:
-				DismantlingAttempts+=1
-			else:
-				DismantlingAttempts=0
-			if DismantlingAttempts == DISMANTLE_MAX_ATTEMPTS:
-				log('Plugin: Skiping "'+item['name']+'", too many dismantling attempts!')
-				DismantlingBlacklisted.append(slot)
-				continue
-			# Try dismantle it
-			DismantlingCurrentSlot = slot
-			log('Plugin: Trying to dismantle "'+item['name']+'"...')
-			Inject_DismantleItem(slot)
-			# waits a little bit for item to be dismantled
-			Timer(3,DismantleItem,[ItemName]).start()
-			break
-	# restart bot if nothing can be found
-	if not itemFound:
-		log("Plugin: Dismantling finished!")
-		start_bot()
 
 # Count slots availables on inventory
 def CountInventoryEmptySlots():
@@ -259,20 +186,6 @@ def GetTakeableStorageItem(FilterConnection):
 	return None
 
 # ______________________________ Events ______________________________ #
-
-# Try to dismantle items on inventory
-def dismantle(args):
-	# reset some vars
-	DismantlingBlacklisted.clear()
-	# check params
-	if len(args) > 1 and args[1]:
-		# dismantle by item name
-		DismantleItem(args[1])
-	else:
-		# dismantle all
-		DismantleItem()
-	# All done
-	return 0
 
 # Takes items from storage
 def DoStorageTakeLimit(args):
