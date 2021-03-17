@@ -10,7 +10,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.4.4'
+pVersion = '1.4.5'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -507,14 +507,6 @@ def OnCharacterList(CharList):
 					select_character(charName)
 					return
 
-			# Condition to check if character is below 40
-			if charLevel < 40:
-				# Check setting
-				if QtBind.isChecked(gui,cbxSelectChar):
-					log("Plugin: Selecting character ["+charName+"] (Lower than level 40)")
-					select_character(charName)
-					return
-
 			# Condition for deleting character between 40~50
 			if charLevel >= 40 and charLevel <= 50:
 				# Check setting
@@ -526,6 +518,14 @@ def OnCharacterList(CharList):
 					Inject_DeleteCharacter(charName)
 					# Asking the character list to avoid phbot getting stupid on popup window
 					Timer(3.0,Inject_RequestCharacterList).start()
+					return
+
+			# Condition to check if character is below 40
+			if charLevel < 40:
+				# Check setting
+				if QtBind.isChecked(gui,cbxSelectChar):
+					log("Plugin: Selecting character ["+charName+"] (Lower than level 40)")
+					select_character(charName)
 					return
 
 	# No conditions triggered
