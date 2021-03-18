@@ -7,7 +7,7 @@ import json
 import struct
 import os
 
-pVersion = '1.0.2'
+pVersion = '1.0.3'
 pName = 'xBattleInfinity'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xBattleInfinity.py'
 
@@ -601,6 +601,8 @@ def PickupDrops(args):
 # Ex.: "RemoveMorphstone"
 def RemoveMorphstone(args):
 	buffs = get_active_skills()
+	if not buffs:
+		return 0
 	for skillID in buffs:
 		buff = buffs[skillID]
 		if buff['servername'].startswith('SKILL_MUHAN_'):
