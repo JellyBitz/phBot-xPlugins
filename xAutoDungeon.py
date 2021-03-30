@@ -7,7 +7,7 @@ import json
 import struct
 import os
 
-pVersion = '1.5.4'
+pVersion = '1.5.5'
 pName = 'xAutoDungeon'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoDungeon.py'
 
@@ -16,9 +16,6 @@ pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAutoD
 DIMENSIONAL_COOLDOWN_DELAY = 7200 # seconds (2 hours)
 WAIT_DROPS_DELAY_MAX = 10 # seconds
 COUNT_MOBS_DELAY = 1.0 # seconds
-
-# API compatibility
-API_COMPATIBILITY = tuple(map(int, (get_version().split(".")))) < (25,0,7)
 
 # Globals
 character_data = None
@@ -348,10 +345,7 @@ def AttackMobs(wait,isAttacking,position,radius):
 		# All mobs killed, stop botting
 		stop_bot()
 		# Setting training area far away. The bot should continue where he was at the script
-		if API_COMPATIBILITY:
-			set_training_position(0,0,0)
-		else:
-			set_training_position(0,0,0,0)
+		set_training_position(0,0,0,0)
 		# Wait for bot to calm down and move back to the starting point
 		log("Plugin: Getting back to the script...")
 		Timer(2.5,move_to,[position['x'],position['y'],position['z']]).start()
@@ -525,10 +519,7 @@ def AttackArea(args):
 		# stop scripting
 		stop_bot()
 		# set automatically the training area
-		if API_COMPATIBILITY:
-			set_training_position(p['region'], p['x'], p['y'])
-		else:
-			set_training_position(p['region'], p['x'], p['y'],p['z'])
+		set_training_position(p['region'], p['x'], p['y'],p['z'])
 		# set automatically the radius to avoid setting conflict
 		if radius != None:
 			set_training_radius(radius)
