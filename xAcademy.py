@@ -10,7 +10,7 @@ import os
 import subprocess
 
 pName = 'xAcademy'
-pVersion = '1.4.5'
+pVersion = '1.4.6'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xAcademy.py'
 
 # User settings
@@ -221,21 +221,21 @@ def CreateCharacter():
 	if race != 'EU':
 		race = 'CH'
 
-		model = get_monster_string('CHAR_CH_MAN_ADVENTURER')['model']
-		chest = get_item_string('ITEM_CH_M_HEAVY_01_BA_A_DEF')['model']
-		legs = get_item_string('ITEM_CH_M_HEAVY_01_LA_A_DEF')['model']
-		shoes = get_item_string('ITEM_CH_M_HEAVY_01_FA_A_DEF')['model']
-		weapon = get_item_string('ITEM_CH_SWORD_01_A_DEF')['model']
+		model = get_monster_string('CHAR_CH_MAN_ADVENTURER')
+		chest = get_item_string('ITEM_CH_M_HEAVY_01_BA_A_DEF')
+		legs = get_item_string('ITEM_CH_M_HEAVY_01_LA_A_DEF')
+		shoes = get_item_string('ITEM_CH_M_HEAVY_01_FA_A_DEF')
+		weapon = get_item_string('ITEM_CH_SWORD_01_A_DEF')
 	else:
 		race = 'EU'
 
-		model = get_monster_string('CHAR_EU_MAN_NOBLE')['model']
-		chest = get_item_string('ITEM_EU_M_HEAVY_01_BA_A_DEF')['model']
-		legs = get_item_string('ITEM_EU_M_HEAVY_01_LA_A_DEF')['model']
-		shoes = get_item_string('ITEM_EU_M_HEAVY_01_FA_A_DEF')['model']
-		weapon = get_item_string('ITEM_EU_SWORD_01_A_DEF')['model']
+		model = get_monster_string('CHAR_EU_MAN_NOBLE')
+		chest = get_item_string('ITEM_EU_M_HEAVY_01_BA_A_DEF')
+		legs = get_item_string('ITEM_EU_M_HEAVY_01_LA_A_DEF')
+		shoes = get_item_string('ITEM_EU_M_HEAVY_01_FA_A_DEF')
+		weapon = get_item_string('ITEM_EU_SWORD_01_A_DEF')
 
-	if model == 0 or chest == 0 or legs == 0 or shoes == 0 or weapon == 0:
+	if not model or not chest or not legs or not shoes or not weapon:
 		log('Plugin: Error, the CodeName has changed on this server')
 		return
 
@@ -245,12 +245,12 @@ def CreateCharacter():
 	p = b'\x01'
 	p += struct.pack('<H', len(CreatingNickname))
 	p += CreatingNickname.encode('ascii')
-	p += struct.pack('<I', model)
+	p += struct.pack('<I', model['model'])
 	p += struct.pack('<B', 0)
-	p += struct.pack('<I', chest)
-	p += struct.pack('<I', legs)
-	p += struct.pack('<I', shoes)
-	p += struct.pack('<I', weapon)
+	p += struct.pack('<I', chest['model'])
+	p += struct.pack('<I', legs['model'])
+	p += struct.pack('<I', shoes['model'])
+	p += struct.pack('<I', weapon['model'])
 	# Try to create character
 	inject_joymax(0x7007,p, False)
 
