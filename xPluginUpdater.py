@@ -6,7 +6,7 @@ import os
 import shutil
 
 pName = 'xPluginUpdater'
-pVersion = '1.1.0'
+pVersion = '1.1.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xPluginUpdater.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -37,7 +37,7 @@ def btnCheck_clicked():
 		# Check only python files
 		if filename.endswith(".py"):
 			pyFile = pyFolder+"\\"+filename
-			with open(pyFile,"r") as f:
+			with open(pyFile,"r",errors='ignore') as f:
 				pyCode = str(f.read())
 				# Read file and check his version
 				if re.search("\npVersion = [0-9a-zA-Z.'\"]*",pyCode):
