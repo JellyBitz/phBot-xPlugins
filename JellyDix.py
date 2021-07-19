@@ -11,7 +11,7 @@ import os
 import re
 
 pName = 'JellyDix'
-pVersion = '2.11.1'
+pVersion = '2.11.2'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/JellyDix.py'
 
 # ______________________________ Initializing ______________________________ #
