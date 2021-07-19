@@ -1064,18 +1064,20 @@ def handle_joymax(opcode, data):
 		# vSRO filter
 		locale = get_locale()
 		if locale == 22:
-			channel_id = QtBind.text(gui_,cmbxEvtPick_item)
-			if channel_id:
-				# parse
-				updateType = data[1]
-				if updateType == 6: # Ground
-					notify_pickup(channel_id,struct.unpack_from("<I",data,7)[0])
-				elif updateType == 17: # Pet
-					notify_pickup(channel_id,struct.unpack_from("<I",data,11)[0])
-				elif updateType == 28: # Pet (Full/Quest)
-					slotInventory = data[6]
-					if slotInventory != 254:
+			# Check success
+			if data[0] == 1:
+				channel_id = QtBind.text(gui_,cmbxEvtPick_item)
+				if channel_id:
+					# parse
+					updateType = data[1]
+					if updateType == 6: # Ground
+						notify_pickup(channel_id,struct.unpack_from("<I",data,7)[0])
+					elif updateType == 17: # Pet
 						notify_pickup(channel_id,struct.unpack_from("<I",data,11)[0])
+					elif updateType == 28: # Pet (Full/Quest)
+						slotInventory = data[6]
+						if slotInventory != 254:
+							notify_pickup(channel_id,struct.unpack_from("<I",data,11)[0])
 	# SERVER_FW_NOTICE
 	elif opcode == 0x385F:
 		channel_id = QtBind.text(gui,cmbxEvtMessage_fortress)
