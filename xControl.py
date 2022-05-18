@@ -9,7 +9,7 @@ import os
 import sqlite3
 
 pName = 'xControl'
-pVersion = '1.9.0'
+pVersion = '1.9.1'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -460,10 +460,12 @@ def GetDatabaseConnection():
 							return conn
 						else:
 							conn.close()
+	# iSRO
+	elif locale == 18:
+		return sqlite3.connect(bot_path+"/Data/iSRO.db3")
 	# TrSRO
 	elif locale == 56:
-		conn = sqlite3.connect(bot_path+"/Data/TRSRO.db3")
-		return conn
+		return sqlite3.connect(bot_path+"/Data/TRSRO.db3")
 	return None
 
 # ______________________________ Events ______________________________ #
