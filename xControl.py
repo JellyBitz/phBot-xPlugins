@@ -6,9 +6,10 @@ import struct
 import random
 import json
 import os
+import sqlite3
 
 pName = 'xControl'
-pVersion = '1.8.2'
+pVersion = '1.9.0'
 pUrl = 'https://raw.githubusercontent.com/JellyBitz/phBot-xPlugins/master/xControl.py'
 
 # ______________________________ Initializing ______________________________ #
@@ -25,7 +26,7 @@ QtBind.createLabel(gui,'Control your party using in-game chat. Leader writes com
 
 QtBind.createLabel(gui,'< COMMAND (uppercased) #Variable (required) #Variable? (optional) >',11,30)
 QtBind.createLabel(gui,'- START : Start bot\n- STOP : Stop bot\n- TRACE #Player? : Start trace to leader or another player\n- NOTRACE : Stop trace\n- RETURN : Use some "Return Scroll" from your inventory\n- TP #A #B : Use teleport from location A to B\n- RECALL #Town : Set recall on city portal\n- ZERK : Use berserker mode if is available\n- GETOUT : Left party\n- MOVEON #Radius? : Set a random movement\n- MOUNT #PetType? : Mount horse by default\n- DISMOUNT #PetType? : Dismount horse by default\n- SETPOS #PosX? #PosY? #Region? #PosZ? : Set training position\n- SETRADIUS #Radius? : Set training radius\n- SETSCRIPT #Path? : Change script path for training area\n- SETAREA #Name : Changes training area by config name\n- PROFILE #Name? : Loads a profile by his name\n- DC : Disconnect from game',15,45)
-QtBind.createLabel(gui,'- INJECT #Opcode #Encrypted? #Data? : Inject packet\n- CHAT #Type #Message : Send any message type\n- FOLLOW #Player? #Distance? : Trace a party player using distance\n- NOFOLLOW : Stop following\n- JUMP : Generate knockback visual effect\n- SIT : Sit or Stand up, depends\n- CAPE #Type? : Use PVP Cape\n- EQUIP #ItemName : Equips an item from inventory\n- UNEQUIP #ItemName : Unequips item from character\n- REVERSE #Type #Name?\n- GETPOS : Gets current position',345,80)
+QtBind.createLabel(gui,'- INJECT #Opcode #Encrypted? #Data? : Inject packet\n- CHAT #Type #Message : Send any message type\n- FOLLOW #Player? #Distance? : Trace a party player using distance\n- NOFOLLOW : Stop following\n- JUMP : Generate knockback visual effect\n- SIT : Sit or Stand up, depends\n- CAPE #Type? : Use PVP Cape\n- EQUIP #ItemName : Equips an item from inventory\n- UNEQUIP #ItemName : Unequips item from character\n- REVERSE #Type #Name?\n- GETPOS : Gets current position\n- USE #ItemName : Use item from inventory',345,80)
 
 tbxLeaders = QtBind.createLineEdit(gui,"",525,11,110,20)
 lstLeaders = QtBind.createList(gui,525,32,110,38)
@@ -231,16 +232,11 @@ def stop_follow():
 
 # Try to summon a vehicle
 def MountHorse():
-	items = get_inventory()['items']
-	for slot, item in enumerate(items):
-		if item:
-			sn = item['servername']
-			# Search some kind vehicle by servername
-			if '_C_' in sn:
-				packet = struct.pack('B',slot)
-				packet += struct.pack('H',4588 + (1 if sn.endswith('_SCROLL') else 0)) # Silk scroll
-				inject_joymax(0x704C,packet,True)
-				return True
+	# search item with similar name or exact server name
+	item = GetItemByExpression(lambda n,s: s.startswith('ITEM_COS_C_'),13)
+	if item:
+		UseItem(item)
+		return True
 	log('Plugin: Horse not found at your inventory')
 	return False
 
@@ -407,6 +403,68 @@ def UnequipItem(item):
 	slot = GetEmptySlot()
 	if slot != -1:
 		Inject_InventoryMovement(0,item['slot'],slot,item['name'])
+
+# Try to use the item specified
+def UseItem(item):
+	# Create packet and inject it
+	p = struct.pack('<B',item['slot'])
+	loc = get_locale()
+
+	tid = GetTIDFromItem(item['model'])
+	if loc == 22: # vsro
+		p += struct.pack('<H',tid)
+	else:
+		p += struct.pack('<I',tid)
+
+	log('Plugin: Using item "'+item['name']+'"...')
+	# CLIENT_INVENTORY_ITEM_USE
+	inject_joymax(0x704C,p,True)
+
+# Get Type ID from item
+def GetTIDFromItem(itemId):
+	conn = GetDatabaseConnection()
+	c = conn.cursor()
+	c.execute('SELECT cash_item, tid1, tid2, tid3 FROM items WHERE id=?',(itemId,))
+	result = c.fetchone()
+	# calculate TID
+	result = result[0] + (3 * 4) + (result[1] * 32) + (result[2] * 128) + (result[3] * 2048)
+	conn.close()
+	return result
+
+# Create a connection to database
+def GetDatabaseConnection():
+	bot_path = os.getcwd()
+	# Load the server info
+	data = {}
+	locale = get_locale()
+	# vSRO
+	if locale == 22:
+		with open(bot_path+"/vSRO.json","r") as f:
+			data = json.load(f)
+		# Match data with the current server name
+		server = character_data['server']
+		for k in data:
+			servers = data[k]['servers']
+			# Check if servers is in list
+			if server in servers:
+				# Scan data folder
+				for path in os.scandir(bot_path+"/Data"):
+					# Check databases only
+					if path.is_file() and path.name.endswith(".db3"):
+						# Connect to check if the data matches
+						conn = sqlite3.connect(bot_path+"/Data/"+path.name)
+						c = conn.cursor()
+						c.execute('SELECT * FROM data WHERE k="path" AND v=?',(data[k]['path'],))
+						if c.fetchone():
+							# match found
+							return conn
+						else:
+							conn.close()
+	# TrSRO
+	elif locale == 56:
+		conn = sqlite3.connect(bot_path+"/Data/TRSRO.db3")
+		return conn
+	return None
 
 # ______________________________ Events ______________________________ #
 
@@ -712,6 +770,14 @@ def handle_chat(t,player,msg):
 						# try to use it
 						if reverse_return(3,msg[1]):
 							log('Plugin: Using reverse to zone "'+msg[1]+'" location')
+		elif msg.startswith("USE "):
+			# remove command
+			msg = msg[4:]
+			if msg:
+				# search item with similar name or exact server name
+				item = GetItemByExpression(lambda n,s: msg in n or msg == s,13)
+				if item:
+					UseItem(item)
 
 # Called every 500ms
 def event_loop():
