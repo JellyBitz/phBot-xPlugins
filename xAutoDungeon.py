@@ -21,6 +21,7 @@ COUNT_MOBS_DELAY = 1.0 # seconds
 character_data = None
 itemUsedByPlugin = None
 dimensionalItemActivated = None
+lastLocation = {}
 
 # Graphic user interface
 gui = QtBind.init(__name__,pName)
@@ -327,6 +328,7 @@ def QtBind_ItemsContains(text,lst):
 
 # Attacking mobs using all configs from bot
 def AttackMobs(wait,isAttacking,position,radius):
+	global lastLocation
 	count = getMobCount(position,radius)
 	if count > 0:
 		# Start to kill mobs using bot
@@ -344,6 +346,10 @@ def AttackMobs(wait,isAttacking,position,radius):
 		conn.close()
 		# All mobs killed, stop botting
 		stop_bot()
+		# Return to last location to continue from correct step in script
+		if lastLocation != {}:
+			move_to(lastLocation['x'],lastLocation['y'],0)
+			log("Plugin: Moving to center")
 		# Setting training area far away. The bot should continue where he was at the script
 		set_training_position(0,0,0,0)
 		# Wait for bot to calm down and move back to the starting point
@@ -508,6 +514,7 @@ def GoDimensionalThread(Name):
 # Attack all mobs around using the bot config. Ex: "AttackArea" or "AttackArea,75"
 # Will be using radius maximum (75 approx) as default
 def AttackArea(args):
+	global lastLocation
 	# radius maximum as default
 	radius = None
 	if len(args) >= 2:
@@ -520,6 +527,8 @@ def AttackArea(args):
 		stop_bot()
 		# set automatically the training area
 		set_training_position(p['region'], p['x'], p['y'],p['z'])
+		# save last location to do not forget script position
+		lastLocation = p
 		# set automatically the radius to avoid setting conflict
 		if radius != None:
 			set_training_radius(radius)
