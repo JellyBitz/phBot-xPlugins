@@ -492,7 +492,7 @@ def GoDimensionalThread(Name):
 		p = struct.pack('B',item['slot'])
 		locale = get_locale()
 
-		if locale in [56, 18, 61]: # TRSRO & (PROBABLY) iSRO
+		if locale in [56, 18, 61]: # TRSRO, iSRO, and VTC
 			p += b'\x30\x0C\x0C\x07'
 		else: #locale == 22: # vSRO
 			p += b'\x6C\x3E'
